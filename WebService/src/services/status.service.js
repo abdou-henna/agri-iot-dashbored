@@ -132,6 +132,43 @@ class StatusService {
       server_time: new Date().toISOString()
     };
   }
+
+  async getEventsAggregate({ from, to, nodeId, gatewayId, bucket = 'day', groupBy = 'severity' }) {
+    const pool = getPool();
+    const bucketExpr = bucket === 'hour' ? "date_trunc('hour', event_time)" : "date_trunc('day', event_time)";
+    const groupField = groupBy === 'event_type' ? 'event_type' : 'severity';
+    let query = `
+      SELECT
+        ${bucketExpr} AS bucket_start,
+        ${groupField} AS group_key,
+        COUNT(*)::int AS count
+      FROM system_events
+      WHERE 1=1
+    `;
+    const values = [];
+    let idx = 1;
+
+    if (gatewayId) {
+      query += ` AND gateway_id = $${idx++}`;
+      values.push(gatewayId);
+    }
+    if (nodeId) {
+      query += ` AND node_id = $${idx++}`;
+      values.push(nodeId);
+    }
+    if (from) {
+      query += ` AND event_time >= $${idx++}`;
+      values.push(from);
+    }
+    if (to) {
+      query += ` AND event_time <= $${idx++}`;
+      values.push(to);
+    }
+
+    query += ` GROUP BY bucket_start, group_key ORDER BY bucket_start ASC, group_key ASC`;
+    const result = await pool.query(query, values);
+    return result.rows;
+  }
 }
 
 export const statusService = new StatusService();
