@@ -1,5 +1,5 @@
 import { apiGet, apiPatch, apiPost } from './client';
-import type { AgronomicEvent } from '../types/agronomy';
+import type { AgronomicEvent } from '../types/agronomic';
 
 export interface AgronomicEventsResponse {
   events: AgronomicEvent[];
@@ -17,4 +17,3 @@ export function createAgronomicEvent(body: unknown) {
 export function updateAgronomicEvent(id: string, body: unknown) {
   return apiPatch<AgronomicEvent>(`/api/v1/agronomic-events/${id}`, body);
 }
-
