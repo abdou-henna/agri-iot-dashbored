@@ -1,0 +1,32 @@
+# Root repository ignore rules
+# Node and build artifacts
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.DS_Store
+.vscode/
+.idea/
+/dist/
+
+# Dashboard app artifacts
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.env
+dashboard/*.local
+dashboard/database_connection.private.md
+dashboard/validation_report_data.json
+
+# WebService artifacts
+WebService/node_modules/
+WebService/.env
+WebService/*.local
+WebService/.DS_Store
+WebService/.git
+
+# Temporary files
+*.tmp
+*.swp
+*.swo

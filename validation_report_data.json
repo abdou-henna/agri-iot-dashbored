@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-05-01T12:24:55.825181+00:00",
+  "api_status": {
+    "status": "NOT_TESTED",
+    "endpoints": {
+      "status": "OK",
+      "readings": "OK",
+      "events": "OK",
+      "uploads": "OK"
+    }
+  },
+  "database_status": {
+    "status": "CONNECTED",
+    "tables": {
+      "sensor_readings": "OK",
+      "system_events": "OK",
+      "uploads": "ISSUES"
+    }
+  },
+  "data_quality": {
+    "readings": {
+      "total_rows": 4,
+      "latest_timestamp": "2000-01-02T16:32:19+00:00"
+    },
+    "events": {
+      "total_rows": 90,
+      "latest_timestamp": "2026-04-30T11:58:14+00:00"
+    },
+    "uploads": {
+      "total_rows": 3,
+      "latest_timestamp": "2026-04-30T11:58:20.268697+00:00"
+    }
+  },
+  "timestamp_validation": {
+    "readings": {},
+    "events": {},
+    "uploads": {}
+  },
+  "issues": [
+    {
+      "level": "WARNING",
+      "message": "Table 'uploads' missing columns: ['created_at']"
+    }
+  ],
+  "summary": "PASSED WITH WARNINGS - System functional but has issues"
+}
