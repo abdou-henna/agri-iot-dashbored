@@ -1,5 +1,5 @@
 import express from 'express';
-import { getReadings, getReadingAggregate } from '../controllers/readings.controller.js';
+import { getReadings, getReadingAggregate, getReadingByRecordId } from '../controllers/readings.controller.js';
 
 const router = express.Router();
 
@@ -8,5 +8,6 @@ router.get('/aggregate', getReadingAggregate);
 
 // GET /api/v1/readings
 router.get('/', getReadings);
+router.get('/:record_id', getReadingByRecordId);
 
 export default router;

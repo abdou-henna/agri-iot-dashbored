@@ -37,6 +37,23 @@ export async function getEvents(req, res, next) {
   }
 }
 
+export async function getEventsAggregate(req, res, next) {
+  try {
+    const { from, to, node_id, gateway_id, bucket = 'day', group_by = 'severity' } = req.query;
+    const points = await statusService.getEventsAggregate({
+      from: from ? new Date(from) : undefined,
+      to: to ? new Date(to) : undefined,
+      nodeId: node_id,
+      gatewayId: gateway_id,
+      bucket,
+      groupBy: group_by,
+    });
+    res.json({ points });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getStatus(req, res, next) {
   try {
     const status = await statusService.getSystemStatus();
