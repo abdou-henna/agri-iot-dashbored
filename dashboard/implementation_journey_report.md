@@ -1,18 +1,33 @@
 # Smart Farm Dashboard Implementation Journey Report
 
-## 1. Current Executive State
-- **Current phase status:**
-  - Phase 1–3: largely implemented in current codebase.
-  - Phase 4 backend/runtime: implemented in WebService (agronomic schema + routes + services).
-  - Phase 4 frontend integration: **partial/pending** (agronomy page is currently a stub in `dashboard/src/features/agronomy/StubPage.tsx`).
-  - Phase 5: **not started**.
-- **Complete:** core sensor pages, diagnostics pages, backend route surface including agronomic endpoints, migrations list includes phase-4 migration.
-- **Partially complete:** agronomic frontend workflow (hooks/forms/mobile irrigation flow not fully wired as a connected start/end UI).
-- **Blocked / pending:** production/runtime verification consistency and deployment workflow discipline between main repo and Render WebService target.
-- **Immediate next step:** Phase 4 Frontend Integration — hooks first, then connected mobile irrigation UI.
+## 1) Current Executive State
 
-## 2. Source of Truth
-Primary references used:
+### Implemented in code
+- Phase 1 foundation architecture is implemented in `dashboard/src` (API client, typed models, route shell, time utility, core hooks).
+- Phase 2 sensor dashboard pages are implemented (Overview, Soil, Weather, Comparison) with chart components and aggregate/readings hooks.
+- Phase 3 diagnostics pages are implemented (Logs, Uploads, System Health).
+- Phase 4 backend (WebService agronomic domain + migration + route registration) is implemented.
+
+### Verified in runtime
+- Verified historically in project validation notes: core API endpoints and aggregate endpoints were reachable after Render warmup/retry cycles.
+- Verified issues/fixes in migration logic were identified through production/runtime failure symptoms and then patched.
+
+### Implemented but not fully runtime-validated in current snapshot
+- End-to-end agronomic frontend irrigation workflow (start/end in dashboard UI) is not present as connected flow in `dashboard/src`.
+- Some backend validations depended on deployment state and were not consistently reproducible from this environment.
+
+### Phase conclusion
+- **Phase 4 backend:** COMPLETE (implemented and hardened).
+- **Phase 4 frontend integration:** PARTIAL.
+- **Phase 5:** NOT STARTED.
+
+### Immediate next step
+- Phase 4 Frontend Integration: hooks first, then connected irrigation UI, then live runtime validation.
+
+---
+
+## 2) Source of Truth
+Primary references used for this report:
 - `dashboard/implementation_master_plan.md`
 - `dashboard/frontend_architecture.md`
 - `dashboard/data_contract.md`
@@ -22,179 +37,258 @@ Primary references used:
 - `dashboard/interaction_flows.md`
 - `dashboard/implementation_plan.md`
 - `WebService/sql/*.sql`
-- `WebService/src/**`
-- `dashboard/src/**`
-- git history (`git log`)
+- `WebService/src/*`
+- `dashboard/src/*`
+- git commit history available in this repository
 
-Governing principles confirmed:
-- Data domains remain logically separate: `sensor_readings`, `system_events`, `uploads`, `agronomic_events`.
-- Time semantics remain distinct:
-  - Sensor charts: `measured_at`
-  - Logs/events: `event_time`
-  - Agronomy: `started_at` / `ended_at`
-  - Upload diagnostics: `received_at` / upload timestamps
-- UI should not surface unsupported fields (pH, salinity, NPK, battery UI) unless formally enabled later.
+Non-negotiable interpretation applied:
+- `sensor_readings`, `system_events`, `uploads`, and `agronomic_events` are separate domains.
+- Time semantics are distinct and must not be mixed:
+  - sensor charts: `measured_at`
+  - logs/events: `event_time`
+  - agronomy: `started_at` / `ended_at`
+  - upload diagnostics: `received_at` + upload timestamps
+- UI remains constrained: no pH/salinity/NPK/battery productization unless formally enabled later.
 
-## 3. Implementation Timeline vs Master Plan
+---
 
-### Phase 1 — Foundation / Backend P0
-- **Planned goal:** architecture scaffold, typed client, time utils, core backend enhancements.
-- **Actual:**
-  - Frontend scaffold and typed API/hook base exists (`dashboard/src/api`, `dashboard/src/hooks`, `dashboard/src/types`, `dashboard/src/app`).
-  - Time utility layer exists (`dashboard/src/utils/time.ts`).
-  - Backend includes foundational routes/services (`/status`, `/readings`, `/events`, `/uploads`, `/nodes`).
-- **Status:** **Complete (code-level)**.
-- **Deviation:** none critical.
+## 3) Timeline vs Master Plan (strict)
+
+## Phase 1 — Foundation / Backend P0
+- **Planned goal:** base architecture + data pipeline + core backend enhancements.
+- **Actual implementation:**
+  - Frontend structure, API client, typed models, timezone utility, and route shell exist.
+  - Backend route surface for core entities exists (`status`, `readings`, `events`, `uploads`, `nodes`).
+- **Evidence:** `dashboard/src/api/*`, `dashboard/src/types/*`, `dashboard/src/utils/time.ts`, `dashboard/src/app/router.tsx`, `WebService/src/routes/*`.
+- **Deviation/delay:** none material in code structure.
+- **Reason:** n/a.
 - **Assessment:** acceptable.
 
-### Phase 2 — Core Sensor Dashboard
-- **Planned goal:** functional sensor pages + aggregate chart flow.
-- **Actual:**
-  - Implemented sensor-focused pages: Overview, Soil, Weather, Comparison.
-  - Aggregate/readings hooks and chart components exist (`useReadingAggregates`, `useReadings`, `BasicCharts`).
-  - Backend aggregate endpoint and readings route support are present.
-- **Status:** **Mostly complete**.
-- **Deviation:** runtime verification depended on data range/environment availability; some validations were delayed by Render/network conditions.
-- **Assessment:** acceptable with known validation caveats.
+## Phase 2 — Core Sensor Dashboard
+- **Planned goal:** fully usable sensor pages via aggregate/readings pipelines.
+- **Actual implementation:**
+  - Pages exist: Overview, Soil, Weather, Comparison.
+  - Hooks exist: `useReadings`, `useReadingAggregates`, `useEvents`, `useStatus`, `useNodes`, `useUploads`.
+  - Shared chart module exists and is used.
+- **Evidence:** `dashboard/src/features/overview|soil|weather|comparison`, `dashboard/src/hooks/*`, `dashboard/src/components/charts/BasicCharts.tsx`.
+- **Deviation/delay:** runtime checks were intermittently blocked by deployment state and data-window assumptions.
+- **Technical reason:** API warmup latency + querying ranges with no data + deployment version mismatch risk.
+- **Assessment:** acceptable but requires disciplined live verification.
 
-### Phase 3 — Diagnostics / Upload / System Health
-- **Planned goal:** logs filtering, upload history, health analytics.
-- **Actual:**
-  - Diagnostics pages exist: `LogsPage`, `UploadsPage`, `SystemHealthPage`.
-  - Backend includes `/events/aggregate` and `/readings/:record_id` support in current implementation history.
-- **Status:** **Substantially complete**.
-- **Deviation:** depended on deployment parity and environment checks.
-- **Assessment:** acceptable, but requires ongoing integration testing against live deployment.
+## Phase 3 — Diagnostics / Upload / System Health
+- **Planned goal:** production-grade diagnostics and upload audit workflows.
+- **Actual implementation:**
+  - Diagnostics pages implemented: Logs, Uploads, System Health.
+  - Backend includes event/readings helper endpoints in history (events aggregate, reading detail by record ID).
+- **Evidence:** `dashboard/src/features/diagnostics/*`, `WebService/src/routes/events.routes.js`, `WebService/src/routes/readings.routes.js`, related controllers/services.
+- **Deviation/delay:** validation confidence impacted by stale deployment confusion.
+- **Technical reason:** runtime sometimes hit old Render deployment despite local code updates.
+- **Assessment:** must be corrected operationally (deployment workflow), not architecturally.
 
-### Phase 4 — Agronomic Backend + Runtime
-- **Planned goal:** canonical agronomic model and irrigation lifecycle APIs.
-- **Actual:**
-  - WebService includes `003_agronomic.sql`, agronomic routes/controller/service, route registration, and migration registration.
-  - Multiple migration safety fixes were applied across iterations (idempotency and legacy compatibility).
-- **Status:** **Complete (backend/runtime implementation in repo)**.
-- **Deviation:** migration hardening required multiple follow-up fixes due production-like rerun and legacy-schema constraints.
-- **Assessment:** required fixes were appropriate and necessary.
+## Phase 4 — Agronomic Backend + Runtime
+- **Planned goal:** canonical agronomic schema + irrigation lifecycle APIs.
+- **Actual implementation:**
+  - Agronomic migration added and iteratively hardened.
+  - Agronomic routes/controller/service implemented and registered.
+- **Evidence:** `WebService/sql/003_agronomic.sql`, `WebService/src/routes/agronomic.routes.js`, `WebService/src/controllers/agronomic.controller.js`, `WebService/src/services/agronomic.service.js`, `WebService/src/server.js`, `WebService/src/migrate.js`.
+- **Deviation/delay:** multiple migration hotfixes required post-runtime errors.
+- **Technical reason:** production had legacy schema realities not fully represented in first-pass migration assumptions.
+- **Assessment:** corrected and acceptable; backend marked complete.
 
-### Phase 4 Frontend Integration
-- **Planned goal:** connected mobile-critical irrigation start/end flow.
-- **Actual:** agronomy remains stubbed (`StubPage`) in current `dashboard/src` snapshot.
-- **Status:** **Partial / pending**.
-- **Deviation:** backend advanced faster than frontend agronomy UX integration.
-- **Assessment:** must be fixed before Phase 5.
+## Phase 4 Frontend Integration
+- **Planned goal:** connected mobile irrigation start/end UX.
+- **Actual implementation:** agronomy remains stubbed in current `dashboard/src` snapshot.
+- **Evidence:** `dashboard/src/features/agronomy/StubPage.tsx`.
+- **Deviation/delay:** backend landed before connected frontend flow.
+- **Technical reason:** sequencing/prioritization and PR scope corrections.
+- **Assessment:** must be completed before any Phase 5 work.
 
-### Phase 5
-- **Status:** **Not started**.
+## Phase 5
+- **Status:** NOT STARTED.
 
-## 4. Backend/WebService Evolution
-- Initial validation surfaced endpoint gaps and deployment/version mismatch confusion.
-- Route surface in current backend includes:
-  - `/api/v1/status`
-  - `/api/v1/readings`
-  - `/api/v1/readings/aggregate`
-  - `/api/v1/events`
-  - `/api/v1/uploads`
-  - `/api/v1/nodes`
-  - `/api/v1/agronomic-events`
-  - irrigation start/end actions
-  - agronomic aggregate
-- Contract and migration evolution highlights:
-  - Added canonical agronomic fields and constraints.
-  - Added cleanup/backfill logic for legacy irrigation rows.
-  - Added idempotent unique index creation for `agro_event_id` to avoid repeated-run failures.
-  - Added guarded legacy column `DROP NOT NULL` to prevent runtime insert failures when old constraints remained in production.
-- Runtime validation (where known) showed repeated issues tied to environment/deploy state (Render asleep, stale deploy, data-range mismatch), not just code.
+---
 
-## 5. Agronomic Events Phase 4 / Phase 4.5
-- **Initial model problem:** legacy schema semantics (`type`, `value`, `unit`, `metadata`) and paired `irrigation_start`/`irrigation_stop` events do not match canonical session semantics.
-- **Why wrong:** canonical design requires one mutable session row for active irrigation, not event-pair reconstruction logic.
-- **Correct canonical model:**
-  - One `irrigation_session` row per session.
-  - `started_at` marks begin time.
-  - `ended_at = NULL` means active.
-  - End operation updates same row and computes `details.duration_min`.
-- **Core files involved:**
-  - `WebService/sql/003_agronomic.sql`
-  - `WebService/src/routes/agronomic.routes.js`
-  - `WebService/src/controllers/agronomic.controller.js`
-  - `WebService/src/services/agronomic.service.js`
-  - `WebService/src/server.js`
-  - `WebService/src/migrate.js`
-- **Migration issues encountered:**
-  1. Legacy conversion left open sessions from old irrigation rows.
-  2. Constraint compatibility bug when `ended_at = started_at` conflicted with `ended_at > started_at` rule.
-  3. Idempotency failure when named unique relation already existed in repeated runs.
-  4. Legacy columns retained `NOT NULL`, breaking canonical inserts that no longer write those fields.
-- **Fixes applied:**
-  - Legacy irrigation cleanup to ensure historical rows do not remain active canonical sessions.
-  - Switched invalid equal-time close to `started_at + INTERVAL '1 second'` where needed.
-  - Replaced fragile unique-constraint add with idempotent unique index (`IF NOT EXISTS`).
-  - Guarded `DROP NOT NULL` for legacy columns (`type`, `node_id`, `value`, `unit`, `metadata`, `created_by`) while preserving canonical NOT NULL fields.
-- **Final verified result (intended target state):**
-  - `POST /irrigation/start` works without legacy NOT NULL collisions.
-  - `POST /irrigation/:id/end` patches same row and completes session.
-  - Aggregate returns `irrigation_minutes_total` and `sessions_count` for completed sessions.
+## 4) Backend/WebService Evolution
 
-## 6. Repo / Deployment Workflow Problem
-- Main dashboard repo and production WebService deployment repo were handled separately.
-- Manual copy/paste folder sync caused production to run stale code at times, creating false negatives during endpoint validation.
-- Git subtree was selected as the professional synchronization pattern.
-- Intended workflow:
-  1. Develop in main repo under `WebService/`.
-  2. Push subtree to dedicated WebService repo.
-  3. Deploy latest WebService commit on Render.
-- Recommended commands:
-  - `git subtree push --prefix=WebService webservice main`
-  - `git subtree pull --prefix=WebService webservice main --squash`
+### How missing/unstable behavior was discovered
+- Initial validation sessions found endpoint-level uncertainty due to mixed causes:
+  - Some routes were absent in specific deployed versions.
+  - Some checks used time windows without matching data (`points: []` but endpoint itself valid).
+  - Some first-failure conclusions were wrong because Render was asleep/cold.
 
-## 7. Dashboard Frontend Progress
-- **API layer:** present (`dashboard/src/api/*`), includes dedicated modules and shared client.
-- **Hooks:** core sensor/diagnostic hooks present (`useReadings`, `useReadingAggregates`, `useEvents`, `useUploads`, `useStatus`, `useNodes`, `useTimeZone`).
-- **Pages:** Overview, Soil, Weather, Comparison, Settings, diagnostics pages present.
-- **Charts:** reusable chart primitives in `dashboard/src/components/charts/BasicCharts.tsx`.
-- **Diagnostics pages:** logs/uploads/system health pages implemented.
-- **Agronomy frontend:** current code shows `StubPage` under agronomy; connected irrigation UX flow is not complete in this snapshot.
-- **Architecture alignment:** largely aligned with `frontend_architecture.md` structure (api/hooks/features/components/utils separation).
-- **Direct fetch usage:** intended architecture avoids direct fetch in components; API layer exists for indirection.
-- **Time utilities:** `dashboard/src/utils/time.ts` exists and is intended single conversion point.
-- **Domain separation:** code organization and docs continue to enforce separation.
+### How issues were diagnosed
+- Repeated warmup/retry checks against `/health` and endpoint matrix.
+- Separation of conclusions:
+  - “code exists in repo” vs
+  - “deployed endpoint verified working now”.
 
-## 8. Problems Encountered and Resolutions
+### Endpoint evolution covered
+- `/api/v1/status`
+- `/api/v1/readings`
+- `/api/v1/readings/aggregate`
+- `/api/v1/events`
+- `/api/v1/uploads`
+- `/api/v1/nodes`
+- `/api/v1/agronomic-events`
+- `/api/v1/agronomic-events/irrigation/start`
+- `/api/v1/agronomic-events/irrigation/:agro_event_id/end`
+- `/api/v1/agronomic-events/aggregate`
+
+### Deployment-side failure contributors
+- Render cold start produced slow/failed first responses.
+- Stale deployment led to testing old code and false debugging paths.
+- API base/path assumptions occasionally caused misleading failures.
+
+### Important interpretation rule
+- Existence in source code is necessary but not sufficient; deploy/version verification is required before concluding runtime success.
+
+---
+
+## 5) Agronomic Phase 4 / 4.5 (detailed debugging narrative)
+
+### A) Original legacy model problem
+Legacy data shape used fields such as `type`, `value`, `unit`, `metadata` and paired event semantics (`irrigation_start`, `irrigation_stop`).
+
+### Why it broke canonical irrigation logic
+Canonical Phase 4.5 requires one row per irrigation session. Pair-based legacy rows can be misinterpreted as open active sessions if mapped incorrectly, causing false 409 “already active” conflicts on start.
+
+### Canonical target model
+- Single row: `event_category='irrigation'`, `event_type='irrigation_session'`.
+- `started_at` = session start.
+- `ended_at = NULL` only while active.
+- Ending irrigation updates same row and writes `details.duration_min`.
+
+### B) Issue 1 — leftover legacy irrigation rows appearing active
+- **Symptom:** `/irrigation/start` returned 409 even when no real active session existed.
+- **Root cause:** legacy rows were backfilled into canonical session identity with `ended_at` left null in edge cases.
+- **Fix:** migration cleanup updates ensure legacy rows do not remain active canonical sessions.
+- **Why it works:** active-session query now excludes legacy artifacts because legacy rows are closed or remapped.
+
+### C) Issue 2 — `ended_at > started_at` constraint conflict
+- **Symptom:** migration/runtime constraint conflict when legacy close logic used equal timestamps.
+- **Root cause:** fallback `ended_at = started_at` violates `ended_at IS NULL OR ended_at > started_at`.
+- **Fix:** changed fallback to `started_at + INTERVAL '1 second'`.
+- **Why it works:** preserves non-active closure while satisfying strict time check.
+
+### D) Issue 3 — duplicate unique relation on rerun
+- **Symptom:** migration failure: relation already exists for agronomic unique relation.
+- **Root cause:** non-idempotent unique-constraint creation path.
+- **Fix:** replaced fragile constraint-add block with idempotent unique index creation (`IF NOT EXISTS`).
+- **Why it works:** repeated runs no longer fail when object already exists.
+
+### E) Issue 4 — legacy NOT NULL columns broke canonical inserts
+- **Symptom:** runtime insert failure: null in legacy `type` column during `/irrigation/start`.
+- **Root cause:** production retained legacy NOT NULL constraints on deprecated columns not written by canonical runtime.
+- **Fix:** guarded, idempotent `DROP NOT NULL` on legacy-only columns when present; canonical NOT NULL fields kept.
+- **Why it works:** canonical inserts no longer depend on legacy write fields.
+
+### F) Resulting backend state
+- Canonical session model is implemented in backend + migration hardening.
+- Known migration/runtime blockers encountered in production-like flow were addressed at SQL level.
+
+---
+
+## 6) Deployment / Repo Workflow Problem
+Two-repo operation (main dashboard repo vs production WebService repo) created repeated confusion.
+
+### What went wrong
+- Code was updated in one location while production tested another version.
+- Manual folder copying introduced human error and drift.
+- Debugging sometimes targeted symptoms from stale deploys, not current source.
+
+### Why manual copy is dangerous
+- No deterministic traceability between tested runtime and audited commit.
+- Easy to skip files (routes/migrations/config), creating false “endpoint missing” conclusions.
+
+### Why subtree is correct
+- Explicitly maps `WebService/` subtree to deployment repo with auditable commit lineage.
+- Reduces accidental version skew and shortens root-cause time.
+
+### Failure scenario if subtree is not used
+- Engineer patches migration locally.
+- Manual copy misses one controller or migration file.
+- Render deploys partial state.
+- Runtime fails differently than local expectation.
+- Team debugs wrong root cause for hours.
+
+### Intended commands
+- `git subtree push --prefix=WebService webservice main`
+- `git subtree pull --prefix=WebService webservice main --squash`
+
+---
+
+## 7) Dashboard Frontend Progress (factual)
+Based strictly on current `dashboard/src`:
+- API layer exists (`dashboard/src/api/*`).
+- Sensor/diagnostic hooks exist (`useReadings`, `useReadingAggregates`, `useEvents`, `useStatus`, `useUploads`, `useNodes`).
+- Sensor pages exist (Overview, Soil, Weather, Comparison).
+- Diagnostics pages exist (Logs, Uploads, SystemHealth).
+- Shared chart components are implemented (`components/charts/BasicCharts.tsx`).
+- Agronomy page in current snapshot is **StubPage**, not connected irrigation workflow.
+- No claim made that start/end irrigation frontend flow is complete.
+
+---
+
+## 8) Problems Encountered and Resolutions (actionable)
 
 | Problem | Symptom | Root cause | Files involved | Fix applied | Current status | Remaining risk |
 |---|---|---|---|---|---|---|
-| Missing backend endpoints | UI paths untestable | Backend route/service gaps or stale deploy | `WebService/src/routes/*`, services/controllers | Added required routes/services | Improved | Deployment drift can reintroduce mismatch |
-| Empty aggregate due to wrong time range | `points: []` | Queried interval had no matching data | `/readings`, `/readings/aggregate` usage | Use real `measured_at` range from live rows | Understood | Still requires careful runtime verification |
-| `measured_at` year 2000 / RTC issues | timelines appear historically wrong | RTC/device-time integrity problem | data + firmware-generated timestamps | Documented as data-quality issue | Ongoing | Affects chart trust if unresolved |
-| Render asleep / old deployment confusion | transient failures / inconsistent endpoint behavior | cold starts + stale deployment version | runtime environment | warmup/retest discipline; deployment checks | Ongoing | Diagnostic overhead remains |
-| Separate repos / manual copy | production not matching main repo | process gap | repo workflow | subtree workflow recommended | Partially adopted | Must enforce operationally |
-| Phase 4.5 not clearly present initially | inconsistent canonical behavior | phased incremental backend fixes | `003_agronomic.sql`, agronomic backend files | canonical + migration hardening updates | Addressed in backend | Needs persistent regression checks |
-| PR accidentally included dashboard changes | scope drift | branch hygiene issue | dashboard files | reverted non-backend scope | Resolved in later iterations | Review discipline needed |
-| Legacy NOT NULL migration failure | `/irrigation/start` insert error on `type` | old schema constraints persisted | `003_agronomic.sql` | guarded DROP NOT NULL on legacy columns | Fixed | must keep migration idempotent |
-| CORS local dev issue | browser blocks localhost dashboard API calls | missing CORS middleware/config | `WebService/src/server.js`, `package.json` | added cors config + dependency | Implemented in code | environment package install policy can block runtime |
-| Phase 4 backend ahead of frontend | agronomy UI flow incomplete | sequencing mismatch | `dashboard/src/features/agronomy/*` | identified as next task | Pending | blocks true phase-4 UX completion |
+| Missing backend route behavior | endpoint 404 / unavailable in checks | route absent in deployed version or stale deploy | routes/controllers/services | route surface completed and redeployed path clarified | mitigated | deployment skew can recur |
+| Empty aggregate results | valid response with `points: []` | incorrect/empty data time range | readings + aggregate APIs | use real `measured_at` windows from live rows | mitigated | wrong query windows still possible |
+| RTC/time anomalies (year 2000 class) | misleading historical chart points | device RTC integrity drift/loss | data ingest/time semantics | documented; semantics enforced in dashboard policy | open | data-quality trust risk |
+| Render cold start | first request timeout/failure | platform sleep/warmup latency | runtime infra | warmup/retry procedure | mitigated | transient latency remains |
+| Stale deployment confusion | tests hit old code | separate repo/deploy mismatch | repo/deploy workflow | subtree workflow chosen | partial | process compliance required |
+| Legacy irrigation rows stayed active | `/irrigation/start` returns false 409 | legacy backfill left canonical active artifacts | `003_agronomic.sql` | cleanup/closure logic added | fixed | future migration edits must preserve behavior |
+| Time-check constraint conflict | migration/check failure | `ended_at == started_at` fallback invalid | `003_agronomic.sql` | changed to `+1 second` fallback | fixed | none if retained |
+| Duplicate relation on migration rerun | migration aborts | non-idempotent unique object creation | `003_agronomic.sql` | idempotent unique index path | fixed | low |
+| Legacy NOT NULL insert failure | runtime insert fails on `type` null | old schema constraints persisted | `003_agronomic.sql` | guarded DROP NOT NULL on legacy columns | fixed | ensure applied in target DB |
+| CORS local dev failure | browser blocks localhost dashboard calls | missing/incorrect CORS headers in runtime | `WebService/src/server.js`, `package.json` | CORS config added in code | implemented | deployment/dependency rollout must be verified |
+| Phase 4 frontend gap | no connected irrigation UI flow | agronomy frontend not wired | `dashboard/src/features/agronomy/StubPage.tsx` | identified as immediate next work | pending | blocks Phase 4 UX completion |
 
-## 9. IoT / Firmware Context Relevant to Dashboard
-- Upload model is offline-first batch transfer; dashboard is not real-time.
-- Sensor charts must use `measured_at` even when uploads happen much later.
-- LoRa/ACK/recovery instability and weak RSSI observations impact confidence in continuity.
-- Node2 has suspected power/hardware reliability concerns in observed diagnostics.
-- Missing-data detection and RTC integrity remain critical risks for interpretation quality.
-- Firmware redesign is out of current scope; dashboard must surface these realities clearly.
+---
 
-## 10. Current Verified State
-- Backend route structure includes core sensor, diagnostics, and agronomic endpoints in repo.
-- Agronomic migration has undergone iterative hardening for canonical semantics and repeat-run safety.
-- CORS support for local dashboard origin is implemented in server code, pending environment dependency install/promotion.
-- Dashboard has strong Phase 1–3 coverage in code.
-- Unresolved items: frontend agronomic connected flow, end-to-end live validation discipline, deployment workflow strictness.
+## 9) Current Verified State (strict split)
 
-## 11. Pending Work Before Phase 5
-1. Verify CORS in deployed environment (and ensure dependency availability in deployment pipeline).
-2. Complete Phase 4 frontend hooks/wiring for agronomy runtime behavior.
-3. Complete connected mobile irrigation start/end flow UX.
-4. Verify active irrigation state derivation and double-start prevention behavior against live API.
-5. Validate dashboard UI against live Render API with real data windows.
-6. Do not start cutting/yield/season/fertilization flows before irrigation UI completion.
+### VERIFIED WORKING (from repo + prior runtime checkpoints)
+- Core dashboard sensor/diagnostics pages exist and compile structure is present.
+- Backend has implemented agronomic domain route/controller/service/migration artifacts.
+- Migration hardening changes for key production failures are present in SQL history.
 
-## 12. Immediate Next Step
-**Phase 4 Frontend Integration — hooks first, then connected mobile irrigation UI.**
+### IMPLEMENTED BUT NOT VERIFIED IN THIS ENVIRONMENT
+- Consistent live production verification of every endpoint after final deploy.
+- End-to-end agronomic frontend start/end flow (because UI is still stubbed).
+- Final deployed CORS behavior after dependency/install/deploy path in target runtime.
+
+### KNOWN RISKS
+- Deployment-version drift across repositories.
+- Data/time-quality anomalies from RTC conditions.
+- Human process risk when migration reruns are not validated against real production state.
+
+---
+
+## 10) Pending Work Before Phase 5
+- [ ] Complete Phase 4 frontend hooks integration for agronomy runtime usage.
+- [ ] Implement connected irrigation UI (start/stop) in dashboard (replace agronomy stub).
+- [ ] Verify active-session handling in UI against live API state.
+- [ ] Verify client-side double-start prevention + server 409 handling UX.
+- [ ] Validate dashboard end-to-end against live Render API with real time windows.
+- [ ] Verify CORS in deployed environment (not only code-level).
+- [ ] Do not start cutting/yield/season/fertilization flows before irrigation UI completion.
+
+---
+
+## 11) Immediate Next Step
+**Phase 4 Frontend Integration:**
+1. Hooks/data contracts first.
+2. Connected mobile irrigation start/end UI second.
+3. Runtime validation against live deployed API third.
+
+---
+
+## 12) Final Validation Checklist
+- Phase 5 status in this report: **NOT STARTED**.
+- Phase 4 backend status in this report: **COMPLETE**.
+- Phase 4 frontend status in this report: **PARTIAL**.
+- Agronomic debugging narrative includes root causes and fixes for legacy/migration failures.
+- No firmware-change recommendations included.
+- No code or architecture changes proposed here beyond documented continuation steps.
