@@ -100,6 +100,29 @@ BEGIN
   END IF;
 END $$;
 
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agronomic_events' AND column_name='type') THEN
+    ALTER TABLE agronomic_events ALTER COLUMN type DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agronomic_events' AND column_name='node_id') THEN
+    ALTER TABLE agronomic_events ALTER COLUMN node_id DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agronomic_events' AND column_name='value') THEN
+    ALTER TABLE agronomic_events ALTER COLUMN value DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agronomic_events' AND column_name='unit') THEN
+    ALTER TABLE agronomic_events ALTER COLUMN unit DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agronomic_events' AND column_name='metadata') THEN
+    ALTER TABLE agronomic_events ALTER COLUMN metadata DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agronomic_events' AND column_name='created_by') THEN
+    ALTER TABLE agronomic_events ALTER COLUMN created_by DROP NOT NULL;
+  END IF;
+END $$;
+
 ALTER TABLE agronomic_events ALTER COLUMN agro_event_id SET NOT NULL;
 ALTER TABLE agronomic_events ALTER COLUMN event_category SET NOT NULL;
 ALTER TABLE agronomic_events ALTER COLUMN event_type SET NOT NULL;
