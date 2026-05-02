@@ -115,3 +115,17 @@ export async function getReadingAggregate(req, res, next) {
     next(error);
   }
 }
+
+export async function getReadingByRecordId(req, res, next) {
+  try {
+    const { record_id } = req.params;
+    const reading = await readingsService.getReadingByRecordId(record_id);
+    if (!reading) {
+      res.status(404).json({ error: 'Reading not found' });
+      return;
+    }
+    res.json(reading);
+  } catch (error) {
+    next(error);
+  }
+}
