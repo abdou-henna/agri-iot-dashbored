@@ -12,6 +12,7 @@ import statusRoutes from './routes/status.routes.js';
 import eventsRoutes from './routes/events.routes.js';
 import uploadsRoutes from './routes/uploads.routes.js';
 import nodesRoutes from './routes/nodes.routes.js';
+import agronomicRoutes from './routes/agronomic.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -39,6 +40,7 @@ app.use('/api/v1/events', eventsRoutes);
 app.use('/api/v1/status', statusRoutes);
 app.use('/api/v1/uploads', uploadsRoutes);
 app.use('/api/v1/nodes', nodesRoutes);
+app.use('/api/v1/agronomic-events', agronomicRoutes);
 app.use('/api/v1/server-time', (req, res) => {
   res.json({
     server_time: new Date().toISOString(),
