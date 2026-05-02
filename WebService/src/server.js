@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import { connectDB } from './db.js';
 import { migrateDatabase } from './migrate.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -21,6 +22,16 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+}));
+app.options('*', cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+}));
 app.use(express.json({ limit: '10mb' })); // Allow large payloads for batch uploads
 
 // Routes
