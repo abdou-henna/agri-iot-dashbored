@@ -112,18 +112,6 @@ class ReadingsService {
     const result = await pool.query(query, [nodeId, from, to]);
     return result.rows;
   }
-
-  async getReadingByRecordId(recordId) {
-    const pool = getPool();
-    const query = `
-      SELECT *
-      FROM sensor_readings
-      WHERE record_id = $1
-      LIMIT 1
-    `;
-    const result = await pool.query(query, [recordId]);
-    return result.rows[0] ?? null;
-  }
 }
 
 export const readingsService = new ReadingsService();

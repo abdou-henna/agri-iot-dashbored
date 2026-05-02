@@ -12,7 +12,6 @@ const sqlDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../sq
 const migrations = [
   '001_init.sql',
   '002_patch.sql',
-  '003_agronomic.sql',
 ];
 
 export async function migrateDatabase() {
