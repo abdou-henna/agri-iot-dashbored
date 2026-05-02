@@ -107,9 +107,8 @@ ALTER TABLE agronomic_events ALTER COLUMN target_scope SET NOT NULL;
 ALTER TABLE agronomic_events ALTER COLUMN started_at SET NOT NULL;
 ALTER TABLE agronomic_events ALTER COLUMN confidence SET NOT NULL;
 
-DO $$ BEGIN
-  ALTER TABLE agronomic_events ADD CONSTRAINT agronomic_events_agro_event_id_unique UNIQUE (agro_event_id);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+CREATE UNIQUE INDEX IF NOT EXISTS agronomic_events_agro_event_id_unique
+ON agronomic_events (agro_event_id);
 DO $$ BEGIN
   ALTER TABLE agronomic_events ADD CONSTRAINT agronomic_events_category_check CHECK (event_category IN ('season_setup','irrigation','cutting','fertilization','yield','field_note'));
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
