@@ -139,12 +139,11 @@ export function MetricLineChart({
 
 export function Sparkline({ points, color }: { points: TimeSeriesPoint[]; color: string }) {
   if (points.length === 0) return <div className="h-10 rounded-sm bg-slate-100" />;
-  const rows = points.map((point) => ({ ...point, sparkValue: point.value ?? 0 }));
   return (
     <div className="h-10 w-full">
       <ResponsiveContainer>
-        <AreaChart data={rows} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
-          <Area type="monotone" dataKey="sparkValue" stroke={color} fill={`${color}22`} strokeWidth={1.5} dot={false} isAnimationActive={false} />
+        <AreaChart data={points} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+          <Area type="monotone" dataKey="value" stroke={color} fill={`${color}22`} strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
