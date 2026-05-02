@@ -54,18 +54,12 @@ export function WeatherPage() {
   const queries = [temp, humidity, pressure];
   const latest = latestReading(readings.data?.readings);
   const statusRows = toStatusDistribution(readings.data?.readings, timezone);
-  const dailyRows = useMemo(() => {
-    const temperatureByDay = new Map((dailyTemp.data?.points ?? []).map((point) => [point.bucket_start, point]));
-    const humidityByDay = new Map((dailyHumidity.data?.points ?? []).map((point) => [point.bucket_start, point]));
-    const pressureByDay = new Map((dailyPressure.data?.points ?? []).map((point) => [point.bucket_start, point]));
-    const days = Array.from(new Set([...temperatureByDay.keys(), ...humidityByDay.keys(), ...pressureByDay.keys()])).sort();
-    return days.map((day) => ({
-      day,
-      temperature: temperatureByDay.get(day),
-      humidity: humidityByDay.get(day),
-      pressure: pressureByDay.get(day),
-    }));
-  }, [dailyTemp.data?.points, dailyHumidity.data?.points, dailyPressure.data?.points]);
+  const dailyRows = dailyTemp.data?.points.map((point, index) => ({
+    day: point.bucket_start,
+    temperature: point,
+    humidity: dailyHumidity.data?.points[index],
+    pressure: dailyPressure.data?.points[index],
+  })) ?? [];
 
   return (
     <div className="space-y-5">
@@ -121,7 +115,7 @@ export function WeatherPage() {
               {dailyRows.map((row) => (
                 <tr key={row.day}>
                   <td className="px-4 py-3">{formatDisplayDate(row.day, timezone)}</td>
-                  <td className="px-4 py-3">{avgText(row.temperature?.avg)} / {avgText(row.temperature?.min)} / {avgText(row.temperature?.max)}</td>
+                  <td className="px-4 py-3">{avgText(row.temperature.avg)} / {avgText(row.temperature.min)} / {avgText(row.temperature.max)}</td>
                   <td className="px-4 py-3">{avgText(row.humidity?.avg)} / {avgText(row.humidity?.min)} / {avgText(row.humidity?.max)}</td>
                   <td className="px-4 py-3">{avgText(row.pressure?.avg)} / {avgText(row.pressure?.min)} / {avgText(row.pressure?.max)}</td>
                 </tr>

@@ -60,18 +60,12 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
   const metricData = [moisture.data, temperature.data, ec.data];
   const latest = latestReading(readings.data?.readings);
   const statusRows = toStatusDistribution(readings.data?.readings, timezone);
-  const dailyRows = useMemo(() => {
-    const moistureByDay = new Map((dailyMoisture.data?.points ?? []).map((point) => [point.bucket_start, point]));
-    const temperatureByDay = new Map((dailyTemperature.data?.points ?? []).map((point) => [point.bucket_start, point]));
-    const ecByDay = new Map((dailyEc.data?.points ?? []).map((point) => [point.bucket_start, point]));
-    const days = Array.from(new Set([...moistureByDay.keys(), ...temperatureByDay.keys(), ...ecByDay.keys()])).sort();
-    return days.map((day) => ({
-      day,
-      moisture: moistureByDay.get(day),
-      temperature: temperatureByDay.get(day),
-      ec: ecByDay.get(day),
-    }));
-  }, [dailyMoisture.data?.points, dailyTemperature.data?.points, dailyEc.data?.points]);
+  const dailyRows = dailyMoisture.data?.points.map((point, index) => ({
+    day: point.bucket_start,
+    moisture: point,
+    temperature: dailyTemperature.data?.points[index],
+    ec: dailyEc.data?.points[index],
+  })) ?? [];
   const rs485Unavailable =
     nodeId === 'MAIN' && readings.data?.readings?.length ? readings.data.readings.every((reading) => reading.status === 'error') : false;
 
@@ -142,7 +136,7 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
               {dailyRows.map((row) => (
                 <tr key={row.day}>
                   <td className="px-4 py-3">{formatDisplayDate(row.day, timezone)}</td>
-                  <td className="px-4 py-3">{avgText(row.moisture?.avg)} / {avgText(row.moisture?.min)} / {avgText(row.moisture?.max)}</td>
+                  <td className="px-4 py-3">{avgText(row.moisture.avg)} / {avgText(row.moisture.min)} / {avgText(row.moisture.max)}</td>
                   <td className="px-4 py-3">{avgText(row.temperature?.avg)} / {avgText(row.temperature?.min)} / {avgText(row.temperature?.max)}</td>
                   <td className="px-4 py-3">{avgText(row.ec?.avg, 0)} / {avgText(row.ec?.min, 0)} / {avgText(row.ec?.max, 0)}</td>
                 </tr>

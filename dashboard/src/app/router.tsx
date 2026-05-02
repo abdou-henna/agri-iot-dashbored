@@ -1,7 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { StubPage } from '../features/agronomy/StubPage';
-import { AgronomyPage } from '../features/agronomy/AgronomyPage';
 import { ComparisonPage } from '../features/comparison/ComparisonPage';
 import { LogsPage } from '../features/diagnostics/LogsPage';
 import { SystemHealthPage } from '../features/diagnostics/SystemHealthPage';
@@ -16,7 +15,7 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { path: '/', element: <OverviewPage /> },
-      { path: '/daily-operations', element: <AgronomyPage /> },
+      { path: '/daily-operations', element: <StubPage title="Daily Operations" /> },
       { path: '/soil/pivot-1', element: <SoilPage nodeId="MAIN" /> },
       { path: '/soil/pivot-2', element: <SoilPage nodeId="N2" /> },
       { path: '/soil/comparison', element: <ComparisonPage /> },
@@ -32,3 +31,4 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+

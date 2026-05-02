@@ -21,7 +21,3 @@ export function getReadingAggregate(nodeId: NodeId, metric: MetricKey, range: Da
     bucket,
   });
 }
-
-export function getReadingByRecordId(recordId: string) {
-  return apiGet<SensorReading & { raw_payload?: Record<string, unknown> | null }>(`/api/v1/readings/${recordId}`);
-}
