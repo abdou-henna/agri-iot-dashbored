@@ -1,17 +1,75 @@
 CREATE TABLE IF NOT EXISTS agronomic_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  node_id TEXT NULL,
-  type TEXT NOT NULL CHECK (type IN ('irrigation_start', 'irrigation_stop', 'fertilization', 'manual_note')),
-  value DOUBLE PRECISION NULL,
-  unit TEXT NULL,
-  metadata JSONB NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  created_by TEXT NULL
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
 
-CREATE INDEX IF NOT EXISTS idx_agronomic_events_node_created_at
-  ON agronomic_events (node_id, created_at DESC);
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS agro_event_id TEXT;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS gateway_id TEXT NOT NULL DEFAULT 'GW01';
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS event_category TEXT;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS event_type TEXT;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS target_scope TEXT;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS ended_at TIMESTAMPTZ NULL;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'manual';
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS confidence TEXT;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS details JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS notes TEXT NULL;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS entered_by TEXT NULL;
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE agronomic_events ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NULL;
 
-CREATE INDEX IF NOT EXISTS idx_agronomic_events_type
-  ON agronomic_events (type);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name='agronomic_events' AND column_name='type'
+  ) THEN
+    UPDATE agronomic_events
+    SET
+      event_category = COALESCE(event_category, CASE WHEN type IN ('irrigation_start', 'irrigation_stop') THEN 'irrigation' WHEN type = 'manual_note' THEN 'field_note' ELSE 'field_note' END),
+      event_type = COALESCE(event_type, CASE WHEN type IN ('irrigation_start', 'irrigation_stop') THEN 'irrigation_session' ELSE type END),
+      target_scope = COALESCE(target_scope, 'unknown'),
+      started_at = COALESCE(started_at, created_at),
+      confidence = COALESCE(confidence, 'unknown'),
+      source = COALESCE(source, 'manual'),
+      agro_event_id = COALESCE(agro_event_id, 'AGRO-' || to_char(created_at, 'YYYYMMDD-HH24MISS') || '-' || substr(md5(id::text), 1, 6));
+  ELSE
+    UPDATE agronomic_events
+    SET
+      event_category = COALESCE(event_category, 'field_note'),
+      event_type = COALESCE(event_type, 'manual_note'),
+      target_scope = COALESCE(target_scope, 'unknown'),
+      started_at = COALESCE(started_at, created_at),
+      confidence = COALESCE(confidence, 'unknown'),
+      source = COALESCE(source, 'manual'),
+      agro_event_id = COALESCE(agro_event_id, 'AGRO-' || to_char(created_at, 'YYYYMMDD-HH24MISS') || '-' || substr(md5(id::text), 1, 6));
+  END IF;
+END $$;
 
+ALTER TABLE agronomic_events ALTER COLUMN agro_event_id SET NOT NULL;
+ALTER TABLE agronomic_events ALTER COLUMN event_category SET NOT NULL;
+ALTER TABLE agronomic_events ALTER COLUMN event_type SET NOT NULL;
+ALTER TABLE agronomic_events ALTER COLUMN target_scope SET NOT NULL;
+ALTER TABLE agronomic_events ALTER COLUMN started_at SET NOT NULL;
+ALTER TABLE agronomic_events ALTER COLUMN confidence SET NOT NULL;
+
+DO $$ BEGIN
+  ALTER TABLE agronomic_events ADD CONSTRAINT agronomic_events_agro_event_id_unique UNIQUE (agro_event_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE agronomic_events ADD CONSTRAINT agronomic_events_category_check CHECK (event_category IN ('season_setup','irrigation','cutting','fertilization','yield','field_note'));
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE agronomic_events ADD CONSTRAINT agronomic_events_scope_check CHECK (target_scope IN ('farm','pivot_1','pivot_2','both_pivots','unknown'));
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE agronomic_events ADD CONSTRAINT agronomic_events_confidence_check CHECK (confidence IN ('exact','estimated','unknown'));
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE agronomic_events ADD CONSTRAINT agronomic_events_time_check CHECK (ended_at IS NULL OR ended_at > started_at);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE INDEX IF NOT EXISTS idx_agro_gateway_category_started_at ON agronomic_events (gateway_id, event_category, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_agro_category_type ON agronomic_events (event_category, event_type);
+CREATE INDEX IF NOT EXISTS idx_agro_scope_started_at ON agronomic_events (target_scope, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_agro_active_irrigation ON agronomic_events (started_at DESC)
+WHERE event_category='irrigation' AND event_type='irrigation_session' AND ended_at IS NULL;
