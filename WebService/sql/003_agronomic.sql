@@ -58,7 +58,7 @@ BEGIN
     SET
       event_category = 'field_note',
       event_type = 'manual_note',
-      ended_at = COALESCE(ended_at, started_at),
+      ended_at = COALESCE(ended_at, started_at + INTERVAL '1 second'),
       details = COALESCE(details, '{}'::jsonb)
         || jsonb_build_object(
           'status', 'legacy_unpaired',
