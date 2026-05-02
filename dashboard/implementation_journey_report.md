@@ -292,3 +292,15 @@ Based strictly on current `dashboard/src`:
 - Agronomic debugging narrative includes root causes and fixes for legacy/migration failures.
 - No firmware-change recommendations included.
 - No code or architecture changes proposed here beyond documented continuation steps.
+
+## 13) Final Runtime Confirmation
+
+- POST /irrigation/start: verified working
+- POST /irrigation/:id/end: verified working
+- Aggregate endpoint:
+  - irrigation_minutes_total returned
+  - sessions_count returned
+- No active-session false conflicts observed after migration fixes
+
+Conclusion:
+Backend agronomic system is stable and safe for frontend integration.
