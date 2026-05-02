@@ -31,3 +31,12 @@ export interface EventsFilters {
   offset?: number;
 }
 
+export interface EventAggregatePoint {
+  bucket_start: string;
+  group_key: string;
+  count: number;
+}
+
+export interface EventsAggregateResponse {
+  points: EventAggregatePoint[];
+}
