@@ -15,7 +15,7 @@ export function AgronomyPage() {
   const [backfillConfidence, setBackfillConfidence] = useState<'exact' | 'estimated'>('exact');
   const [backfillNotes, setBackfillNotes] = useState('');
   const timezone = getCurrentDisplayTimezone();
-  const { activeSession, todaySessions, isIrrigating, startIrrigation, endIrrigation, refetchSession, isLoading, isStarting, isEnding, error } = useIrrigationSession();
+  const { activeSession, todaySessions, isIrrigating, startIrrigation, endIrrigation, refetchSession, isStarting, isEnding, error } = useIrrigationSession();
   const noteEvents = useAgronomicEvents({ event_category: 'field_note', limit: 10 });
   useEffect(() => {
     const id = window.setInterval(() => setNowTs(Date.now()), 30_000);
@@ -48,7 +48,7 @@ export function AgronomyPage() {
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
             className="min-h-12 rounded-md bg-green-600 px-4 text-white transition-transform duration-150 active:scale-[0.98] disabled:opacity-50"
-            disabled={isIrrigating || isStarting || isLoading}
+            disabled={Boolean(activeSession) || isStarting}
             onClick={async () => {
               setFormError(null);
               if (isIrrigating) {
