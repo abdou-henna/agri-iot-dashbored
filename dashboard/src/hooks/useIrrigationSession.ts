@@ -7,7 +7,12 @@ export function useIrrigationSession() {
   const queryClient = useQueryClient();
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-  const eventsQuery = useAgronomicEvents({
+  const activeEventsQuery = useAgronomicEvents({
+    event_category: 'irrigation',
+    event_type: 'irrigation_session',
+    limit: 200,
+  });
+  const todayEventsQuery = useAgronomicEvents({
     event_category: 'irrigation',
     event_type: 'irrigation_session',
     from: todayStart.toISOString(),
@@ -15,9 +20,10 @@ export function useIrrigationSession() {
     limit: 200,
   });
 
-  const events = eventsQuery.data?.events ?? [];
-  const activeSession = events.find((event) => event.ended_at === null) ?? null;
-  const todaySessions = events.filter((event) => event.ended_at !== null);
+  const activeEvents = activeEventsQuery.data?.events ?? [];
+  const todayEvents = todayEventsQuery.data?.events ?? [];
+  const activeSession = activeEvents.find((event) => event.ended_at === null) ?? null;
+  const todaySessions = todayEvents.filter((event) => event.ended_at !== null);
   const isIrrigating = Boolean(activeSession);
 
   const startMutation = useMutation({
@@ -25,7 +31,14 @@ export function useIrrigationSession() {
       if (activeSession) {
         throw new Error('Irrigation is already active. End current session before starting a new one.');
       }
-      return startIrrigation(input);
+      try {
+        return await startIrrigation(input);
+      } catch (error) {
+        if (typeof error === 'object' && error !== null && 'status' in error && (error as { status?: number }).status === 409) {
+          await Promise.all([activeEventsQuery.refetch(), todayEventsQuery.refetch()]);
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agronomicEvents'] });
@@ -52,7 +65,10 @@ export function useIrrigationSession() {
     endIrrigation: endMutation.mutateAsync,
     isStarting: startMutation.isPending,
     isEnding: endMutation.isPending,
-    error: startMutation.error ?? endMutation.error ?? eventsQuery.error ?? null,
+    refetchSession: async () => {
+      await Promise.all([activeEventsQuery.refetch(), todayEventsQuery.refetch()]);
+    },
+    isLoading: activeEventsQuery.isLoading || todayEventsQuery.isLoading,
+    error: startMutation.error ?? endMutation.error ?? activeEventsQuery.error ?? todayEventsQuery.error ?? null,
   };
 }
-
