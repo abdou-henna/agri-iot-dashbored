@@ -44,15 +44,15 @@ export function LogsPage() {
   return (
     <div className="space-y-5">
       <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <div className="grid gap-3 md:grid-cols-[1fr_160px_1fr_1fr_1fr_auto]">
-          <div className="flex flex-wrap gap-2">
+        <div className="grid gap-3 md:grid-cols-[1fr_220px_1fr_1fr_1fr_auto]">
+          <div className="flex flex-wrap gap-1.5">
             {severities.map((severity) => {
               const active = selectedSeverities.includes(severity);
               return (
                 <button
                   key={severity}
-                  className={`rounded-md border px-3 py-2 text-sm uppercase ${
-                    active ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'
+                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold uppercase ${
+                    active ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'
                   }`}
                   onClick={() =>
                     setSelectedSeverities((current) =>
@@ -65,22 +65,32 @@ export function LogsPage() {
               );
             })}
           </div>
-          <select className="rounded-md border border-slate-200 px-3 py-2" value={nodeId} onChange={(event) => setNodeId(event.target.value as NodeId | '')}>
-            <option value="">All nodes</option>
-            <option value="MAIN">MAIN</option>
-            <option value="N2">N2</option>
-            <option value="N3">N3</option>
-          </select>
+          <div className="flex items-center gap-1">
+            {[
+              { label: 'All', value: '' },
+              { label: 'MAIN', value: 'MAIN' },
+              { label: 'N2', value: 'N2' },
+              { label: 'N3', value: 'N3' },
+            ].map((node) => (
+              <button
+                key={node.label}
+                className={`rounded-md border px-2.5 py-1.5 text-xs ${nodeId === node.value ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}
+                onClick={() => setNodeId(node.value as NodeId | '')}
+              >
+                {node.label}
+              </button>
+            ))}
+          </div>
           <input
-            className="rounded-md border border-slate-200 px-3 py-2"
-            placeholder="Upload ID"
+            className="h-9 rounded-md border border-slate-300 px-3 text-sm"
+            placeholder="Upload ID (e.g. UPL-...)"
             value={uploadId}
             onChange={(event) => setUploadId(event.target.value)}
           />
-          <input className="rounded-md border border-slate-200 px-3 py-2" placeholder="Event Type" value={eventType} onChange={(event) => setEventType(event.target.value)} />
-          <input className="rounded-md border border-slate-200 px-3 py-2" placeholder="Error Code" value={errorCode} onChange={(event) => setErrorCode(event.target.value)} />
+          <input className="h-9 rounded-md border border-slate-300 px-3 text-sm" placeholder="Event Type" value={eventType} onChange={(event) => setEventType(event.target.value)} />
+          <input className="h-9 rounded-md border border-slate-300 px-3 text-sm" placeholder="Error Code" value={errorCode} onChange={(event) => setErrorCode(event.target.value)} />
           <button
-            className="rounded-md border border-slate-200 px-3 py-2 text-sm"
+            className="h-9 self-end whitespace-nowrap rounded-md border border-slate-300 px-3 text-sm"
             onClick={() => {
               setSelectedSeverities(severities);
               setNodeId('');
@@ -124,7 +134,7 @@ export function LogsPage() {
                 <summary className="grid cursor-pointer gap-2 px-4 py-3 text-sm md:grid-cols-[180px_110px_90px_1fr_160px_1fr]">
                   <span>{formatDisplayTime(event.event_time, { timezone, includeSeconds: true })}</span>
                   <span className="font-semibold uppercase">{event.severity}</span>
-                  <span>{event.node_id ?? '-'}</span>
+                  <span>{event.node_id ?? 'Gateway'}</span>
                   <span className="font-mono">{event.event_type}</span>
                   <span className="font-mono">{event.error_code ?? '-'}</span>
                   <span>{event.message ?? '-'}</span>
