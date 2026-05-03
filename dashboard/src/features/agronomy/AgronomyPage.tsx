@@ -31,6 +31,10 @@ export function AgronomyPage() {
     const m = diffMin % 60;
     return h ? `${h}h ${m}m` : `${m}m`;
   }, [activeSession?.started_at, nowTs]);
+  const isStaleActiveSession = useMemo(() => {
+    if (!activeSession?.started_at) return false;
+    return nowTs - new Date(activeSession.started_at).getTime() > 12 * 60 * 60 * 1000;
+  }, [activeSession?.started_at, nowTs]);
 
   return (
     <div className="mx-auto max-w-[420px] space-y-4 px-3 pb-6">
@@ -59,21 +63,26 @@ export function AgronomyPage() {
           </button>
           <button
             className="min-h-12 rounded-md bg-red-600 px-4 text-white transition-transform duration-150 active:scale-[0.98] disabled:opacity-50"
-            disabled={!isIrrigating || isEnding || isLoading}
+            disabled={!activeSession || isEnding}
             onClick={async () => {
               setFormError(null);
-              const endedAt = new Date().toISOString();
-              if (activeSession?.started_at && new Date(endedAt) <= new Date(activeSession.started_at)) {
-                setFormError('End time must be after start time.');
-                return;
+              try {
+                await endIrrigation({ ended_at: new Date().toISOString(), confidence: 'exact' });
+                await refetchSession();
+              } catch (operationError) {
+                const message = typeof operationError === 'object' && operationError !== null && 'message' in operationError
+                  ? String((operationError as { message: unknown }).message)
+                  : 'Failed to end irrigation session.';
+                setFormError(message);
               }
-              await endIrrigation({ ended_at: endedAt, confidence: 'exact' });
-              await refetchSession();
             }}
           >
             {isEnding ? 'Ending...' : 'End'}
           </button>
         </div>
+        {isStaleActiveSession ? (
+          <div className="mt-2 text-sm text-amber-700">This irrigation session has been running for a long time.</div>
+        ) : null}
         {formError ? <div className="mt-2 text-sm text-red-600">{formError}</div> : null}
         {error ? <div className="mt-2 text-sm text-red-600">{(error as Error).message ?? 'Operation failed'}</div> : null}
       </section>

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { endIrrigation, startIrrigation } from '../api/agronomy.api';
 import { useAgronomicEvents } from './useAgronomicEvents';
@@ -25,6 +26,9 @@ export function useIrrigationSession() {
   const activeSession = activeEvents.find((event) => event.ended_at === null) ?? null;
   const todaySessions = todayEvents.filter((event) => event.ended_at !== null);
   const isIrrigating = Boolean(activeSession);
+  const refetchSession = useCallback(async () => {
+    await Promise.all([activeEventsQuery.refetch(), todayEventsQuery.refetch()]);
+  }, [activeEventsQuery, todayEventsQuery]);
 
   const startMutation = useMutation({
     mutationFn: async (input: IrrigationStartInput = {}) => {
@@ -35,7 +39,7 @@ export function useIrrigationSession() {
         return await startIrrigation(input);
       } catch (error) {
         if (typeof error === 'object' && error !== null && 'status' in error && (error as { status?: number }).status === 409) {
-          await Promise.all([activeEventsQuery.refetch(), todayEventsQuery.refetch()]);
+          await refetchSession();
         }
         throw error;
       }
@@ -65,9 +69,7 @@ export function useIrrigationSession() {
     endIrrigation: endMutation.mutateAsync,
     isStarting: startMutation.isPending,
     isEnding: endMutation.isPending,
-    refetchSession: async () => {
-      await Promise.all([activeEventsQuery.refetch(), todayEventsQuery.refetch()]);
-    },
+    refetchSession,
     isLoading: activeEventsQuery.isLoading || todayEventsQuery.isLoading,
     error: startMutation.error ?? endMutation.error ?? activeEventsQuery.error ?? todayEventsQuery.error ?? null,
   };

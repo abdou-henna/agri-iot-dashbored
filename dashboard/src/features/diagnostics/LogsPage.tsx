@@ -18,24 +18,22 @@ export function LogsPage() {
   const [errorCode, setErrorCode] = useState('');
   const { timezone } = useTimeZone();
   const range = useMemo(() => rangeForPreset('7d'), []);
-  const events = useEvents({
-    severity: selectedSeverities,
+  const normalizedSeverities = selectedSeverities.length === severities.length ? undefined : selectedSeverities;
+  const sharedFilters = {
+    severity: normalizedSeverities,
     node_id: nodeId || undefined,
-    upload_id: uploadId || undefined,
-    event_type: eventType || undefined,
-    error_code: errorCode || undefined,
+    upload_id: uploadId.trim() || undefined,
+    event_type: eventType.trim() || undefined,
+    error_code: errorCode.trim() || undefined,
     from: range.from,
     to: range.to,
+  };
+  const events = useEvents({
+    ...sharedFilters,
     limit: 50,
   });
   const histogram = useEventsAggregate({
-    severity: selectedSeverities,
-    node_id: nodeId || undefined,
-    upload_id: uploadId || undefined,
-    event_type: eventType || undefined,
-    error_code: errorCode || undefined,
-    from: range.from,
-    to: range.to,
+    ...sharedFilters,
     bucket: 'day',
     group_by: 'severity',
   });
@@ -44,8 +42,8 @@ export function LogsPage() {
   return (
     <div className="space-y-5">
       <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <div className="grid gap-3 md:grid-cols-[1fr_220px_1fr_1fr_1fr_auto]">
-          <div className="flex flex-wrap gap-1.5">
+        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-6">
+          <div className="flex min-w-0 max-w-full flex-wrap gap-1.5 md:col-span-2">
             {severities.map((severity) => {
               const active = selectedSeverities.includes(severity);
               return (
@@ -65,7 +63,7 @@ export function LogsPage() {
               );
             })}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-1">
             {[
               { label: 'All', value: '' },
               { label: 'MAIN', value: 'MAIN' },
@@ -82,15 +80,15 @@ export function LogsPage() {
             ))}
           </div>
           <input
-            className="h-9 rounded-md border border-slate-300 px-3 text-sm"
+            className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm"
             placeholder="Upload ID (e.g. UPL-...)"
             value={uploadId}
             onChange={(event) => setUploadId(event.target.value)}
           />
-          <input className="h-9 rounded-md border border-slate-300 px-3 text-sm" placeholder="Event Type" value={eventType} onChange={(event) => setEventType(event.target.value)} />
-          <input className="h-9 rounded-md border border-slate-300 px-3 text-sm" placeholder="Error Code" value={errorCode} onChange={(event) => setErrorCode(event.target.value)} />
+          <input className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm" placeholder="Event Type" value={eventType} onChange={(event) => setEventType(event.target.value)} />
+          <input className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm" placeholder="Error Code" value={errorCode} onChange={(event) => setErrorCode(event.target.value)} />
           <button
-            className="h-9 self-end whitespace-nowrap rounded-md border border-slate-300 px-3 text-sm"
+            className="h-9 min-w-0 max-w-full whitespace-nowrap rounded-md border border-slate-300 px-3 text-sm md:justify-self-end"
             onClick={() => {
               setSelectedSeverities(severities);
               setNodeId('');
