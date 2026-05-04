@@ -46,8 +46,7 @@ export function AppShell() {
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-14 items-center gap-2 border-b border-slate-200 px-4">
-          <Menu className="h-5 w-5" />
+        <div className="flex h-14 items-center border-b border-slate-200 px-4">
           {!collapsed ? (
             <Link to="/" className="font-semibold text-slate-900" onClick={() => setOpen(false)}>
               Smart Farm
@@ -55,7 +54,11 @@ export function AppShell() {
           ) : null}
         </div>
         <nav
-          className={`flex-1 space-y-5 p-3 text-sm ${collapsed ? 'overflow-hidden md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden' : 'overflow-y-auto'}`}
+          className={`flex-1 space-y-5 p-3 text-sm ${
+            collapsed
+              ? 'overflow-hidden md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden'
+              : 'overflow-y-auto md:[scrollbar-width:thin] md:[&::-webkit-scrollbar]:w-1.5 md:[&::-webkit-scrollbar-thumb]:rounded-full md:[&::-webkit-scrollbar-thumb]:bg-slate-300'
+          }`}
         >
           {[...groupedRoutes.entries()].map(([group, items]) => (
             <div key={group}>
@@ -87,7 +90,7 @@ export function AppShell() {
       <div className={collapsed ? 'md:pl-20' : 'md:pl-64'}>
         <header className="fixed inset-x-0 top-0 z-10 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:sticky md:inset-auto md:top-0">
           <div className="flex items-center gap-3">
-            <button className="rounded-md border border-slate-200 p-2" onClick={onHamburgerClick} aria-label="Open navigation">
+            <button className="rounded-md border border-slate-200 p-2" onClick={onHamburgerClick} aria-label="Toggle navigation">
               <Menu className="h-5 w-5" />
             </button>
             <h1 className="text-lg font-semibold text-slate-900">{pageTitle(location.pathname)}</h1>
