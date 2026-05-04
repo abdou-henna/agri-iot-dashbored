@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { mobileRoutes, routes } from '../../config/routes';
@@ -31,29 +31,35 @@ export function AppShell() {
     window.localStorage.setItem('dashboard.sidebar.collapsed', String(collapsed));
   }, [collapsed]);
 
+  const onHamburgerClick = () => {
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      setCollapsed((prev) => !prev);
+      return;
+    }
+    setOpen(true);
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50">
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex ${collapsed ? 'w-20' : 'w-64'} flex-col border-r border-slate-200 bg-white transition-all transition-transform md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-30 flex ${collapsed ? 'w-20 md:overflow-hidden' : 'w-64'} flex-col border-r border-slate-200 bg-white transition-all transition-transform md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex h-14 items-center gap-2 border-b border-slate-200 px-4">
           <Menu className="h-5 w-5" />
-          {!collapsed ? <Link to="/" className="font-semibold text-slate-900" onClick={() => setOpen(false)}>Smart Farm</Link> : null}
-          <button
-            type="button"
-            onClick={() => setCollapsed((prev) => !prev)}
-            className="ml-auto hidden rounded-md border border-slate-200 p-1 text-slate-600 hover:bg-slate-100 md:block"
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </button>
+          {!collapsed ? (
+            <Link to="/" className="font-semibold text-slate-900" onClick={() => setOpen(false)}>
+              Smart Farm
+            </Link>
+          ) : null}
         </div>
-        <nav className="flex-1 space-y-5 overflow-y-auto p-3 text-sm">
+        <nav
+          className={`flex-1 space-y-5 p-3 text-sm ${collapsed ? 'overflow-hidden md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden' : 'overflow-y-auto'}`}
+        >
           {[...groupedRoutes.entries()].map(([group, items]) => (
             <div key={group}>
-              {group !== 'main' ? <div className="px-3 pb-2 text-xs font-semibold uppercase text-slate-400">{group}</div> : null}
+              {!collapsed && group !== 'main' ? <div className="px-3 pb-2 text-xs font-semibold uppercase text-slate-400">{group}</div> : null}
               <div className="space-y-1">
                 {items.map((route) => (
                   <NavLink
@@ -61,13 +67,13 @@ export function AppShell() {
                     to={route.path}
                     onClick={() => setOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 ${
+                      `flex items-center ${collapsed ? 'justify-center' : ''} gap-3 rounded-md px-3 py-2 ${
                         isActive ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
                       }`
                     }
                   >
-                    <route.icon className="h-4 w-4" />
-                    {!collapsed ? <span>{route.label}</span> : null}
+                    <route.icon className="h-4 w-4 shrink-0" />
+                    {!collapsed || open ? <span>{route.label}</span> : null}
                   </NavLink>
                 ))}
               </div>
@@ -79,16 +85,16 @@ export function AppShell() {
       {open ? <button aria-label="Close navigation" className="fixed inset-0 z-20 bg-black/20 md:hidden" onClick={() => setOpen(false)} /> : null}
 
       <div className={collapsed ? 'md:pl-20' : 'md:pl-64'}>
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
+        <header className="fixed inset-x-0 top-0 z-10 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:sticky md:inset-auto md:top-0">
           <div className="flex items-center gap-3">
-            <button className="rounded-md border border-slate-200 p-2 md:hidden" onClick={() => setOpen(true)} aria-label="Open navigation">
+            <button className="rounded-md border border-slate-200 p-2" onClick={onHamburgerClick} aria-label="Open navigation">
               <Menu className="h-5 w-5" />
             </button>
             <h1 className="text-lg font-semibold text-slate-900">{pageTitle(location.pathname)}</h1>
           </div>
           <div className="text-xs text-slate-500">All times shown in {timezone}</div>
         </header>
-        <main className="p-4 pb-24 md:p-6">
+        <main className="pt-16 p-4 pb-24 md:p-6 md:pt-6">
           <Outlet />
         </main>
       </div>

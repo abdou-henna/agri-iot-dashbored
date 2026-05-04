@@ -351,3 +351,20 @@ Backend agronomic system is stable and safe for frontend integration.
 - Fertilization form corrected to capture datetime, fertilizer name/type, optional amount/unit, target scope, confidence, and optional notes; saved rows now show those values.
 - Validation: typecheck/build pass locally; manual checks completed for layout overflow/scroll behavior and chart expansion wiring.
 - Limitations: final visual validation still depends on live data density and device viewport testing in runtime.
+
+## Phase 6.2 — Runtime UX Corrections
+
+- Sidebar behavior corrected: mobile drawer now keeps route labels visible, desktop collapsed rail shows icons only, hamburger now handles desktop collapse toggle and mobile drawer open, and collapsed rail hides scrollbar while preserving clickable navigation.
+- Mobile header behavior corrected: top header is fixed on mobile with content offset to avoid overlap, while desktop layout remains unchanged in structure.
+- Logs page enhanced with “Latest upload logs” control: latest `upload_id` is derived from existing `system_events` rows in current view data; control is disabled with message `No upload id available.` when none is present; clearing filters exits latest-upload mode.
+- Cutting entry flow now includes date-only input; blank date resolves to today; submitted `started_at` is generated at local noon and converted to UTC ISO string; cutting list now shows readable dates alongside IDs.
+- Season workflow moved to long-form entry: editable start/end dates, optional notes, target scope/confidence selectors, and explicit save actions for season start/end using existing agronomic events fields (`started_at`, `ended_at`, `notes`, `details`) only.
+- System Health UX improved: opening “View raw payload” now auto-scrolls to the revealed payload section using smooth `scrollIntoView`.
+
+### Validation result
+- Typecheck/build validation for the dashboard completed successfully after these UI/data-entry updates.
+- Manual runtime checks for target interactions were implemented in code paths but still depend on live API data presence for full behavior confirmation.
+
+### Remaining limitations
+- Latest upload mode depends on `upload_id` being present in the currently fetched `system_events` window (same limitation as data freshness/windowing).
+- Season lifecycle still uses the existing phase-mapped backend category (`season_setup`) and existing create-event contract; no backend or schema normalization was introduced in this phase.
