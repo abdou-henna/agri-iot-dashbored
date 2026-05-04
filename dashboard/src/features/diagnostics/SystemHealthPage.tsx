@@ -26,6 +26,12 @@ export function SystemHealthPage() {
   const events = useEvents({ from: range.from, to: range.to, limit: 1000 });
   const rawReadings = useReadings({ from: range.from, to: range.to, limit: 1000 });
 
+  useEffect(() => {
+    if (rawPayload && payloadRef.current) {
+      payloadRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [rawPayload]);
+
   if (status.isLoading || nodes.isLoading) return <LoadingBlock label="Loading system health" />;
   if (status.isError) return <ErrorBlock error={status.error} onRetry={() => status.refetch()} />;
 
@@ -46,12 +52,6 @@ export function SystemHealthPage() {
   });
   const rssiPoints = alignDualSeries(toTimeSeriesPoints(n2Rssi.data, timezone), toTimeSeriesPoints(n3Rssi.data, timezone));
   const snrPoints = alignDualSeries(toTimeSeriesPoints(n2Snr.data, timezone), toTimeSeriesPoints(n3Snr.data, timezone));
-
-  useEffect(() => {
-    if (rawPayload && payloadRef.current) {
-      payloadRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [rawPayload]);
 
   return (
     <div className="space-y-5">

@@ -56,8 +56,12 @@ export function SeasonPage() {
     </div>
 
     <div className="grid grid-cols-2 gap-2">
-      <button className="rounded-md bg-green-600 px-3 py-2 text-white disabled:opacity-50" disabled={isLoading} onClick={async () => {
+      <button className="rounded-md bg-green-600 px-3 py-2 text-white disabled:opacity-50" disabled={Boolean(activeSeason) || isLoading} onClick={async () => {
         setFormError(null);
+        if (activeSeason) {
+          setFormError('Active season exists. End it before starting another.');
+          return;
+        }
         await startSeason({ target_scope: targetScope, started_at: localNoonIsoFromDate(startDate), confidence, notes: notes.trim() || null, details: {} });
       }}>Save season start</button>
       <button className="rounded-md bg-red-600 px-3 py-2 text-white disabled:opacity-50" disabled={!activeSeason || isLoading} onClick={async () => {
