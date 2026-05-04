@@ -338,3 +338,16 @@ Backend agronomic system is stable and safe for frontend integration.
 ### Next Step
 - Phase 5.1: Contract alignment and cleanup
 - Phase 6: Agronomic analytics and insights
+
+## Phase 6 — Agronomic Insights
+- Insights page is implemented for agronomic analytics workflows, including irrigation versus soil moisture trend interpretation and cutting/yield summaries.
+- Reliability summary is included using existing confidence/status context from current frontend data sources.
+- Phase 6 reuses existing dashboard APIs and agronomic endpoints; no backend or schema changes were introduced.
+- Validation status: implemented in dashboard UI flow, with runtime behavior dependent on available production data windows.
+
+## Phase 6.1 — Dashboard UX Refinement
+- Sidebar UX refined with desktop collapse/expand, localStorage persistence, and vertical scrolling in desktop/mobile navigation containers.
+- Major chart cards in Soil, Weather, and Comparison now support fullscreen expansion with mobile-readable modal sizing.
+- Fertilization form corrected to capture datetime, fertilizer name/type, optional amount/unit, target scope, confidence, and optional notes; saved rows now show those values.
+- Validation: typecheck/build pass locally; manual checks completed for layout overflow/scroll behavior and chart expansion wiring.
+- Limitations: final visual validation still depends on live data density and device viewport testing in runtime.
