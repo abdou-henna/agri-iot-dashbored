@@ -34,6 +34,7 @@ export const routes: AppRoute[] = [
   { path: '/agronomy/cutting-yield', label: 'Cutting & Yield', group: 'Agronomy', icon: ClipboardList },
   { path: '/agronomy/fertilization', label: 'Fertilization', group: 'Agronomy', icon: Gauge },
   { path: '/agronomy/field-notes', label: 'Field Notes', group: 'Agronomy', icon: NotebookText },
+  { path: '/agronomy/insights', label: 'Insights', group: 'Agronomy', icon: BarChart3 },
   { path: '/diagnostics/uploads', label: 'Upload History', group: 'Diagnostics', icon: UploadCloud },
   { path: '/diagnostics/logs', label: 'Logs / Events', group: 'Diagnostics', icon: FileClock },
   { path: '/diagnostics/system-health', label: 'System Health', group: 'Diagnostics', icon: Stethoscope },

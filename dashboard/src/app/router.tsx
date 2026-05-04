@@ -4,6 +4,7 @@ import { AgronomyPage } from '../features/agronomy/AgronomyPage';
 import { CuttingYieldPage } from '../features/agronomy/CuttingYieldPage';
 import { FertilizationPage } from '../features/agronomy/FertilizationPage';
 import { FieldNotesPage } from '../features/agronomy/FieldNotesPage';
+import { InsightsPage } from '../features/agronomy/InsightsPage';
 import { SeasonPage } from '../features/agronomy/SeasonPage';
 import { ComparisonPage } from '../features/comparison/ComparisonPage';
 import { LogsPage } from '../features/diagnostics/LogsPage';
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: '/agronomy/cutting-yield', element: <CuttingYieldPage /> },
       { path: '/agronomy/fertilization', element: <FertilizationPage /> },
       { path: '/agronomy/field-notes', element: <FieldNotesPage /> },
+      { path: '/agronomy/insights', element: <InsightsPage /> },
       { path: '/diagnostics/uploads', element: <UploadsPage /> },
       { path: '/diagnostics/logs', element: <LogsPage /> },
       { path: '/diagnostics/system-health', element: <SystemHealthPage /> },
