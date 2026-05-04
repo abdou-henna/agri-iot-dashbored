@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useTimeZone, type TimeZoneMode } from '../../hooks/useTimeZone';
+import { rangeForPreset } from '../../utils/time';
+import { useDataExport, type ExportDataset } from '../../hooks/useDataExport';
 
 export function SettingsPage() {
   const { mode, timezone, setMode } = useTimeZone();
   const [defaultRange, setDefaultRange] = useState(() => window.localStorage.getItem('smartFarm.defaultRange') ?? '24h');
   const [theme, setTheme] = useState(() => window.localStorage.getItem('smartFarm.chartTheme') ?? 'light');
+  const [exportPreset, setExportPreset] = useState<'24h' | '7d' | '30d' | 'custom'>('24h');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+  const [selectedDataset, setSelectedDataset] = useState<ExportDataset | 'all'>('sensor_readings');
+  const { isExporting, error: exportError, message: exportMessage, exportNote, runExport } = useDataExport();
 
   useEffect(() => {
     window.localStorage.setItem('smartFarm.defaultRange', defaultRange);
@@ -40,7 +47,64 @@ export function SettingsPage() {
           <option value="dark">Dark</option>
         </select>
       </section>
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="font-semibold text-slate-900">Data Export</h2>
+        <p className="mt-1 text-sm text-slate-500">Download CSV snapshots of stored dashboard data. Each domain is exported separately to preserve data semantics.</p>
+        <div className="mt-3 grid gap-2">
+          <label className="text-sm font-medium text-slate-700">Date range</label>
+          <select className="w-full rounded-md border border-slate-200 px-3 py-2" value={exportPreset} onChange={(event) => setExportPreset(event.target.value as typeof exportPreset)}>
+            <option value="24h">Last 24h</option>
+            <option value="7d">Last 7d</option>
+            <option value="30d">Last 30d</option>
+            <option value="custom">Custom</option>
+          </select>
+          {exportPreset === 'custom' ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <input type="datetime-local" className="w-full rounded-md border border-slate-200 px-3 py-2" value={customFrom} onChange={(event) => setCustomFrom(event.target.value)} />
+              <input type="datetime-local" className="w-full rounded-md border border-slate-200 px-3 py-2" value={customTo} onChange={(event) => setCustomTo(event.target.value)} />
+            </div>
+          ) : null}
+          <label className="mt-2 text-sm font-medium text-slate-700">Dataset</label>
+          <select className="w-full rounded-md border border-slate-200 px-3 py-2" value={selectedDataset} onChange={(event) => setSelectedDataset(event.target.value as ExportDataset)}>
+            <option value="sensor_readings">Sensor readings</option>
+            <option value="system_events">System events</option>
+            <option value="uploads">Uploads</option>
+            <option value="agronomic_events">Agronomic events</option>
+            <option value="all">All datasets</option>
+          </select>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <button
+              className="rounded-md bg-slate-900 px-3 py-2 text-white disabled:opacity-50"
+              disabled={isExporting}
+              onClick={async () => {
+                const range = exportPreset === 'custom'
+                  ? { from: customFrom ? new Date(customFrom).toISOString() : '', to: customTo ? new Date(customTo).toISOString() : '' }
+                  : rangeForPreset(exportPreset);
+                if (!range.from || !range.to) return;
+                await runExport(selectedDataset === 'all' ? ['sensor_readings', 'system_events', 'uploads', 'agronomic_events'] : [selectedDataset], range.from, range.to);
+              }}
+            >
+              {isExporting ? 'Exporting...' : 'Export selected'}
+            </button>
+            <button
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 disabled:opacity-50"
+              disabled={isExporting}
+              onClick={async () => {
+                const range = exportPreset === 'custom'
+                  ? { from: customFrom ? new Date(customFrom).toISOString() : '', to: customTo ? new Date(customTo).toISOString() : '' }
+                  : rangeForPreset(exportPreset);
+                if (!range.from || !range.to) return;
+                await runExport(['sensor_readings', 'system_events', 'uploads', 'agronomic_events'], range.from, range.to);
+              }}
+            >
+              Export all
+            </button>
+          </div>
+          <p className="text-xs text-slate-500">{exportNote}</p>
+          {exportError ? <p className="text-sm text-red-600">{exportError}</p> : null}
+          {exportMessage ? <p className="text-sm text-green-700">{exportMessage}</p> : null}
+        </div>
+      </section>
     </div>
   );
 }
-

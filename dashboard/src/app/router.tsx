@@ -1,7 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
-import { StubPage } from '../features/agronomy/StubPage';
 import { AgronomyPage } from '../features/agronomy/AgronomyPage';
+import { CuttingYieldPage } from '../features/agronomy/CuttingYieldPage';
+import { FertilizationPage } from '../features/agronomy/FertilizationPage';
+import { FieldNotesPage } from '../features/agronomy/FieldNotesPage';
+import { SeasonPage } from '../features/agronomy/SeasonPage';
 import { ComparisonPage } from '../features/comparison/ComparisonPage';
 import { LogsPage } from '../features/diagnostics/LogsPage';
 import { SystemHealthPage } from '../features/diagnostics/SystemHealthPage';
@@ -21,10 +24,10 @@ export const router = createBrowserRouter([
       { path: '/soil/pivot-2', element: <SoilPage nodeId="N2" /> },
       { path: '/soil/comparison', element: <ComparisonPage /> },
       { path: '/weather', element: <WeatherPage /> },
-      { path: '/agronomy/field-setup', element: <StubPage title="Field Setup / Season" /> },
-      { path: '/agronomy/cutting-yield', element: <StubPage title="Cutting & Yield" /> },
-      { path: '/agronomy/fertilization', element: <StubPage title="Fertilization" /> },
-      { path: '/agronomy/field-notes', element: <StubPage title="Field Notes" /> },
+      { path: '/agronomy/field-setup', element: <SeasonPage /> },
+      { path: '/agronomy/cutting-yield', element: <CuttingYieldPage /> },
+      { path: '/agronomy/fertilization', element: <FertilizationPage /> },
+      { path: '/agronomy/field-notes', element: <FieldNotesPage /> },
       { path: '/diagnostics/uploads', element: <UploadsPage /> },
       { path: '/diagnostics/logs', element: <LogsPage /> },
       { path: '/diagnostics/system-health', element: <SystemHealthPage /> },
