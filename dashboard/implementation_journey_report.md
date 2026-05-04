@@ -307,8 +307,8 @@ Backend agronomic system is stable and safe for frontend integration.
 
 ## Phase 5 — Agronomic Events (Frontend + Integration)
 
-### Status
-- Phase 5 frontend implementation: COMPLETE
+  ### Status
+  - Phase 5 frontend implementation: COMPLETE
 - Phase 5 backend reuse: COMPLETE (no schema changes)
 - All agronomic events use canonical agronomic_events table
 
