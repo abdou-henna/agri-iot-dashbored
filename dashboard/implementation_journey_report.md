@@ -304,3 +304,37 @@ Based strictly on current `dashboard/src`:
 
 Conclusion:
 Backend agronomic system is stable and safe for frontend integration.
+
+## Phase 5 — Agronomic Events (Frontend + Integration)
+
+### Status
+- Phase 5 frontend implementation: COMPLETE
+- Phase 5 backend reuse: COMPLETE (no schema changes)
+- All agronomic events use canonical agronomic_events table
+
+### Implemented
+- Season management (start/end)
+- Cutting events
+- Yield records (linked to cutting)
+- Fertilization events
+- Field notes
+
+### Architecture Compliance
+- No new tables introduced
+- No domain mixing (sensor_readings, system_events, uploads, agronomic_events remain isolated)
+- All events follow canonical model:
+  event_category · event_type · target_scope · started_at · ended_at · details · notes · confidence
+
+### Known Technical Debt (Deferred to Phase 5.1)
+- Frontend uses "season" mapped to backend "season_setup"
+- Hook name useAgronomyPhase5 is phase-specific
+- Yield-to-cutting linkage depends on details.cutting_id enforcement
+
+### Validation Status
+- TypeScript: PASS
+- Build: PASS (non-blocking warnings only)
+- Runtime validation: pending final confirmation with production data
+
+### Next Step
+- Phase 5.1: Contract alignment and cleanup
+- Phase 6: Agronomic analytics and insights
