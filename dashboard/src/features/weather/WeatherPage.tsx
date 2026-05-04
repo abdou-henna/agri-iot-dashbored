@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Maximize2 } from 'lucide-react';
 import {
   ChartFrame,
   DailyBandChart,
@@ -6,6 +7,7 @@ import {
   MetricLineChart,
   StatusDistributionChart,
   TimeRangeSelector,
+  ChartExpandModal,
 } from '../../components/charts/BasicCharts';
 import { COLORS } from '../../config/constants';
 import { useReadingAggregates } from '../../hooks/useReadingAggregates';
@@ -40,6 +42,7 @@ function avgText(value: number | null | undefined, digits = 1) {
 
 export function WeatherPage() {
   const [preset, setPreset] = useState<'24h' | '7d' | '30d'>('24h');
+  const [expandedChart, setExpandedChart] = useState<string | null>(null);
   const { timezone } = useTimeZone();
   const range = useMemo(() => rangeForPreset(preset), [preset]);
   const temp = useReadingAggregates('N3', 'air_temperature_c', range);
@@ -87,11 +90,28 @@ export function WeatherPage() {
         ))}
       </section>
       {weatherMetrics.map(([metric, label, domain], index) => (
-        <ChartFrame key={metric} title={label}>
+        <ChartFrame key={metric} title={label} actions={<button className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700" onClick={() => setExpandedChart(metric)}><Maximize2 className="h-3.5 w-3.5" /></button>}>
           <MetricLineChart points={toTimeSeriesPoints(queries[index].data, timezone)} color={COLORS.weather} yDomain={domain} />
           <DataConfidenceStrip />
         </ChartFrame>
       ))}
+
+
+      <ChartExpandModal
+        open={Boolean(expandedChart)}
+        title={weatherMetrics.find(([metric]) => metric === expandedChart)?.[1] ?? 'Expanded chart'}
+        onClose={() => setExpandedChart(null)}
+        controls={<TimeRangeSelector value={preset} onChange={setPreset} />}
+      >
+        {expandedChart ? (
+          <MetricLineChart
+            points={toTimeSeriesPoints(queries[weatherMetrics.findIndex(([metric]) => metric === expandedChart)].data, timezone)}
+            color={COLORS.weather}
+            yDomain={weatherMetrics.find(([metric]) => metric === expandedChart)?.[2]}
+            heightClassName="h-[68vh]"
+          />
+        ) : null}
+      </ChartExpandModal>
 
       <div className="grid gap-5 xl:grid-cols-3">
         <ChartFrame title="Daily Air Temperature Summary">

@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useEffect } from 'react';
 import { COLORS } from '../../config/constants';
 import type { TimeSeriesPoint } from '../../types/readings';
 
@@ -259,6 +260,51 @@ export function TimeRangeSelector({
       <button className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-400" disabled title="Custom range is reserved for a later phase">
         Custom
       </button>
+    </div>
+  );
+}
+
+export function ChartExpandModal({
+  open,
+  title,
+  onClose,
+  controls,
+  children,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  controls?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEsc);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = '';
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-2 md:items-center md:p-6" role="dialog" aria-modal="true">
+      <button className="absolute inset-0" aria-label="Close expanded chart" onClick={onClose} />
+      <div className="relative z-10 max-h-[95vh] w-full overflow-y-auto rounded-lg bg-white p-4 md:p-6">
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h3 className="text-base font-semibold text-slate-900 md:text-lg">{title}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            {controls}
+            <button className="rounded-md border border-slate-200 px-3 py-2 text-sm" onClick={onClose}>Close</button>
+          </div>
+        </div>
+        {children}
+      </div>
     </div>
   );
 }

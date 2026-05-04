@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Maximize2 } from 'lucide-react';
 import {
   ChartFrame,
   DailyBandChart,
@@ -6,6 +7,7 @@ import {
   MetricLineChart,
   StatusDistributionChart,
   TimeRangeSelector,
+  ChartExpandModal,
 } from '../../components/charts/BasicCharts';
 import { ErrorBlock, LoadingBlock } from '../../components/feedback/States';
 import { COLORS } from '../../config/constants';
@@ -41,6 +43,7 @@ function avgText(value: number | null | undefined, digits = 1) {
 
 export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> }) {
   const [preset, setPreset] = useState<'24h' | '7d' | '30d'>('24h');
+  const [expandedChart, setExpandedChart] = useState<string | null>(null);
   const { timezone } = useTimeZone();
   const range = useMemo(() => rangeForPreset(preset), [preset]);
   const color = nodeId === 'MAIN' ? COLORS.pivot1 : COLORS.pivot2;
@@ -107,7 +110,7 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
       </section>
 
       {soilMetrics.map(([metric, label, domain], index) => (
-        <ChartFrame key={metric} title={label}>
+        <ChartFrame key={metric} title={label} actions={<button className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700" onClick={() => setExpandedChart(metric)}><Maximize2 className="h-3.5 w-3.5" /></button>}>
           {metricQueries[index].isLoading ? <LoadingBlock /> : null}
           <MetricLineChart points={toTimeSeriesPoints(metricData[index], timezone)} color={color} yDomain={domain} />
           <DataConfidenceStrip />
@@ -155,6 +158,23 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
       <ChartFrame title="Reading Status Distribution">
         <StatusDistributionChart points={statusRows} />
       </ChartFrame>
+
+
+      <ChartExpandModal
+        open={Boolean(expandedChart)}
+        title={soilMetrics.find(([metric]) => metric === expandedChart)?.[1] ?? 'Expanded chart'}
+        onClose={() => setExpandedChart(null)}
+        controls={<TimeRangeSelector value={preset} onChange={setPreset} />}
+      >
+        {expandedChart ? (
+          <MetricLineChart
+            points={toTimeSeriesPoints(metricData[soilMetrics.findIndex(([metric]) => metric === expandedChart)], timezone)}
+            color={color}
+            yDomain={soilMetrics.find(([metric]) => metric === expandedChart)?.[2]}
+            heightClassName="h-[68vh]"
+          />
+        ) : null}
+      </ChartExpandModal>
 
       {nodeId === 'N2' ? (
         <>
