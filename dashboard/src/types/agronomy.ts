@@ -22,9 +22,10 @@ export interface YieldDetails extends Record<string, unknown> {
   yield_unit: string;
 }
 export interface FertilizationDetails extends Record<string, unknown> {
-  fertilizer_type: string;
-  amount: number;
-  unit: string;
+  fertilizer_name?: string;
+  fertilizer_type?: string;
+  amount?: number;
+  unit?: string;
 }
 
 export interface AgronomicEvent {
