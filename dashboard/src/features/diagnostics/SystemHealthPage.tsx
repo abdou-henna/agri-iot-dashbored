@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getReadingByRecordId } from '../../api/readings.api';
 import { ChartFrame, DualMetricChart } from '../../components/charts/BasicCharts';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/States';
@@ -17,6 +17,7 @@ export function SystemHealthPage() {
   const status = useStatus();
   const nodes = useNodes();
   const [rawPayload, setRawPayload] = useState<Record<string, unknown> | null>(null);
+  const payloadRef = useRef<HTMLElement | null>(null);
   const range = useMemo(() => ({ from: new Date(Date.now() - 30 * 24 * 3_600_000).toISOString(), to: new Date().toISOString() }), []);
   const n2Rssi = useReadingAggregates('N2', 'rssi', range);
   const n3Rssi = useReadingAggregates('N3', 'rssi', range);
@@ -24,6 +25,12 @@ export function SystemHealthPage() {
   const n3Snr = useReadingAggregates('N3', 'snr', range);
   const events = useEvents({ from: range.from, to: range.to, limit: 1000 });
   const rawReadings = useReadings({ from: range.from, to: range.to, limit: 1000 });
+
+  useEffect(() => {
+    if (rawPayload && payloadRef.current) {
+      payloadRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [rawPayload]);
 
   if (status.isLoading || nodes.isLoading) return <LoadingBlock label="Loading system health" />;
   if (status.isError) return <ErrorBlock error={status.error} onRetry={() => status.refetch()} />;
@@ -108,7 +115,7 @@ export function SystemHealthPage() {
         </div>
       </section>
       {rawPayload ? (
-        <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <section ref={payloadRef} className="rounded-lg border border-slate-200 bg-white p-4">
           <h3 className="font-semibold text-slate-900">Raw Payload</h3>
           <pre className="mt-2 overflow-auto rounded-md bg-slate-50 p-3 text-xs">{JSON.stringify(rawPayload, null, 2)}</pre>
         </section>

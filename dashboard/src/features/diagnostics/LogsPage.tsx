@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useEventsAggregate } from '../../hooks/useEventsAggregate';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/States';
@@ -38,6 +38,20 @@ export function LogsPage() {
     group_by: 'severity',
   });
   const histogramRows = histogram.data?.points?.slice(0, 30) ?? [];
+  const eventRows = events.data?.events ?? [];
+  const latestUploadId = useMemo(() => {
+    for (const event of eventRows) {
+      if (event.upload_id) return event.upload_id;
+    }
+    return '';
+  }, [eventRows]);
+  const [latestUploadOnly, setLatestUploadOnly] = useState(false);
+
+  useEffect(() => {
+    if (latestUploadOnly && latestUploadId) {
+      setUploadId(latestUploadId);
+    }
+  }, [latestUploadOnly, latestUploadId]);
 
   return (
     <div className="space-y-5">
@@ -88,6 +102,22 @@ export function LogsPage() {
           <input className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm" placeholder="Event Type" value={eventType} onChange={(event) => setEventType(event.target.value)} />
           <input className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm" placeholder="Error Code" value={errorCode} onChange={(event) => setErrorCode(event.target.value)} />
           <button
+            type="button"
+            disabled={!latestUploadId}
+            title={!latestUploadId ? 'No upload id available.' : ''}
+            className={`h-9 min-w-0 max-w-full whitespace-nowrap rounded-md border px-3 text-sm ${
+              latestUploadOnly ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'
+            } disabled:cursor-not-allowed disabled:opacity-60`}
+            onClick={() => {
+              if (!latestUploadId) return;
+              setLatestUploadOnly((prev) => !prev);
+              if (!latestUploadOnly) setUploadId(latestUploadId);
+            }}
+          >
+            Latest upload logs
+          </button>
+          {!latestUploadId ? <div className="text-xs text-slate-500">No upload id available.</div> : null}
+          <button
             className="h-9 min-w-0 max-w-full whitespace-nowrap rounded-md border border-slate-300 px-3 text-sm md:justify-self-end"
             onClick={() => {
               setSelectedSeverities(severities);
@@ -95,6 +125,7 @@ export function LogsPage() {
               setUploadId('');
               setEventType('');
               setErrorCode('');
+              setLatestUploadOnly(false);
             }}
           >
             Clear filters
