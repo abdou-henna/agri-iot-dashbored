@@ -563,6 +563,7 @@ Backend agronomic system is stable and safe for frontend integration.
 
 
 ## Phase 8.6–8.7 — Multi-snapshot Comparison and Production Hardening
+- Final Safety/UX Patch: restored full structured AI output UI sections/actions, restored backend safety prompt constraints, retained multi-snapshot comparison plus frontend/backend timeout hardening, no schema/migration/raw-data/deterministic formula changes, and validations passed.
 - Added MAIN/N2 pivot comparison with optional N3 weather context in multi-snapshot AI input.
 - Added multi-snapshot reliability gate with missing/invalid/low-quality limitations.
 - Added stale-result clearing, duplicate request prevention, and 30s frontend timeout.
