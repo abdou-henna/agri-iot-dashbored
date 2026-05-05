@@ -1,0 +1,39 @@
+import type { AnalyticsSnapshot } from '../../types/analytics';
+import type { GeminiReliabilityGateResult } from '../../utils/ai/geminiReliabilityGate';
+
+interface GeminiReliabilityGateProps {
+  gate: GeminiReliabilityGateResult;
+  snapshot: AnalyticsSnapshot | null;
+}
+
+const toneClasses: Record<GeminiReliabilityGateResult['mode'], string> = {
+  allowed: 'border-sky-200 bg-sky-50 text-sky-900',
+  caution: 'border-amber-200 bg-amber-50 text-amber-900',
+  blocked: 'border-slate-300 bg-slate-100 text-slate-800',
+};
+
+export function GeminiReliabilityGate({ gate, snapshot }: GeminiReliabilityGateProps) {
+  const expectedCount = snapshot?.quality.expected_count;
+  const missingCount = snapshot?.quality.missing_count;
+
+  return (
+    <div className={`mb-4 rounded-md border p-3 text-sm ${toneClasses[gate.mode]}`}>
+      <div className="mb-2 flex items-center gap-2">
+        <span className="rounded-full border border-current/25 px-2 py-0.5 text-xs font-semibold">{gate.badgeLabel}</span>
+        <span className="text-xs">Reliability gate</span>
+      </div>
+      <p className="mb-2">{gate.reason}</p>
+      <ul className="mb-2 list-disc space-y-1 pl-5">
+        {gate.limitations.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+      <div className="flex flex-wrap gap-2 text-xs">
+        <span className="rounded-full bg-white/70 px-2 py-1">Reliability level: {snapshot?.quality.reliability_level ?? 'invalid'}</span>
+        <span className="rounded-full bg-white/70 px-2 py-1">Reliability score: {snapshot?.quality.reliability_score ?? 'n/a'}</span>
+        {typeof expectedCount === 'number' ? <span className="rounded-full bg-white/70 px-2 py-1">Missing: {missingCount}/{expectedCount}</span> : null}
+        {typeof snapshot?.quality.qc_flag_count === 'number' ? <span className="rounded-full bg-white/70 px-2 py-1">QC flags: {snapshot.quality.qc_flag_count}</span> : null}
+      </div>
+    </div>
+  );
+}

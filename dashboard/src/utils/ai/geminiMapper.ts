@@ -1,6 +1,7 @@
 import type { AnalyticsSnapshot } from '../../types/analytics';
 import type { GeminiAnalysisType, GeminiInsightInput } from '../../types/gemini';
 import { GEMINI_FORBIDDEN_CLAIMS } from '../../config/geminiPrompts';
+import { evaluateGeminiReliabilityGate } from './geminiReliabilityGate';
 
 interface BuildGeminiInsightOptions {
   analysis_type?: GeminiAnalysisType;
@@ -12,13 +13,15 @@ interface BuildGeminiInsightOptions {
 }
 
 export function buildGeminiInsightInput(snapshot: AnalyticsSnapshot, options: BuildGeminiInsightOptions = {}): GeminiInsightInput {
+  const gate = evaluateGeminiReliabilityGate(snapshot);
   const reliabilityLevel = snapshot.quality.reliability_level ?? 'invalid';
   const missingPct = snapshot.quality.expected_count
     ? snapshot.quality.missing_count / Math.max(1, snapshot.quality.expected_count)
     : 0;
 
-  const limitations = new Set<string>();
+  const limitations = new Set<string>(gate.limitations);
   if (reliabilityLevel === 'invalid') limitations.add('No reliable conclusion can be drawn.');
+  if (reliabilityLevel === 'low') limitations.add('Snapshot reliability is low; interpretation confidence must remain limited.');
   if (missingPct >= 0.2) limitations.add(`High missing data (${Math.round(missingPct * 100)}%) limits interpretation quality.`);
   if (options.calibration_present === false) limitations.add('No calibration metadata; water-stress threshold claims are forbidden.');
 

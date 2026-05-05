@@ -550,3 +550,13 @@ Backend agronomic system is stable and safe for frontend integration.
 - Confirmed no backend/schema/raw-data changes and no AI alerting/persistence behavior.
 - Validation: typecheck/build and prohibited-keyword scan pass.
 - Known limitations: farm_summary and pivot_comparison remain limited by single-snapshot input; interpretation quality depends on snapshot reliability and backend proxy availability.
+
+## Phase 8.5 — Reliability-Aware AI Behavior
+- Added a dedicated reliability gate utility for Gemini that classifies snapshot contexts into allowed, caution, or blocked and emits explicit limitations.
+- Added a reliability gate UI panel in the AI interpretation section showing mode, reason, reliability metadata, and safety limitations.
+- Generation is blocked when no snapshot exists or reliability is invalid; generation remains allowed with caution for low and medium reliability.
+- Gemini input now carries reliability-driven limitations (invalid/low reliability, high missing data, QC flags, low score, deterministic alerts precedence).
+- No deterministic reliability/alert formula changes were made.
+- No backend, schema, migration, or raw-data write changes were made.
+- Validation: frontend typecheck and build pass after implementation.
+- Known limitations: reliability gate constrains interpretation confidence but still depends on available snapshot feature completeness.
