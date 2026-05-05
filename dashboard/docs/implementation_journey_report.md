@@ -449,3 +449,12 @@ Backend agronomic system is stable and safe for frontend integration.
 - Validation result: dashboard typecheck/build pass with the new delta foundation; backend readings API required no change because `from` already maps to `measured_at >= from`.
 - Known limitations: aggregate queries are still computed on logical full window (`from` → `to`) to avoid unsafe partial aggregate semantics in this phase.
 - Next recommended step: add safe aggregate-delta reconciliation and deterministic bucket-level merge/invalidation policy so aggregate compute can also reduce full-window reads.
+
+## Phase 7.z.2 — Incremental Identity Builder Cleanup
+
+- Removed the double analytics snapshot hook pattern in incremental snapshot logic by replacing identity-seeding `useAnalyticsSnapshot` usage with a pure identity builder.
+- Added `buildSensorSnapshotIdentityFromParams` to centralize snapshot identity construction semantics (`domain`, window bounds, bucket normalization, version defaults, and `filters_hash`) without network or React coupling.
+- Preserved immutability guarantees for raw data domains (`sensor_readings`, `system_events`, `uploads`, `agronomic_events`): no writes or mutation paths were introduced.
+- No backend, schema, API wrapper, UI, package, or Gemini/AI scope changes were made.
+- Validation result: TypeScript typecheck and production build both pass after cleanup.
+- Remaining limitation: identity compatibility and delta reuse are still bounded by persisted cursor quality/availability; when cursor is missing/invalid, logic correctly falls back to full logical window computation.

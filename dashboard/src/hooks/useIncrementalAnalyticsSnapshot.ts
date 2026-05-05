@@ -3,7 +3,7 @@ import { getLatestAnalyticsSnapshot, upsertAnalyticsSnapshot, type AnalyticsSnap
 import type { Bucket, MetricKey, NodeId } from '../types/common';
 import type { AnalyticsSnapshot, SnapshotInvalidationReason } from '../types/analytics';
 import type { AnalyticsMetricName, SnapshotBucket, SnapshotDomain } from '../types/analytics';
-import { getDeltaTimeRangeFromCursor, getSnapshotDeltaCursor, isSnapshotReusable, mergeSnapshots } from '../utils/analytics/snapshots';
+import { buildSensorSnapshotIdentityFromParams, getDeltaTimeRangeFromCursor, getSnapshotDeltaCursor, isSnapshotReusable, mergeSnapshots } from '../utils/analytics/snapshots';
 import { useAnalyticsSnapshot } from './useAnalyticsSnapshot';
 
 interface UseIncrementalAnalyticsSnapshotParams {
@@ -15,8 +15,6 @@ interface UseIncrementalAnalyticsSnapshotParams {
 }
 
 export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, bucket }: UseIncrementalAnalyticsSnapshotParams) {
-  const identitySeedSnapshot = useAnalyticsSnapshot({ node_id, metric, from, to, bucket });
-
   const toAnalyticsSnapshot = (record: AnalyticsSnapshotRecord): AnalyticsSnapshot => ({
     snapshot_id: record.snapshot_id,
     identity: {
@@ -40,18 +38,26 @@ export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, buc
     updated_at: record.updated_at,
   });
 
+  const identity = buildSensorSnapshotIdentityFromParams({
+    node_id,
+    metric,
+    from,
+    to,
+    bucket,
+  });
+
   const latestPersistedQuery = useQuery({
-    queryKey: ['analyticsSnapshots', 'latest', identitySeedSnapshot.snapshot.identity],
+    queryKey: ['analyticsSnapshots', 'latest', identity],
     queryFn: () => {
       const filters: LatestAnalyticsSnapshotFilters = {
-        domain: identitySeedSnapshot.snapshot.identity.domain,
-        node_id: identitySeedSnapshot.snapshot.identity.node_id,
-        metric: identitySeedSnapshot.snapshot.identity.metric,
-        bucket: identitySeedSnapshot.snapshot.identity.bucket,
-        analytics_version: identitySeedSnapshot.snapshot.identity.analytics_version,
-        qc_version: identitySeedSnapshot.snapshot.identity.qc_version,
-        calibration_version: identitySeedSnapshot.snapshot.identity.calibration_version,
-        filters_hash: identitySeedSnapshot.snapshot.identity.filters_hash,
+        domain: identity.domain,
+        node_id: identity.node_id,
+        metric: identity.metric,
+        bucket: identity.bucket,
+        analytics_version: identity.analytics_version,
+        qc_version: identity.qc_version,
+        calibration_version: identity.calibration_version,
+        filters_hash: identity.filters_hash,
       };
       return getLatestAnalyticsSnapshot(filters);
     },
@@ -59,7 +65,7 @@ export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, buc
   });
 
   const latestPersistedSnapshot = latestPersistedQuery.data ? toAnalyticsSnapshot(latestPersistedQuery.data) : null;
-  const canReuse = isSnapshotReusable(latestPersistedSnapshot, identitySeedSnapshot.snapshot.identity);
+  const canReuse = isSnapshotReusable(latestPersistedSnapshot, identity);
   const reusableSnapshot = canReuse ? latestPersistedSnapshot : null;
   const deltaCursor = getSnapshotDeltaCursor(reusableSnapshot);
   const deltaRange = reusableSnapshot
