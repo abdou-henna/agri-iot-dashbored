@@ -508,3 +508,13 @@ Backend agronomic system is stable and safe for frontend integration.
   - Heavy query fan-out in `useReliabilityScores`/`useAlertEvaluations` may be expensive for broad windows.
   - Large build chunk warning (`>500 kB`) remains and should be addressed in optimization-focused work.
 - Phase 8 readiness: ready, with recommendation to monitor performance characteristics during broader range usage.
+
+## Phase 8.0 — Gemini Interpretation Foundation
+- Files added: `src/types/gemini.ts`, `src/config/geminiPrompts.ts`, `src/utils/ai/geminiMapper.ts`, `src/api/gemini.api.ts`, `src/hooks/useGeminiInsight.ts`.
+- Gemini input contract consumes Phase 7 processed analytics snapshot summaries only (snapshot identity/quality/features/alerts/reliability), with no raw row forwarding.
+- No raw data mutation was introduced for `sensor_readings`, `system_events`, `uploads`, or `agronomic_events`.
+- No backend schema changes, migrations, or backend endpoint changes were introduced.
+- No UI-first route/page/chart changes were introduced.
+- API key is provided only by environment variable (`VITE_GEMINI_API_KEY`), model default is `VITE_GEMINI_MODEL=gemini-flash-latest`.
+- Validation result: `npm run typecheck` and `npm run build` pass after implementation.
+- Known limitations: Mapper currently depends on existing snapshot `payload.features` availability; absent feature fields are mapped to empty objects with explicit reliability/ET/EC limitations.
