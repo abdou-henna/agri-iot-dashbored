@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useGeminiInsight } from '../../hooks/useGeminiInsight';
 import type { AnalyticsSnapshot } from '../../types/analytics';
 import type { GeminiAnalysisType } from '../../types/gemini';
 import { buildGeminiInsightInput } from '../../utils/ai/geminiMapper';
+import { GeminiReliabilityGate } from './GeminiReliabilityGate';
+import { evaluateGeminiReliabilityGate } from '../../utils/ai/geminiReliabilityGate';
 
 interface GeminiInsightPanelProps {
   snapshot: AnalyticsSnapshot | null;
@@ -38,10 +40,20 @@ export function GeminiInsightPanel({ snapshot, analysisType, timezone = 'UTC', c
     });
   }, [analysisType, snapshot, timezone]);
 
+  const gate = useMemo(() => evaluateGeminiReliabilityGate(snapshot), [snapshot]);
+
   const gemini = useGeminiInsight(input);
   const errorMessage = parseErrorMessage(gemini.error);
   const reliabilityLevel = snapshot?.quality.reliability_level ?? 'invalid';
   const reliabilityScore = snapshot?.quality.reliability_score;
+
+  const canGenerate = gate.canGenerate && !gemini.isLoading && Boolean(snapshot);
+
+  useEffect(() => {
+    if (gate.mode === 'blocked' && gemini.insight) {
+      gemini.clear();
+    }
+  }, [gate.mode, gemini]);
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
@@ -59,12 +71,14 @@ export function GeminiInsightPanel({ snapshot, analysisType, timezone = 'UTC', c
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Window: {windowLabel}</span>
       </div>
 
+      <GeminiReliabilityGate gate={gate} snapshot={snapshot} />
+
       <div className="mb-4 flex flex-wrap gap-2">
-        <button type="button" className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400" onClick={() => void gemini.generate()} disabled={gemini.isLoading || !snapshot}>
+        <button type="button" className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400" onClick={() => void gemini.generate()} disabled={!canGenerate}>
           {gemini.isLoading ? 'Generating...' : 'Generate AI insight'}
         </button>
         {(gemini.isError || gemini.insight) ? (
-          <button type="button" className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 disabled:cursor-not-allowed" onClick={() => void gemini.refetch()} disabled={gemini.isLoading || !snapshot}>
+          <button type="button" className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 disabled:cursor-not-allowed" onClick={() => void gemini.refetch()} disabled={!canGenerate}>
             Retry
           </button>
         ) : null}
@@ -75,9 +89,11 @@ export function GeminiInsightPanel({ snapshot, analysisType, timezone = 'UTC', c
         ) : null}
       </div>
 
-      {!snapshot ? <div className="mb-3 rounded-md bg-slate-50 p-3 text-sm text-slate-700">No snapshot available for current context.</div> : null}
-      {!snapshot && !gemini.isLoading ? null : null}
-      {snapshot && reliabilityLevel === 'low' ? <div className="mb-3 rounded-md bg-slate-50 p-3 text-sm text-slate-700">Low reliability snapshot; interpretation quality may be limited.</div> : null}
+
+      {!gate.canGenerate ? <div className="mb-3 rounded-md bg-slate-50 p-3 text-sm text-slate-700">Generation disabled until data reliability improves or a valid snapshot is available.</div> : null}
+      {gate.mode === 'caution' ? <div className="mb-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">Generated interpretation will be limited and should be treated as low confidence.</div> : null}
+      {gate.mode === 'caution' && gemini.insight?.confidence === 'high' ? <div className="mb-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">Gemini confidence is high, but snapshot reliability limits practical confidence.</div> : null}
+
       {gemini.isLoading ? <div className="mb-3 rounded-md bg-slate-50 p-3 text-sm text-slate-700">Snapshot loading and interpretation in progress.</div> : null}
       {errorMessage ? <div className="mb-3 rounded-md bg-slate-50 p-3 text-sm text-slate-700">{errorMessage}</div> : null}
 
