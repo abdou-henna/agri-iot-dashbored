@@ -26,5 +26,6 @@ export function useGeminiInsight(input: GeminiInsightInput | null, options: UseG
     error: mutation.error instanceof Error ? mutation.error.message : mutation.error ? String(mutation.error) : null,
     generate: mutation.mutateAsync,
     refetch: mutation.mutateAsync,
+    clear: mutation.reset,
   };
 }
