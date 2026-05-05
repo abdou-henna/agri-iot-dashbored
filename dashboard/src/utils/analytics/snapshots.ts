@@ -1,3 +1,4 @@
+import type { Bucket, MetricKey, NodeId } from '../../types/common';
 import type {
   AggregatePoint,
   AnalyticsSnapshot,
@@ -10,6 +11,44 @@ import type {
   SnapshotPayload,
   SnapshotQualitySummary,
 } from '../../types/analytics';
+
+
+
+export interface SensorSnapshotIdentityParams {
+  node_id: NodeId;
+  metric: MetricKey;
+  from: string;
+  to: string;
+  bucket: Bucket;
+  analytics_version?: string;
+  qc_version?: string;
+  calibration_version?: string;
+}
+
+export function buildSensorSnapshotIdentityFromParams({
+  node_id,
+  metric,
+  from,
+  to,
+  bucket,
+  analytics_version = '7.x',
+  qc_version = '7.x',
+  calibration_version,
+}: SensorSnapshotIdentityParams): SnapshotIdentity {
+  const normalizedBucket = bucket === '10min' ? '10min' : bucket === '1hour' ? 'hour' : 'day';
+  return {
+    domain: 'sensor_readings',
+    node_id,
+    metric,
+    window_start: from,
+    window_end: to,
+    bucket: normalizedBucket,
+    analytics_version,
+    qc_version,
+    calibration_version,
+    filters_hash: `${node_id}:${metric}:${from}:${to}:${bucket}`,
+  };
+}
 
 export function buildSnapshotIdentity(identity: SnapshotIdentity): SnapshotIdentity {
   return { ...identity };

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { Bucket, MetricKey, NodeId } from '../types/common';
 import type { AnalyticsMetricName, AnalyticsSnapshot, SnapshotIdentity } from '../types/analytics';
 import { useAnalytics } from './useAnalytics';
-import { getSensorCursorFromReadings } from '../utils/analytics';
+import { buildSensorSnapshotIdentityFromParams, getSensorCursorFromReadings } from '../utils/analytics';
 
 interface UseAnalyticsSnapshotParams {
   node_id: NodeId;
@@ -11,12 +11,6 @@ interface UseAnalyticsSnapshotParams {
   to: string;
   bucket: Bucket;
   effectiveFrom?: string;
-}
-
-function normalizeBucket(bucket: Bucket): '10min' | 'hour' | 'day' {
-  if (bucket === '10min') return '10min';
-  if (bucket === '1hour') return 'hour';
-  return 'day';
 }
 
 export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effectiveFrom }: UseAnalyticsSnapshotParams) {
@@ -40,17 +34,13 @@ export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effect
       reliability_score: undefined,
     };
 
-    const identity: SnapshotIdentity = {
-      domain: 'sensor_readings',
+    const identity: SnapshotIdentity = buildSensorSnapshotIdentityFromParams({
       node_id,
       metric,
-      window_start: from,
-      window_end: to,
-      bucket: normalizeBucket(bucket),
-      analytics_version: '7.x',
-      qc_version: '7.x',
-      filters_hash: `${node_id}:${metric}:${from}:${to}:${bucket}`,
-    };
+      from,
+      to,
+      bucket,
+    });
 
     return {
       snapshot_id: [identity.domain, identity.node_id ?? 'all', identity.metric ?? 'all', identity.window_start, identity.window_end, identity.bucket, identity.analytics_version, identity.qc_version, identity.calibration_version ?? 'none', identity.filters_hash].join(':'),
