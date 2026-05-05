@@ -560,3 +560,14 @@ Backend agronomic system is stable and safe for frontend integration.
 - No backend, schema, migration, or raw-data write changes were made.
 - Validation: frontend typecheck and build pass after implementation.
 - Known limitations: reliability gate constrains interpretation confidence but still depends on available snapshot feature completeness.
+
+
+## Phase 8.6–8.7 — Multi-snapshot Comparison and Production Hardening
+- Final Safety/UX Patch: restored full structured AI output UI sections/actions, restored backend safety prompt constraints, retained multi-snapshot comparison plus frontend/backend timeout hardening, no schema/migration/raw-data/deterministic formula changes, and validations passed.
+- Added MAIN/N2 pivot comparison with optional N3 weather context in multi-snapshot AI input.
+- Added multi-snapshot reliability gate with missing/invalid/low-quality limitations.
+- Added stale-result clearing, duplicate request prevention, and 30s frontend timeout.
+- Added backend 30s upstream timeout with safe gemini_timeout normalization and payload size guard.
+- Kept deterministic formulas, schema, and raw data handling unchanged.
+- Validation: typecheck/build pass and frontend key-pattern scan pass.
+- Known limitations: no AI persistence, no additional rate limiting, quality depends on snapshot availability/reliability/proxy uptime.

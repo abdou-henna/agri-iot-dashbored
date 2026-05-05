@@ -3,11 +3,13 @@ import { useGeminiInsight } from '../../hooks/useGeminiInsight';
 import type { AnalyticsSnapshot } from '../../types/analytics';
 import type { GeminiAnalysisType } from '../../types/gemini';
 import { buildGeminiInsightInput } from '../../utils/ai/geminiMapper';
+import { buildGeminiMultiSnapshotInsightInput } from '../../utils/ai/geminiMultiSnapshotMapper';
 import { GeminiReliabilityGate } from './GeminiReliabilityGate';
-import { evaluateGeminiReliabilityGate } from '../../utils/ai/geminiReliabilityGate';
+import { evaluateGeminiMultiSnapshotReliabilityGate, evaluateGeminiReliabilityGate } from '../../utils/ai/geminiReliabilityGate';
 
 interface GeminiInsightPanelProps {
   snapshot: AnalyticsSnapshot | null;
+  comparisonSnapshots?: Array<{ scopeLabel: string; snapshot: AnalyticsSnapshot | null }>;
   analysisType: GeminiAnalysisType;
   timezone?: string;
   contextLabel: string;
@@ -15,45 +17,30 @@ interface GeminiInsightPanelProps {
   scopeLabel: string;
 }
 
-function parseErrorMessage(error: string | null): string | null {
-  if (!error) return null;
-  if (error.includes('missing_gemini_api_key')) return 'Backend proxy is missing Gemini API key configuration.';
-  if (error.toLowerCase().includes('invalid insight response shape')) return 'Invalid output shape returned by backend proxy. Retry later.';
-  if (error.toLowerCase().includes('http')) return 'Backend proxy HTTP error while generating interpretation.';
-  return 'Unable to generate interpretation due to a temporary failure.';
-}
-
 function renderList(items: string[]) {
   if (!items.length) return <p className="mt-1 text-slate-500">No items returned.</p>;
   return <ul className="mt-1 list-disc space-y-1 pl-5 text-slate-700">{items.map((item) => <li key={item}>{item}</li>)}</ul>;
 }
 
-export function GeminiInsightPanel({ snapshot, analysisType, timezone = 'UTC', contextLabel, windowLabel, scopeLabel }: GeminiInsightPanelProps) {
-  const input = useMemo(() => {
-    if (!snapshot) return null;
-    return buildGeminiInsightInput(snapshot, {
-      analysis_type: analysisType,
-      timezone: timezone ?? 'UTC',
-      crop: 'alfalfa',
-      season_status: 'unknown',
-      calibration_present: false,
-    });
-  }, [analysisType, snapshot, timezone]);
+export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysisType, timezone = 'UTC', contextLabel, windowLabel, scopeLabel }: GeminiInsightPanelProps) {
+  const isMulti = analysisType === 'pivot_comparison' || analysisType === 'farm_summary';
+  const gate = useMemo(
+    () => (isMulti ? evaluateGeminiMultiSnapshotReliabilityGate(comparisonSnapshots.map((item) => item.snapshot)) : evaluateGeminiReliabilityGate(snapshot)),
+    [comparisonSnapshots, isMulti, snapshot],
+  );
 
-  const gate = useMemo(() => evaluateGeminiReliabilityGate(snapshot), [snapshot]);
+  const input = useMemo(() => {
+    if (isMulti) return buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots: comparisonSnapshots });
+    if (!snapshot) return null;
+    return buildGeminiInsightInput(snapshot, { analysis_type: analysisType, timezone, crop: 'alfalfa', season_status: 'unknown', calibration_present: false });
+  }, [analysisType, comparisonSnapshots, isMulti, snapshot, timezone]);
 
   const gemini = useGeminiInsight(input);
-  const errorMessage = parseErrorMessage(gemini.error);
-  const reliabilityLevel = snapshot?.quality.reliability_level ?? 'invalid';
-  const reliabilityScore = snapshot?.quality.reliability_score;
+  useEffect(() => { gemini.clear(); }, [analysisType, contextLabel, scopeLabel, windowLabel]);
 
-  const canGenerate = gate.canGenerate && !gemini.isLoading && Boolean(snapshot);
-
-  useEffect(() => {
-    if (gate.mode === 'blocked' && gemini.insight) {
-      gemini.clear();
-    }
-  }, [gate.mode, gemini]);
+  const canGenerate = gate.canGenerate && !gemini.isLoading && Boolean(input);
+  const includedSnapshots = comparisonSnapshots.filter((item) => item.snapshot).map((item) => item.scopeLabel);
+  const missingSnapshots = comparisonSnapshots.filter((item) => !item.snapshot).map((item) => item.scopeLabel);
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
@@ -64,11 +51,14 @@ export function GeminiInsightPanel({ snapshot, analysisType, timezone = 'UTC', c
       </div>
 
       <div className="mb-3 flex flex-wrap gap-2 text-xs">
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Reliability: {reliabilityLevel}</span>
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Reliability score: {reliabilityScore ?? 'n/a'}</span>
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Reliability mode: {gate.mode}</span>
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Reliability level: {snapshot?.quality.reliability_level ?? 'mixed'}</span>
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Gemini confidence: {gemini.insight?.confidence ?? 'n/a'}</span>
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Scope: {scopeLabel}</span>
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Window: {windowLabel}</span>
+        {isMulti ? <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Included snapshots: {includedSnapshots.length}</span> : null}
+        {isMulti ? <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Included: {includedSnapshots.length ? includedSnapshots.join(', ') : 'none'}</span> : null}
+        {isMulti ? <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Missing: {missingSnapshots.length ? missingSnapshots.join(', ') : 'none'}</span> : null}
       </div>
 
       <GeminiReliabilityGate gate={gate} snapshot={snapshot} />
@@ -89,13 +79,10 @@ export function GeminiInsightPanel({ snapshot, analysisType, timezone = 'UTC', c
         ) : null}
       </div>
 
-
       {!gate.canGenerate ? <div className="mb-3 rounded-md bg-slate-50 p-3 text-sm text-slate-700">Generation disabled until data reliability improves or a valid snapshot is available.</div> : null}
       {gate.mode === 'caution' ? <div className="mb-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">Generated interpretation will be limited and should be treated as low confidence.</div> : null}
       {gate.mode === 'caution' && gemini.insight?.confidence === 'high' ? <div className="mb-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">Gemini confidence is high, but snapshot reliability limits practical confidence.</div> : null}
-
-      {gemini.isLoading ? <div className="mb-3 rounded-md bg-slate-50 p-3 text-sm text-slate-700">Snapshot loading and interpretation in progress.</div> : null}
-      {errorMessage ? <div className="mb-3 rounded-md bg-slate-50 p-3 text-sm text-slate-700">{errorMessage}</div> : null}
+      {gemini.isError ? <div className="mb-3 rounded-md bg-slate-50 p-3 text-sm text-slate-700">Unable to generate interpretation due to a temporary proxy timeout or service failure. Please retry later.</div> : null}
 
       {!gemini.insight && !gemini.isLoading ? <div className="text-sm text-slate-500">Run manual generation to view interpretation.</div> : null}
 
@@ -108,20 +95,18 @@ export function GeminiInsightPanel({ snapshot, analysisType, timezone = 'UTC', c
           <div>
             <h3 className="font-semibold text-slate-900">Key observations</h3>
             {gemini.insight.key_observations.length ? (
-              <ul className="mt-1 list-disc space-y-1 pl-5 text-slate-700">
-                {gemini.insight.key_observations.map((obs) => <li key={obs.title}><span className="font-medium">{obs.title}:</span> {obs.description}</li>)}
-              </ul>
+              <ul className="mt-1 list-disc space-y-1 pl-5 text-slate-700">{gemini.insight.key_observations.map((obs) => <li key={obs.title}><span className="font-medium">{obs.title}:</span> {obs.description}</li>)}</ul>
             ) : <p className="mt-1 text-slate-500">No items returned.</p>}
           </div>
           <div>
             <h3 className="font-semibold text-slate-900">Possible explanations</h3>
-            {gemini.insight.risks.length ? (
-              <ul className="mt-1 list-disc space-y-1 pl-5 text-slate-700">{gemini.insight.risks.map((risk) => <li key={risk.title}><span className="font-medium">{risk.title}:</span> {risk.explanation}</li>)}</ul>
-            ) : <p className="mt-1 text-slate-500">No items returned.</p>}
+            {renderList(gemini.insight.hypotheses)}
           </div>
           <div>
             <h3 className="font-semibold text-slate-900">Risks and cautions</h3>
-            {renderList(gemini.insight.hypotheses)}
+            {gemini.insight.risks.length ? (
+              <ul className="mt-1 list-disc space-y-1 pl-5 text-slate-700">{gemini.insight.risks.map((risk) => <li key={risk.title}><span className="font-medium">{risk.title}:</span> {risk.explanation} ({risk.severity}/{risk.confidence})</li>)}</ul>
+            ) : <p className="mt-1 text-slate-500">No items returned.</p>}
           </div>
           <div>
             <h3 className="font-semibold text-slate-900">Recommended checks</h3>
@@ -132,12 +117,7 @@ export function GeminiInsightPanel({ snapshot, analysisType, timezone = 'UTC', c
             {renderList(gemini.insight.not_claimed)}
           </div>
         </div>
-      ) : (
-        <div className="mt-4 border-t border-slate-100 pt-4 text-sm">
-          <h3 className="font-semibold text-slate-900">Limitations / Not claimed</h3>
-          <p className="mt-1 text-slate-500">No items returned.</p>
-        </div>
-      )}
+      ) : null}
     </section>
   );
 }

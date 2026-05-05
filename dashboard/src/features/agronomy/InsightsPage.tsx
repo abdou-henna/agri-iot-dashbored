@@ -37,6 +37,10 @@ export function InsightsPage() {
     bucket: '1hour',
   });
 
+  const mainSoilSnapshotState = useAnalyticsSnapshot({ node_id: 'MAIN', metric: 'soil_moisture_percent', from: range.from, to: range.to, bucket: '1hour' });
+  const n2SoilSnapshotState = useAnalyticsSnapshot({ node_id: 'N2', metric: 'soil_moisture_percent', from: range.from, to: range.to, bucket: '1hour' });
+  const n3WeatherSnapshotState = useAnalyticsSnapshot({ node_id: 'N3', metric: 'air_temperature_c', from: range.from, to: range.to, bucket: '1hour' });
+
   if (insights.isLoading) return <LoadingBlock label="Loading agronomic insights" />;
   if (insights.isError) return <ErrorBlock error={insights.error} onRetry={() => insights.refetch()} />;
 
@@ -120,6 +124,11 @@ export function InsightsPage() {
 
       <GeminiInsightPanel
         snapshot={snapshotState.snapshot ?? null}
+        comparisonSnapshots={[
+          { scopeLabel: 'MAIN soil moisture', snapshot: mainSoilSnapshotState.snapshot ?? null },
+          { scopeLabel: 'N2 soil moisture', snapshot: n2SoilSnapshotState.snapshot ?? null },
+          { scopeLabel: 'N3 air temperature', snapshot: n3WeatherSnapshotState.snapshot ?? null },
+        ]}
         analysisType={selectedAnalysisType}
         timezone={timezone ?? 'UTC'}
         contextLabel={selectedScopeOption.label}

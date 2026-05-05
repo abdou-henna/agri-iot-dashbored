@@ -1,6 +1,13 @@
 import { geminiService } from '../services/gemini.service.js';
 
+const MAX_INPUT_BYTES = 120000;
+
 export async function postGeminiInsight(req, res) {
+  const bodySize = Buffer.byteLength(JSON.stringify(req.body ?? {}));
+  if (bodySize > MAX_INPUT_BYTES) {
+    return res.status(413).json({ error: 'payload_too_large', message: 'Input payload exceeds maximum allowed size.' });
+  }
+
   const { input } = req.body ?? {};
   const validationError = geminiService.validateInput(input);
 

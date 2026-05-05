@@ -1,4 +1,4 @@
-export type GeminiAnalysisType = 'weekly_summary' | 'event_analysis' | 'alert_explanation' | 'pivot_comparison';
+export type GeminiAnalysisType = 'weekly_summary' | 'event_analysis' | 'alert_explanation' | 'pivot_comparison' | 'farm_summary';
 
 export type GeminiConfidence = 'high' | 'medium' | 'low';
 
@@ -59,6 +59,39 @@ export interface GeminiInsightInput {
   forbidden_claims: GeminiForbiddenClaim[];
 }
 
+
+
+export interface GeminiSnapshotSummary {
+  scope_label: string;
+  node_id: string;
+  metric: string;
+  time_window: {
+    from: string;
+    to: string;
+    timezone: string;
+  };
+  quality: Record<string, unknown>;
+  reliability: Record<string, unknown>;
+  alerts: Array<Record<string, unknown>>;
+  processed_features: Record<string, unknown>;
+  limitations: string[];
+}
+
+export interface GeminiMultiSnapshotInsightInput {
+  schema_version: '1.0';
+  analysis_type: GeminiAnalysisType;
+  context_mode: 'single_snapshot' | 'pivot_comparison' | 'farm_summary';
+  time_window: {
+    from: string;
+    to: string;
+    timezone: string;
+  };
+  crop_context: GeminiInsightInput['crop_context'];
+  snapshots: GeminiSnapshotSummary[];
+  cross_snapshot_limitations: string[];
+  reliability: Record<string, unknown>;
+  forbidden_claims: GeminiForbiddenClaim[];
+}
 export interface GeminiInsightRequestState {
   insight: GeminiInsightOutput | null;
   isLoading: boolean;
