@@ -19,6 +19,7 @@ const FORBIDDEN_KEYS = new Set([
 ]);
 
 const CONFIDENCE_LEVELS = new Set(['high', 'medium', 'low']);
+const FORBIDDEN_AI_ALERT_TERMS = ['critical alert', 'emergency shutdown', 'fatal risk'];
 
 function hasForbiddenKey(value) {
   if (!value || typeof value !== 'object') return false;
@@ -51,7 +52,9 @@ function isValidOutputShape(payload) {
     && payload.risks.every((risk) => isValidRisk(risk))
     && Array.isArray(payload.hypotheses)
     && Array.isArray(payload.recommended_checks)
-    && Array.isArray(payload.not_claimed);
+    && Array.isArray(payload.not_claimed)
+    && payload.key_observations.every((item) => item && typeof item === 'object')
+    && payload.risks.every((risk) => isValidRisk(risk) && !FORBIDDEN_AI_ALERT_TERMS.some((term) => String(risk.title).toLowerCase().includes(term)));
 }
 
 class GeminiService {
@@ -91,13 +94,17 @@ class GeminiService {
           'Content-Type': 'application/json',
           'X-goog-api-key': apiKey,
         },
+        signal: AbortSignal.timeout(30000),
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: JSON.stringify(input) }] }],
           systemInstruction: { parts: [{ text: GEMINI_SYSTEM_PROMPT }] },
           generationConfig: { responseMimeType: 'application/json' },
         }),
       });
-    } catch {
+    } catch (error) {
+      if (error?.name === 'TimeoutError') {
+        return { status: 502, error: 'gemini_timeout', message: 'Gemini upstream timeout.' };
+      }
       return { status: 502, error: 'gemini_http_error', message: 'Failed to reach Gemini API.' };
     }
 

@@ -1,12 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 import { generateGeminiInsight } from '../api/gemini.api';
-import type { GeminiInsightInput } from '../types/gemini';
+import type { GeminiInsightInput, GeminiMultiSnapshotInsightInput } from '../types/gemini';
 
 interface UseGeminiInsightOptions {
   onSuccess?: () => void;
 }
 
-export function useGeminiInsight(input: GeminiInsightInput | null, options: UseGeminiInsightOptions = {}) {
+export function useGeminiInsight(input: GeminiInsightInput | GeminiMultiSnapshotInsightInput | null, options: UseGeminiInsightOptions = {}) {
   const canGenerate = Boolean(input);
 
   const mutation = useMutation({
