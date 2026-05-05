@@ -528,3 +528,14 @@ Backend agronomic system is stable and safe for frontend integration.
 - No database or schema changes in this phase.
 - Validation results: `dashboard` `npm run typecheck` and `npm run build` pass; `WebService` `npm ci` remained long-running without completion output after extended polling in this environment.
 - Known limitations: runtime Gemini output quality still depends on upstream API availability and model behavior.
+
+## Phase 8.2 — Gemini Insight UI Integration
+- UI files added: `src/components/ai/GeminiInsightPanel.tsx` and integration in `src/features/agronomy/InsightsPage.tsx`.
+- Manual generation only: insight request runs exclusively via explicit "Generate AI insight" button.
+- Uses backend proxy: UI calls existing `POST /api/v1/ai/gemini/insight` through current frontend API layer.
+- Consumes Phase 7 snapshot only: input built from `useAnalyticsSnapshot` and `buildGeminiInsightInput`.
+- No raw mutation: no local/raw data writes, no autosave, no persistence.
+- No backend/schema changes: frontend-only implementation.
+- No AI alerts: rendered as interpretation sections (summary/observations/possible explanations/checks/limitations), not deterministic alerts.
+- Validation result: TypeScript check and production build pass after integration.
+- Known limitations: requires backend Gemini key/proxy availability; low/invalid reliability can reduce usefulness; snapshot scope currently uses a weekly MAIN soil moisture context.

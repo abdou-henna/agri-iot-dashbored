@@ -1,6 +1,9 @@
+import { GeminiInsightPanel } from '../../components/ai/GeminiInsightPanel';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/States';
 import { useAgronomicInsights } from '../../hooks/useAgronomicInsights';
-import { formatDisplayTime } from '../../utils/time';
+import { useAnalyticsSnapshot } from '../../hooks/useAnalyticsSnapshot';
+import { useTimeZone } from '../../hooks/useTimeZone';
+import { formatDisplayTime, rangeForPreset } from '../../utils/time';
 
 function DeltaLabel({ value }: { value: number }) {
   const sign = value > 0 ? '+' : '';
@@ -9,6 +12,15 @@ function DeltaLabel({ value }: { value: number }) {
 
 export function InsightsPage() {
   const insights = useAgronomicInsights();
+  const { timezone } = useTimeZone();
+  const range = rangeForPreset('7d');
+  const snapshotState = useAnalyticsSnapshot({
+    node_id: 'MAIN',
+    metric: 'soil_moisture_percent',
+    from: range.from,
+    to: range.to,
+    bucket: '1hour',
+  });
 
   if (insights.isLoading) return <LoadingBlock label="Loading agronomic insights" />;
   if (insights.isError) return <ErrorBlock error={insights.error} onRetry={() => insights.refetch()} />;
@@ -81,6 +93,17 @@ export function InsightsPage() {
           </div>
         </div>
       </section>
+
+      <GeminiInsightPanel
+        snapshot={snapshotState.snapshot ?? null}
+        defaultAnalysisType="weekly_summary"
+        timezone={timezone || 'UTC'}
+        cropContext={{
+          crop: 'alfalfa',
+          season_status: 'unknown',
+          calibration_present: false,
+        }}
+      />
     </div>
   );
 }
