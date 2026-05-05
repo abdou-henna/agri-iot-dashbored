@@ -38,8 +38,24 @@ export function evaluateStaleMeasurement(latestMeasuredAt: string | null, nowIso
 
 export function evaluateDryingTrend(dropRate: number | null, baselineDropRate: number | null, triggeredAt: string, factor = 1.5): AlertEvaluation | null {
   if (dropRate == null || baselineDropRate == null) return null;
-  if (dropRate >= baselineDropRate * factor) return null;
-  return mkAlert({ alert_type: 'drying_trend_warning', domain: 'agronomic', severity: 'info', confidence: 'medium', title: 'Drying trend increased', message: 'Moisture is drying faster than recent baseline (trend-only warning).', triggered_at: triggeredAt, evidence: { dropRate, baselineDropRate, factor }, limitations: ['Not a calibrated water-stress diagnosis.'] });
+
+  const currentDryingMagnitude = Math.abs(Math.min(0, dropRate));
+  const baselineDryingMagnitude = Math.abs(Math.min(0, baselineDropRate));
+
+  if (currentDryingMagnitude <= 0 || baselineDryingMagnitude <= 0) return null;
+  if (currentDryingMagnitude <= baselineDryingMagnitude * factor) return null;
+
+  return mkAlert({
+    alert_type: 'drying_trend_warning',
+    domain: 'agronomic',
+    severity: 'info',
+    confidence: 'medium',
+    title: 'Drying trend increased',
+    message: 'Moisture is drying faster than recent baseline (trend-only warning).',
+    triggered_at: triggeredAt,
+    evidence: { dropRate, baselineDropRate, factor, currentDryingMagnitude, baselineDryingMagnitude },
+    limitations: ['Not a calibrated water-stress diagnosis.'],
+  });
 }
 
 export function evaluatePoorIrrigationResponse(delta: number | null, lagMinutes: number | null, triggeredAt: string): AlertEvaluation | null {

@@ -1,4 +1,4 @@
-import type { CleanedReading } from '../../types/analytics';
+import type { CleanedReading, DuplicateReadingMeta } from '../../types/analytics';
 import type { SensorReading } from '../../types/readings';
 
 const DEFAULT_FUTURE_TOLERANCE_MINUTES = 10;
@@ -21,16 +21,43 @@ export function filterFutureTimestamps<T extends { measured_at: string }>(
   });
 }
 
+function duplicateKey(reading: Pick<SensorReading, 'record_id' | 'node_id' | 'measured_at'>): string {
+  return reading.record_id || `${reading.node_id}|${reading.measured_at}`;
+}
+
+export function detectDuplicateReadings(readings: ReadonlyArray<SensorReading>): DuplicateReadingMeta[] {
+  const grouped = new Map<string, SensorReading[]>();
+
+  for (const reading of readings) {
+    const key = duplicateKey(reading);
+    const existing = grouped.get(key) ?? [];
+    grouped.set(key, [...existing, reading]);
+  }
+
+  const duplicates: DuplicateReadingMeta[] = [];
+  for (const [key, group] of grouped.entries()) {
+    if (group.length < 2) continue;
+    const serialized = group.map((item) => JSON.stringify(item));
+    const conflict = new Set(serialized).size > 1;
+    duplicates.push({
+      key,
+      count: group.length,
+      conflict,
+      record_ids: group.map((item) => item.record_id),
+    });
+  }
+
+  return duplicates;
+}
+
 export function deduplicateReadings(readings: ReadonlyArray<SensorReading>): CleanedReading[] {
   const seen = new Set<string>();
   const deduped: CleanedReading[] = [];
 
   for (const reading of readings) {
-    const key = reading.record_id || `${reading.node_id}|${reading.measured_at}`;
-    const fallbackKey = `${reading.node_id}|${reading.measured_at}|${reading.record_id}`;
-    const dedupeKey = key === '' ? fallbackKey : key;
-    if (seen.has(dedupeKey)) continue;
-    seen.add(dedupeKey);
+    const key = duplicateKey(reading);
+    if (seen.has(key)) continue;
+    seen.add(key);
     deduped.push({ ...reading });
   }
 

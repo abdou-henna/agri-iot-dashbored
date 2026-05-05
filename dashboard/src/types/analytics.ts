@@ -1,7 +1,7 @@
 import type { AgronomicEvent } from './agronomy';
 import type { EventSeverity, NodeId } from './common';
-import type { SensorReading, SensorReading as Reading } from './readings';
 import type { SystemEvent } from './events';
+import type { SensorReading, SensorReading as Reading } from './readings';
 
 export interface AnalyticsTimeRange {
   from: string;
@@ -22,6 +22,13 @@ export type AnalyticsMetricName =
 
 export interface CleanedReading extends SensorReading {
   qc_excluded?: boolean;
+}
+
+export interface DuplicateReadingMeta {
+  key: string;
+  count: number;
+  conflict: boolean;
+  record_ids: string[];
 }
 
 export interface QcFlag {

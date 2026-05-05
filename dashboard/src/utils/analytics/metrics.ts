@@ -8,7 +8,12 @@ function bucketStart(iso: string, bucket: 'hour' | 'day'): string {
   return d.toISOString();
 }
 
-export function aggregateReadings(readings: ReadonlyArray<MetricReading>, metric: AnalyticsMetricName, bucket: 'hour' | 'day'): AggregatePoint[] {
+export function aggregateReadings(
+  readings: ReadonlyArray<MetricReading>,
+  metric: AnalyticsMetricName,
+  bucket: 'hour' | 'day',
+  expectedCountsByBucket?: Readonly<Record<string, number>>,
+): AggregatePoint[] {
   const map = new Map<string, number[]>();
   for (const r of readings) {
     const key = bucketStart(r.measured_at, bucket);
@@ -17,14 +22,18 @@ export function aggregateReadings(readings: ReadonlyArray<MetricReading>, metric
     if (value != null) current.push(value);
     map.set(key, current);
   }
-  return [...map.entries()].sort(([a], [b]) => Date.parse(a) - Date.parse(b)).map(([key, values]) => ({
-    bucket_start: key,
-    avg: values.length ? values.reduce((s, v) => s + v, 0) / values.length : null,
-    min: values.length ? Math.min(...values) : null,
-    max: values.length ? Math.max(...values) : null,
-    count: values.length,
-    missing_count: 0,
-  }));
+  return [...map.entries()].sort(([a], [b]) => Date.parse(a) - Date.parse(b)).map(([key, values]) => {
+    const expected = expectedCountsByBucket?.[key];
+    const missingCount = typeof expected === 'number' ? Math.max(0, expected - values.length) : 0;
+    return {
+      bucket_start: key,
+      avg: values.length ? values.reduce((s, v) => s + v, 0) / values.length : null,
+      min: values.length ? Math.min(...values) : null,
+      max: values.length ? Math.max(...values) : null,
+      count: values.length,
+      missing_count: missingCount,
+    };
+  });
 }
 
 export function moistureDropRate(startMoisture: number, endMoisture: number, deltaHours: number): number | null {
