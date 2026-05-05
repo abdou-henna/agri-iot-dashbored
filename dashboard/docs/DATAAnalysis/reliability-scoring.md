@@ -4,6 +4,11 @@
 **Scope:** Node reliability, window confidence, and analysis readiness  
 **Status:** Implementation specification
 
+## Approved folder placement
+
+Phase 7/8 documentation in this file maps to the existing dashboard structure under `dashboard/src/` only.
+Do not introduce parallel roots such as `dashboard/core/`, `dashboard/ai/`, or `dashboard/modules/`.
+
 ---
 
 ## 1. Purpose
