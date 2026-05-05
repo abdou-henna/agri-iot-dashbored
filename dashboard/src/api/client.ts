@@ -82,3 +82,7 @@ export function apiPatch<T>(path: string, body: unknown) {
 export function apiDelete<T>(path: string) {
   return request<T>('DELETE', path);
 }
+
+export function apiPut<T>(path: string, body: unknown) {
+  return request<T>('PUT', path, body);
+}

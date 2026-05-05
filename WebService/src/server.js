@@ -14,6 +14,7 @@ import eventsRoutes from './routes/events.routes.js';
 import uploadsRoutes from './routes/uploads.routes.js';
 import nodesRoutes from './routes/nodes.routes.js';
 import agronomicRoutes from './routes/agronomic.routes.js';
+import analyticsSnapshotsRoutes from './routes/analyticsSnapshots.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -24,12 +25,12 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors({
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
 }));
 app.options('*', cors({
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
 }));
 app.use(express.json({ limit: '10mb' })); // Allow large payloads for batch uploads
@@ -52,6 +53,7 @@ app.use('/api/v1/status', statusRoutes);
 app.use('/api/v1/uploads', uploadsRoutes);
 app.use('/api/v1/nodes', nodesRoutes);
 app.use('/api/v1/agronomic-events', agronomicRoutes);
+app.use('/api/v1/analytics-snapshots', analyticsSnapshotsRoutes);
 app.use('/api/v1/server-time', (req, res) => {
   res.json({
     server_time: new Date().toISOString(),

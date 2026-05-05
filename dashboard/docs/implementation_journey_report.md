@@ -409,3 +409,13 @@ Backend agronomic system is stable and safe for frontend integration.
 - Restored QC composition to include physical range, flatline, and spike/step checks.
 - Read-only/derived-only behavior is preserved with no raw data mutation.
 - Validation result: `npm run typecheck` and `npm run build` pass.
+
+## Phase 7.y — Persistent Derived Analytics Snapshots
+- Added persistent snapshot schema migration `004_analytics_snapshots.sql` with table `analytics_snapshots`, required columns, and indexes for identity lookup, time window lookup, invalidation filtering, and version filtering.
+- Added backend service/controller/routes for snapshot persistence: list, get by `snapshot_id`, upsert by `snapshot_id`, and invalidate with reason.
+- Added dashboard API wrapper module `analyticsSnapshots.api.ts` and hook `usePersistentAnalyticsSnapshot` that composes `useAnalyticsSnapshot` with explicit save/invalidate mutations.
+- Raw data immutability confirmed: implementation writes only `analytics_snapshots`; no writes were introduced to `sensor_readings`, `system_events`, `uploads`, or `agronomic_events`.
+- No UI connection was added; no pages, charts, layouts, or route wiring were changed.
+- Validation result: backend migration script and dashboard type/build checks executed (details in validation section of implementation output).
+- Known limitations: no pagination on snapshot list endpoint; no strict enum validation for `domain/bucket`; no API-key protection added because existing read/query route pattern is public in current service.
+- Next step: add backend request validation hardening (allowed domain/bucket/version format), optional pagination, and query-key invalidation linkage in dashboard when persistence is wired to future UI actions.
