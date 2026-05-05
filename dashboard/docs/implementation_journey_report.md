@@ -402,3 +402,10 @@ Backend agronomic system is stable and safe for frontend integration.
 - Raw data remains read-only/derived-only with no in-place mutation.
 - No UI/backend/schema/API contract changes were introduced.
 - Validation result: `npm run typecheck` and `npm run build` pass.
+
+## Phase 7.x — useAnalytics QC Restoration
+
+- Restored `missingPct` computation in `useAnalytics` using deterministic 10-minute cadence expectation across `from`/`to`.
+- Restored QC composition to include physical range, flatline, and spike/step checks.
+- Read-only/derived-only behavior is preserved with no raw data mutation.
+- Validation result: `npm run typecheck` and `npm run build` pass.
