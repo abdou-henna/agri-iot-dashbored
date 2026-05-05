@@ -18,6 +18,7 @@ interface UseAnalyticsParams {
   from: string;
   to: string;
   bucket: Bucket;
+  effectiveFrom?: string;
 }
 
 const SPIKE_THRESHOLDS: Record<AnalyticsMetricName, number> = {
@@ -31,8 +32,9 @@ const SPIKE_THRESHOLDS: Record<AnalyticsMetricName, number> = {
   snr: 8,
 };
 
-export function useAnalytics({ node_id, metric, from, to, bucket }: UseAnalyticsParams) {
-  const readingsQuery = useReadings({ node_id, from, to });
+export function useAnalytics({ node_id, metric, from, to, bucket, effectiveFrom }: UseAnalyticsParams) {
+  const queryFrom = effectiveFrom ?? from;
+  const readingsQuery = useReadings({ node_id, from: queryFrom, to });
   const aggregateQuery = useReadingAggregates(node_id, metric, { from, to }, bucket);
 
   const cleanedReadings = useMemo(() => cleanReadings(readingsQuery.data?.readings ?? [], new Date().toISOString()), [readingsQuery.data?.readings]);
@@ -48,11 +50,11 @@ export function useAnalytics({ node_id, metric, from, to, bucket }: UseAnalytics
   }, [cleanedReadings, metric]);
 
   const missingPct = useMemo(() => {
-    const durationMs = Math.max(0, Date.parse(to) - Date.parse(from));
+    const durationMs = Math.max(0, Date.parse(to) - Date.parse(queryFrom));
     const expectedCount = Math.floor(durationMs / (10 * 60 * 1000));
     const validCount = cleanedReadings.filter((reading) => reading[metric] != null).length;
     return calculateMissingPercentage(expectedCount, validCount);
-  }, [cleanedReadings, from, metric, to]);
+  }, [cleanedReadings, metric, queryFrom, to]);
 
   return {
     aggregates: aggregateQuery.data?.points?.map((point) => ({ ...point })) ?? [],
@@ -60,6 +62,7 @@ export function useAnalytics({ node_id, metric, from, to, bucket }: UseAnalytics
     duplicateMeta,
     cleanedReadings,
     missingPct,
+    effectiveFrom: queryFrom,
     isLoading: readingsQuery.isLoading || aggregateQuery.isLoading,
     isError: readingsQuery.isError || aggregateQuery.isError,
     error: readingsQuery.error ?? aggregateQuery.error,

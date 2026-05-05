@@ -3,7 +3,7 @@ import { getLatestAnalyticsSnapshot, upsertAnalyticsSnapshot, type AnalyticsSnap
 import type { Bucket, MetricKey, NodeId } from '../types/common';
 import type { AnalyticsSnapshot, SnapshotInvalidationReason } from '../types/analytics';
 import type { AnalyticsMetricName, SnapshotBucket, SnapshotDomain } from '../types/analytics';
-import { mergeSnapshots, isSnapshotReusable } from '../utils/analytics/snapshots';
+import { getDeltaTimeRangeFromCursor, getSnapshotDeltaCursor, isSnapshotReusable, mergeSnapshots } from '../utils/analytics/snapshots';
 import { useAnalyticsSnapshot } from './useAnalyticsSnapshot';
 
 interface UseIncrementalAnalyticsSnapshotParams {
@@ -15,8 +15,7 @@ interface UseIncrementalAnalyticsSnapshotParams {
 }
 
 export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, bucket }: UseIncrementalAnalyticsSnapshotParams) {
-  const analyticsSnapshotQuery = useAnalyticsSnapshot({ node_id, metric, from, to, bucket });
-  const currentSnapshot = analyticsSnapshotQuery.snapshot;
+  const identitySeedSnapshot = useAnalyticsSnapshot({ node_id, metric, from, to, bucket });
 
   const toAnalyticsSnapshot = (record: AnalyticsSnapshotRecord): AnalyticsSnapshot => ({
     snapshot_id: record.snapshot_id,
@@ -42,17 +41,17 @@ export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, buc
   });
 
   const latestPersistedQuery = useQuery({
-    queryKey: ['analyticsSnapshots', 'latest', currentSnapshot.identity],
+    queryKey: ['analyticsSnapshots', 'latest', identitySeedSnapshot.snapshot.identity],
     queryFn: () => {
       const filters: LatestAnalyticsSnapshotFilters = {
-        domain: currentSnapshot.identity.domain,
-        node_id: currentSnapshot.identity.node_id,
-        metric: currentSnapshot.identity.metric,
-        bucket: currentSnapshot.identity.bucket,
-        analytics_version: currentSnapshot.identity.analytics_version,
-        qc_version: currentSnapshot.identity.qc_version,
-        calibration_version: currentSnapshot.identity.calibration_version,
-        filters_hash: currentSnapshot.identity.filters_hash,
+        domain: identitySeedSnapshot.snapshot.identity.domain,
+        node_id: identitySeedSnapshot.snapshot.identity.node_id,
+        metric: identitySeedSnapshot.snapshot.identity.metric,
+        bucket: identitySeedSnapshot.snapshot.identity.bucket,
+        analytics_version: identitySeedSnapshot.snapshot.identity.analytics_version,
+        qc_version: identitySeedSnapshot.snapshot.identity.qc_version,
+        calibration_version: identitySeedSnapshot.snapshot.identity.calibration_version,
+        filters_hash: identitySeedSnapshot.snapshot.identity.filters_hash,
       };
       return getLatestAnalyticsSnapshot(filters);
     },
@@ -60,7 +59,24 @@ export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, buc
   });
 
   const latestPersistedSnapshot = latestPersistedQuery.data ? toAnalyticsSnapshot(latestPersistedQuery.data) : null;
-  const reusableSnapshot = isSnapshotReusable(latestPersistedSnapshot, currentSnapshot.identity) ? latestPersistedSnapshot : null;
+  const canReuse = isSnapshotReusable(latestPersistedSnapshot, identitySeedSnapshot.snapshot.identity);
+  const reusableSnapshot = canReuse ? latestPersistedSnapshot : null;
+  const deltaCursor = getSnapshotDeltaCursor(reusableSnapshot);
+  const deltaRange = reusableSnapshot
+    ? getDeltaTimeRangeFromCursor(deltaCursor, from, to)
+    : { from, to, reason: 'no_reusable_snapshot', usedCursor: false };
+  const usedDelta = reusableSnapshot ? deltaRange.usedCursor && deltaRange.from !== from : false;
+
+  const analyticsSnapshotQuery = useAnalyticsSnapshot({
+    node_id,
+    metric,
+    from,
+    to,
+    bucket,
+    effectiveFrom: reusableSnapshot ? deltaRange.from : undefined,
+  });
+  const currentSnapshot = analyticsSnapshotQuery.snapshot;
+
   const mergedPreviewSnapshot = reusableSnapshot
     ? mergeSnapshots(reusableSnapshot, currentSnapshot).new_snapshot
     : currentSnapshot;
@@ -69,9 +85,8 @@ export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, buc
     mutationFn: () => upsertAnalyticsSnapshot(mergedPreviewSnapshot),
   });
 
-  const canReuse = Boolean(reusableSnapshot);
   const reuseReason = canReuse
-    ? 'Identity compatible; preview merge available'
+    ? `Identity compatible; using ${usedDelta ? `cursor delta from ${deltaRange.from}` : 'full logical window due to cursor boundary'}`
     : latestPersistedSnapshot
       ? 'Identity incompatible'
       : 'No persisted snapshot found';
@@ -81,6 +96,9 @@ export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, buc
     latestPersistedSnapshot,
     reusableSnapshot,
     mergedPreviewSnapshot,
+    deltaRange,
+    usedDelta,
+    deltaCursor,
     canReuse,
     reuseReason,
     isLoading: analyticsSnapshotQuery.isLoading || latestPersistedQuery.isLoading,
