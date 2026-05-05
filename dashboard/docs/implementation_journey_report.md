@@ -518,3 +518,13 @@ Backend agronomic system is stable and safe for frontend integration.
 - API key is provided only by environment variable (`VITE_GEMINI_API_KEY`), model default is `VITE_GEMINI_MODEL=gemini-flash-latest`.
 - Validation result: `npm run typecheck` and `npm run build` pass after implementation.
 - Known limitations: Mapper currently depends on existing snapshot `payload.features` availability; absent feature fields are mapped to empty objects with explicit reliability/ET/EC limitations.
+
+
+## Phase 8.1 — Secure Gemini Backend Proxy
+- Gemini API key moved server-side using `GEMINI_API_KEY`; frontend no longer references a browser key.
+- Frontend Gemini insight generation now calls WebService proxy endpoint (`POST /api/v1/ai/gemini/insight`) instead of Google directly.
+- Added proxy route/controller/service in WebService with strict request validation and normalized-response enforcement.
+- No database or schema changes in this phase.
+- Processed-summary-only validation now rejects forbidden identifiers/secrets in the request payload.
+- Validation results: dashboard typecheck/build pass in this environment; WebService dependency install remained long-running and did not complete within session polling windows.
+- Known limitations: runtime Gemini output quality depends on external API availability and model behavior.

@@ -7,13 +7,12 @@ interface UseGeminiInsightOptions {
 }
 
 export function useGeminiInsight(input: GeminiInsightInput | null, options: UseGeminiInsightOptions = {}) {
-  const hasApiKey = Boolean(import.meta.env.VITE_GEMINI_API_KEY);
-  const canGenerate = Boolean(input) && hasApiKey;
+  const canGenerate = Boolean(input);
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (!input || !canGenerate) {
-        throw new Error('Gemini insight generation is disabled until input and API key are available.');
+        throw new Error('Gemini insight generation is disabled until input is available.');
       }
       return generateGeminiInsight(input);
     },
