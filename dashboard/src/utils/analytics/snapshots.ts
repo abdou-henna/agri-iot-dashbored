@@ -60,13 +60,13 @@ export function mergeQcFlags(prev: ReadonlyArray<QcFlag> = [], next: ReadonlyArr
   });
 }
 
-export function invalidateSnapshot(snapshot: AnalyticsSnapshot, reason: SnapshotInvalidationReason): AnalyticsSnapshot {
-  return { ...snapshot, invalidated: true, invalidation_reason: reason, updated_at: new Date().toISOString() };
+export function invalidateSnapshot(snapshot: AnalyticsSnapshot, reason: SnapshotInvalidationReason, nowIso = new Date().toISOString()): AnalyticsSnapshot {
+  return { ...snapshot, invalidated: true, invalidation_reason: reason, updated_at: nowIso };
 }
 
-export function mergeSnapshots(prev: AnalyticsSnapshot, delta: AnalyticsSnapshot): SnapshotMergeResult {
+export function mergeSnapshots(prev: AnalyticsSnapshot, delta: AnalyticsSnapshot, nowIso = new Date().toISOString()): SnapshotMergeResult {
   if (!isSnapshotIdentityCompatible(prev.identity, delta.identity)) {
-    return { previous_snapshot_id: prev.snapshot_id, new_snapshot: invalidateSnapshot(delta, 'query_filters_changed'), processed_new_records: delta.quality.processed_count, skipped_duplicate_records: delta.quality.duplicate_count, conflict_count: delta.quality.conflict_count, invalidated_previous: true, invalidation_reason: 'query_filters_changed' };
+    return { previous_snapshot_id: prev.snapshot_id, new_snapshot: { ...delta, updated_at: nowIso }, processed_new_records: delta.quality.processed_count, skipped_duplicate_records: delta.quality.duplicate_count, conflict_count: delta.quality.conflict_count, invalidated_previous: true, invalidation_reason: 'query_filters_changed' };
   }
   const mergedAggregates = mergeAggregatePoints(prev.payload.aggregates, delta.payload.aggregates);
   const mergedQcFlags = mergeQcFlags(prev.payload.qc_flags, delta.payload.qc_flags);
@@ -84,6 +84,7 @@ export function mergeSnapshots(prev: AnalyticsSnapshot, delta: AnalyticsSnapshot
     payload: { ...delta.payload, aggregates: mergedAggregates, qc_flags: mergedQcFlags, quality },
     quality,
     created_at: prev.created_at,
+    updated_at: nowIso,
   };
   return { previous_snapshot_id: prev.snapshot_id, new_snapshot: newSnapshot, processed_new_records: delta.quality.processed_count, skipped_duplicate_records: delta.quality.duplicate_count, conflict_count: delta.quality.conflict_count, invalidated_previous: false };
 }

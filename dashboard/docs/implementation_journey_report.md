@@ -385,3 +385,12 @@ Backend agronomic system is stable and safe for frontend integration.
   - QC flag merge currently deduplicates by structural identity and does not classify conflict severity.
   - In-memory snapshot lifecycle is per-render and not shared across views.
 - **Next step:** wire Phase 7.y incremental merge flow with existing deterministic analytics pipeline and version-aware invalidation triggers.
+
+## Phase 7.x — Snapshot Foundation Correctness Patch
+
+- `useAnalyticsSnapshot` now reuses `useAnalytics` output instead of duplicating direct snapshot derivation paths.
+- Snapshot payload now includes QC flags, duplicate metadata semantics, cleaned-readings cursor, and quality counters aligned to the Phase 7.x contract.
+- Raw data immutability is preserved (derived-only transformations and no in-place source mutation).
+- No UI/backend/schema/API contract changes were introduced.
+- Validation result: `npm run typecheck` and `npm run build` pass.
+- Remaining limitations: reliability score remains undefined and invalidation reason still uses `query_filters_changed` placeholder for incompatible identities.
