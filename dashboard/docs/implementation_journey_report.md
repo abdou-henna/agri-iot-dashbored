@@ -521,10 +521,10 @@ Backend agronomic system is stable and safe for frontend integration.
 
 
 ## Phase 8.1 — Secure Gemini Backend Proxy
-- Gemini API key moved server-side using `GEMINI_API_KEY`; frontend no longer references a browser key.
-- Frontend Gemini insight generation now calls WebService proxy endpoint (`POST /api/v1/ai/gemini/insight`) instead of Google directly.
-- Added proxy route/controller/service in WebService with strict request validation and normalized-response enforcement.
+- Gemini API key moved server-side using `GEMINI_API_KEY`; frontend contains no Gemini API key usage.
+- Frontend Gemini insight generation calls the WebService proxy endpoint (`POST /api/v1/ai/gemini/insight`) and no longer calls Google Gemini directly.
+- Added backend `systemInstruction` prompt contract in WebService to enforce processed-summary-only interpretation, uncertainty preservation, forbidden-claim boundaries, and JSON-only output.
+- Proxy route/controller/service enforce request and response validation, including case-insensitive forbidden-key checks for secret/raw identifiers while allowing deterministic derived alert summaries.
 - No database or schema changes in this phase.
-- Processed-summary-only validation now rejects forbidden identifiers/secrets in the request payload.
-- Validation results: dashboard typecheck/build pass in this environment; WebService dependency install remained long-running and did not complete within session polling windows.
-- Known limitations: runtime Gemini output quality depends on external API availability and model behavior.
+- Validation results: `dashboard` `npm run typecheck` and `npm run build` pass; `WebService` `npm ci` remained long-running without completion output after extended polling in this environment.
+- Known limitations: runtime Gemini output quality still depends on upstream API availability and model behavior.

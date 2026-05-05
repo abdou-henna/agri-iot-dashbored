@@ -1,3 +1,5 @@
+import { GEMINI_SYSTEM_PROMPT } from '../config/geminiPrompts.js';
+
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 const FORBIDDEN_KEYS = new Set([
@@ -11,21 +13,42 @@ const FORBIDDEN_KEYS = new Set([
   'password',
   'secret',
   'token',
+  'authorization',
+  'cookie',
+  'set-cookie',
 ]);
+
+const CONFIDENCE_LEVELS = new Set(['high', 'medium', 'low']);
 
 function hasForbiddenKey(value) {
   if (!value || typeof value !== 'object') return false;
   if (Array.isArray(value)) return value.some((item) => hasForbiddenKey(item));
 
-  return Object.entries(value).some(([key, nested]) => FORBIDDEN_KEYS.has(key) || hasForbiddenKey(nested));
+  return Object.entries(value).some(([key, nested]) => {
+    const normalizedKey = key.toLowerCase();
+    return FORBIDDEN_KEYS.has(normalizedKey) || hasForbiddenKey(nested);
+  });
+}
+
+function isValidRisk(risk) {
+  return Boolean(
+    risk
+    && typeof risk === 'object'
+    && typeof risk.title === 'string'
+    && typeof risk.severity === 'string'
+    && typeof risk.confidence === 'string'
+    && typeof risk.explanation === 'string'
+    && Array.isArray(risk.limitations)
+  );
 }
 
 function isValidOutputShape(payload) {
   if (!payload || typeof payload !== 'object') return false;
   return typeof payload.summary === 'string'
-    && typeof payload.confidence === 'string'
+    && CONFIDENCE_LEVELS.has(payload.confidence)
     && Array.isArray(payload.key_observations)
     && Array.isArray(payload.risks)
+    && payload.risks.every((risk) => isValidRisk(risk))
     && Array.isArray(payload.hypotheses)
     && Array.isArray(payload.recommended_checks)
     && Array.isArray(payload.not_claimed);
@@ -70,6 +93,7 @@ class GeminiService {
         },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: JSON.stringify(input) }] }],
+          systemInstruction: { parts: [{ text: GEMINI_SYSTEM_PROMPT }] },
           generationConfig: { responseMimeType: 'application/json' },
         }),
       });
