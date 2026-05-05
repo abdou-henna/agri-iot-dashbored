@@ -458,3 +458,24 @@ Backend agronomic system is stable and safe for frontend integration.
 - No backend, schema, API wrapper, UI, package, or Gemini/AI scope changes were made.
 - Validation result: TypeScript typecheck and production build both pass after cleanup.
 - Remaining limitation: identity compatibility and delta reuse are still bounded by persisted cursor quality/availability; when cursor is missing/invalid, logic correctly falls back to full logical window computation.
+
+## Phase 7.z.3 — Aggregate Delta Reconciliation Foundation
+
+- Added derived aggregate mode foundation in analytics hooks so aggregate generation can be sourced from fetched cleaned readings during true cursor-delta windows.
+- Added snapshot payload metadata `features.aggregate_source` with mode and reason (`api_full_window` vs `derived_from_fetched_readings`) to make aggregate provenance explicit.
+- Incremental snapshot hook now selects `aggregateMode='derived'` only when a reusable snapshot exists and cursor delta is actually used (`usedDelta=true`); safe fallback remains `aggregateMode='api'` for full-window flows.
+- Preserved raw data immutability: no write or mutation paths were added for `sensor_readings`, `system_events`, `uploads`, or `agronomic_events`; snapshot persistence remains the only write target (`analytics_snapshots`) through existing explicit save path.
+- No UI integration, Gemini/AI integration, backend change, database/schema change, or package change was introduced.
+- Validation result: `npm run typecheck` and `npm run build` pass in `dashboard` after this phase update.
+- Known limitations: `useReadingAggregates` currently lacks an `enabled` toggle in its API, so the aggregate query hook is still instantiated even when `aggregateMode='derived'`; results are ignored in derived mode.
+- Next recommended step: add `enabled` support in `useReadingAggregates` (or equivalent query gating) so derived mode can skip backend aggregate requests completely while preserving hook-order safety.
+
+## Phase 7 — Master Plan Alignment and Aggregate Query Gating
+
+- Master plan was updated with a concise Phase 7 incremental-analytics completion subsection covering deterministic core through aggregate delta reconciliation and read-only guarantees.
+- `useReadingAggregates` now supports query gating via optional `enabled?: boolean` while keeping default behavior unchanged for existing callers.
+- `useAnalytics` now disables backend aggregate querying when `aggregateMode='derived'`, so derived mode skips backend aggregate execution and relies on deterministic aggregates from fetched cleaned readings.
+- Raw data immutability remains preserved: no writes or mutation paths were added for `sensor_readings`, `system_events`, `uploads`, or `agronomic_events`.
+- No backend, schema/migration, UI, API wrapper, Gemini/AI, firmware, package, or autosave changes were introduced.
+- Validation result: `npm run typecheck` and `npm run build` pass for `dashboard`.
+- Remaining limitations: aggregate query hook is still instantiated for React hook-order safety; only execution is gated. Further optimization could reduce even hook-level setup overhead if architectural constraints allow.

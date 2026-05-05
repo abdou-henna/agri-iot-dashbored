@@ -72,6 +72,7 @@ export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, buc
     ? getDeltaTimeRangeFromCursor(deltaCursor, from, to)
     : { from, to, reason: 'no_reusable_snapshot', usedCursor: false };
   const usedDelta = reusableSnapshot ? deltaRange.usedCursor && deltaRange.from !== from : false;
+  const aggregateMode: 'api' | 'derived' = reusableSnapshot && usedDelta ? 'derived' : 'api';
 
   const analyticsSnapshotQuery = useAnalyticsSnapshot({
     node_id,
@@ -80,6 +81,7 @@ export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, buc
     to,
     bucket,
     effectiveFrom: reusableSnapshot ? deltaRange.from : undefined,
+    aggregateMode,
   });
   const currentSnapshot = analyticsSnapshotQuery.snapshot;
 

@@ -552,6 +552,18 @@ The deterministic layer produces structured summaries:
 - Aggregation service
 - Reliability scoring service
 
+### Completed Incremental Analytics Work
+
+- Deterministic analytics core established for cleaning, QC, and feature engineering.
+- Analytics hooks foundation implemented for reusable deterministic processing flows.
+- Analytics snapshot model and merge primitives implemented for deterministic snapshot composition.
+- Persistent derived analytics snapshots implemented with explicit save path only.
+- Latest compatible snapshot lookup implemented for incremental reuse decisions.
+- Cursor-based delta fetch foundation implemented via effective lower-bound reuse.
+- Identity builder cleanup completed to remove duplicate snapshot-hook identity seeding.
+- Aggregate delta reconciliation foundation implemented with derived aggregate mode support.
+- Read-only/derived-only guarantee preserved: no raw-domain mutation paths introduced.
+
 ---
 
 ## Phase 8 — AI Interpretation Layer (Gemini)

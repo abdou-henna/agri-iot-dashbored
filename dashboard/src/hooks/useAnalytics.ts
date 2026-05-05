@@ -4,6 +4,7 @@ import type { AnalyticsMetricName } from '../types/analytics';
 import { useReadingAggregates } from './useReadingAggregates';
 import { useReadings } from './useReadings';
 import {
+  aggregateReadings,
   calculateMissingPercentage,
   cleanReadings,
   detectDuplicateReadings,
@@ -19,6 +20,7 @@ interface UseAnalyticsParams {
   to: string;
   bucket: Bucket;
   effectiveFrom?: string;
+  aggregateMode?: 'api' | 'derived';
 }
 
 const SPIKE_THRESHOLDS: Record<AnalyticsMetricName, number> = {
@@ -32,10 +34,10 @@ const SPIKE_THRESHOLDS: Record<AnalyticsMetricName, number> = {
   snr: 8,
 };
 
-export function useAnalytics({ node_id, metric, from, to, bucket, effectiveFrom }: UseAnalyticsParams) {
+export function useAnalytics({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode = 'api' }: UseAnalyticsParams) {
   const queryFrom = effectiveFrom ?? from;
   const readingsQuery = useReadings({ node_id, from: queryFrom, to });
-  const aggregateQuery = useReadingAggregates(node_id, metric, { from, to }, bucket);
+  const aggregateQuery = useReadingAggregates(node_id, metric, { from, to }, bucket, aggregateMode === 'api');
 
   const cleanedReadings = useMemo(() => cleanReadings(readingsQuery.data?.readings ?? [], new Date().toISOString()), [readingsQuery.data?.readings]);
   const duplicateMeta = useMemo(() => detectDuplicateReadings(readingsQuery.data?.readings ?? []), [readingsQuery.data?.readings]);
@@ -56,15 +58,25 @@ export function useAnalytics({ node_id, metric, from, to, bucket, effectiveFrom 
     return calculateMissingPercentage(expectedCount, validCount);
   }, [cleanedReadings, metric, queryFrom, to]);
 
+  const derivedAggregates = useMemo(() => {
+    if (aggregateMode !== 'derived') return [];
+    return aggregateReadings(cleanedReadings, metric, bucket, from, to);
+  }, [aggregateMode, bucket, cleanedReadings, from, metric, to]);
+
+  const aggregates = aggregateMode === 'derived'
+    ? derivedAggregates
+    : (aggregateQuery.data?.points?.map((point) => ({ ...point })) ?? []);
+
   return {
-    aggregates: aggregateQuery.data?.points?.map((point) => ({ ...point })) ?? [],
+    aggregates,
+    aggregateMode,
     qcFlags,
     duplicateMeta,
     cleanedReadings,
     missingPct,
     effectiveFrom: queryFrom,
-    isLoading: readingsQuery.isLoading || aggregateQuery.isLoading,
-    isError: readingsQuery.isError || aggregateQuery.isError,
-    error: readingsQuery.error ?? aggregateQuery.error,
+    isLoading: readingsQuery.isLoading || (aggregateMode === 'api' && aggregateQuery.isLoading),
+    isError: readingsQuery.isError || (aggregateMode === 'api' && aggregateQuery.isError),
+    error: readingsQuery.error ?? (aggregateMode === 'api' ? aggregateQuery.error : null),
   };
 }

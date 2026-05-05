@@ -11,10 +11,11 @@ interface UseAnalyticsSnapshotParams {
   to: string;
   bucket: Bucket;
   effectiveFrom?: string;
+  aggregateMode?: 'api' | 'derived';
 }
 
-export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effectiveFrom }: UseAnalyticsSnapshotParams) {
-  const analytics = useAnalytics({ node_id, metric: metric as AnalyticsMetricName, from, to, bucket, effectiveFrom });
+export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode = 'api' }: UseAnalyticsSnapshotParams) {
+  const analytics = useAnalytics({ node_id, metric: metric as AnalyticsMetricName, from, to, bucket, effectiveFrom, aggregateMode });
 
   const snapshot = useMemo<AnalyticsSnapshot>(() => {
     const nowIso = new Date().toISOString();
@@ -55,6 +56,10 @@ export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effect
             logical_from: from,
             to,
             used_delta: analytics.effectiveFrom !== from,
+          },
+          aggregate_source: {
+            mode: analytics.aggregateMode,
+            reason: analytics.aggregateMode === 'derived' ? 'derived_from_fetched_readings' : 'api_full_window',
           },
         },
         quality,

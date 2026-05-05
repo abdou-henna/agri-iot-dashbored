@@ -1,22 +1,37 @@
 import type { AgronomicEvent } from '../../types/agronomy';
 import type { AggregatePoint, AnalyticsMetricName, IrrigationResponseMetric, MetricReading, VpdPoint } from '../../types/analytics';
 
-function bucketStart(iso: string, bucket: 'hour' | 'day'): string {
+function bucketStart(iso: string, bucket: '10min' | 'hour' | 'day'): string {
   const d = new Date(iso);
+  if (bucket === '10min') {
+    const minuteBucket = Math.floor(d.getUTCMinutes() / 10) * 10;
+    d.setUTCMinutes(minuteBucket, 0, 0);
+  }
   if (bucket === 'hour') d.setUTCMinutes(0, 0, 0);
   if (bucket === 'day') d.setUTCHours(0, 0, 0, 0);
   return d.toISOString();
 }
 
+function normalizeAggregateBucket(bucket: '10min' | '1hour' | 'hour' | 'day' | '1day'): '10min' | 'hour' | 'day' {
+  if (bucket === '1hour' || bucket === 'hour') return 'hour';
+  if (bucket === '1day' || bucket === 'day') return 'day';
+  return '10min';
+}
+
 export function aggregateReadings(
   readings: ReadonlyArray<MetricReading>,
   metric: AnalyticsMetricName,
-  bucket: 'hour' | 'day',
+  bucket: '10min' | '1hour' | 'hour' | 'day' | '1day',
+  from?: string,
+  to?: string,
   expectedCountsByBucket?: Readonly<Record<string, number>>,
 ): AggregatePoint[] {
+  const normalizedBucket = normalizeAggregateBucket(bucket);
   const map = new Map<string, number[]>();
   for (const r of readings) {
-    const key = bucketStart(r.measured_at, bucket);
+    if (from && Date.parse(r.measured_at) < Date.parse(from)) continue;
+    if (to && Date.parse(r.measured_at) > Date.parse(to)) continue;
+    const key = bucketStart(r.measured_at, normalizedBucket);
     const current = map.get(key) ?? [];
     const value = r[metric];
     if (value != null) current.push(value);
