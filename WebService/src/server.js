@@ -15,6 +15,7 @@ import uploadsRoutes from './routes/uploads.routes.js';
 import nodesRoutes from './routes/nodes.routes.js';
 import agronomicRoutes from './routes/agronomic.routes.js';
 import analyticsSnapshotsRoutes from './routes/analyticsSnapshots.routes.js';
+import geminiRoutes from './routes/gemini.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -54,6 +55,7 @@ app.use('/api/v1/uploads', uploadsRoutes);
 app.use('/api/v1/nodes', nodesRoutes);
 app.use('/api/v1/agronomic-events', agronomicRoutes);
 app.use('/api/v1/analytics-snapshots', analyticsSnapshotsRoutes);
+app.use('/api/v1/ai/gemini', geminiRoutes);
 app.use('/api/v1/server-time', (req, res) => {
   res.json({
     server_time: new Date().toISOString(),
