@@ -90,7 +90,8 @@ class AnalyticsSnapshotsService {
     if (filters.window_end) { query += ` AND window_end <= $${idx++}`; values.push(filters.window_end); }
     if (typeof filters.invalidated === 'boolean') { query += ` AND invalidated = $${idx++}`; values.push(filters.invalidated); }
 
-    query += ' ORDER BY window_start DESC, created_at DESC';
+    query += ` ORDER BY window_start DESC, created_at DESC LIMIT $${idx++} OFFSET $${idx++}`;
+    values.push(filters.limit ?? 50, filters.offset ?? 0);
     const { rows } = await pool.query(query, values);
     return rows;
   }

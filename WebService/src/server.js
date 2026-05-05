@@ -26,12 +26,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
   origin: 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'x-api-key'],
 }));
 app.options('*', cors({
   origin: 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'x-api-key'],
 }));
 app.use(express.json({ limit: '10mb' })); // Allow large payloads for batch uploads
 

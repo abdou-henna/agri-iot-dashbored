@@ -419,3 +419,11 @@ Backend agronomic system is stable and safe for frontend integration.
 - Validation result: backend migration script and dashboard type/build checks executed (details in validation section of implementation output).
 - Known limitations: no pagination on snapshot list endpoint; no strict enum validation for `domain/bucket`; no API-key protection added because existing read/query route pattern is public in current service.
 - Next step: add backend request validation hardening (allowed domain/bucket/version format), optional pagination, and query-key invalidation linkage in dashboard when persistence is wired to future UI actions.
+
+## Phase 7.y — Snapshot API Hardening
+- Added strict backend validation for snapshot domain, bucket, invalidation reason, required identity fields, and date window ordering.
+- Added list pagination (`limit`, `offset`) with defaults and bounds validation.
+- Updated CORS allowed headers to include `x-api-key` alongside `Content-Type`.
+- Raw data immutability preserved: writes remain scoped to `analytics_snapshots` only.
+- Validation result: WebService migration command failed in this environment due to missing local dependency resolution; dashboard typecheck/build succeeded.
+- Remaining limitations: list endpoint returns page length as `count` (not total matched rows), and validation still does not enforce version format patterns beyond non-empty strings.
