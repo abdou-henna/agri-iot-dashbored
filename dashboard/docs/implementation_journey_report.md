@@ -368,3 +368,44 @@ Backend agronomic system is stable and safe for frontend integration.
 ### Remaining limitations
 - Latest upload mode depends on `upload_id` being present in the currently fetched `system_events` window (same limitation as data freshness/windowing).
 - Season lifecycle still uses the existing phase-mapped backend category (`season_setup`) and existing create-event contract; no backend or schema normalization was introduced in this phase.
+
+## Phase 7.x — In-Memory Analytics Snapshot Foundation
+
+- **Files created/updated:**
+  - `dashboard/src/types/analytics.ts`
+  - `dashboard/src/utils/analytics/snapshots.ts`
+  - `dashboard/src/utils/analytics/index.ts`
+  - `dashboard/src/hooks/useAnalyticsSnapshot.ts`
+- **Derived-only rule:** snapshot objects are computed from existing hook outputs; no snapshot operation mutates source records.
+- **No raw mutation:** snapshot utilities and hook logic clone/merge into new arrays/objects only.
+- **No persistence:** no localStorage/sessionStorage/database writes were introduced.
+- **Validation result:** `npm run typecheck` and `npm run build` pass for the dashboard package after this phase update.
+- **Known limitations:**
+  - `reliability_score` intentionally remains undefined in quality summary for this phase.
+  - QC flag merge currently deduplicates by structural identity and does not classify conflict severity.
+  - In-memory snapshot lifecycle is per-render and not shared across views.
+- **Next step:** wire Phase 7.y incremental merge flow with existing deterministic analytics pipeline and version-aware invalidation triggers.
+
+## Phase 7.x — Snapshot Foundation Correctness Patch
+
+- `useAnalyticsSnapshot` now reuses `useAnalytics` output instead of duplicating direct snapshot derivation paths.
+- Snapshot payload now includes QC flags, duplicate metadata semantics, cleaned-readings cursor, and quality counters aligned to the Phase 7.x contract.
+- Raw data immutability is preserved (derived-only transformations and no in-place source mutation).
+- No UI/backend/schema/API contract changes were introduced.
+- Validation result: `npm run typecheck` and `npm run build` pass.
+- Remaining limitations: reliability score remains undefined and invalidation reason still uses `query_filters_changed` placeholder for incompatible identities.
+
+## Phase 7.x — Snapshot Hook Architecture Cleanup
+
+- Removed local duplicated analytics derivation logic from `useAnalyticsSnapshot`.
+- `useAnalyticsSnapshot` now reuses the real shared `useAnalytics` hook.
+- Raw data remains read-only/derived-only with no in-place mutation.
+- No UI/backend/schema/API contract changes were introduced.
+- Validation result: `npm run typecheck` and `npm run build` pass.
+
+## Phase 7.x — useAnalytics QC Restoration
+
+- Restored `missingPct` computation in `useAnalytics` using deterministic 10-minute cadence expectation across `from`/`to`.
+- Restored QC composition to include physical range, flatline, and spike/step checks.
+- Read-only/derived-only behavior is preserved with no raw data mutation.
+- Validation result: `npm run typecheck` and `npm run build` pass.
