@@ -103,6 +103,45 @@ export async function listAnalyticsSnapshots(req, res, next) {
   }
 }
 
+export async function getLatestAnalyticsSnapshot(req, res, next) {
+  try {
+    const { domain, node_id, metric, bucket, analytics_version, qc_version, calibration_version, filters_hash } = req.query;
+    if (!domain) throw badRequest('domain is required');
+    if (!bucket) throw badRequest('bucket is required');
+    if (!analytics_version) throw badRequest('analytics_version is required');
+    if (!qc_version) throw badRequest('qc_version is required');
+    if (!filters_hash) throw badRequest('filters_hash is required');
+
+    if (!ALLOWED_DOMAINS.has(domain)) throw badRequest('domain is not allowed');
+    if (!ALLOWED_BUCKETS.has(bucket)) throw badRequest('bucket is not allowed');
+    if (typeof analytics_version !== 'string' || analytics_version.trim() === '') throw badRequest('analytics_version must be a non-empty string');
+    if (typeof qc_version !== 'string' || qc_version.trim() === '') throw badRequest('qc_version must be a non-empty string');
+    if (typeof filters_hash !== 'string' || filters_hash.trim() === '') throw badRequest('filters_hash must be a non-empty string');
+
+    const snapshot = await analyticsSnapshotsService.getLatest({
+      domain,
+      node_id,
+      metric,
+      bucket,
+      analytics_version,
+      qc_version,
+      calibration_version,
+      filters_hash,
+    });
+
+    if (!snapshot) {
+      res.status(404).json({ error: 'Analytics snapshot not found' });
+      return;
+    }
+
+    parseDateInput(snapshot.window_start, 'window_start');
+    parseDateInput(snapshot.window_end, 'window_end');
+    res.json(snapshot);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getAnalyticsSnapshot(req, res, next) {
   try {
     const snapshot = await analyticsSnapshotsService.getBySnapshotId(req.params.snapshot_id);

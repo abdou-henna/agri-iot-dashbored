@@ -96,6 +96,37 @@ class AnalyticsSnapshotsService {
     return rows;
   }
 
+  async getLatest(filters) {
+    const pool = getPool();
+    const query = `
+      SELECT *
+      FROM analytics_snapshots
+      WHERE domain = $1
+        AND bucket = $2
+        AND analytics_version = $3
+        AND qc_version = $4
+        AND filters_hash = $5
+        AND invalidated = FALSE
+        AND ($6::text IS NULL OR node_id = $6)
+        AND ($7::text IS NULL OR metric = $7)
+        AND ($8::text IS NULL OR calibration_version = $8)
+      ORDER BY window_end DESC, updated_at DESC
+      LIMIT 1
+    `;
+    const values = [
+      filters.domain,
+      filters.bucket,
+      filters.analytics_version,
+      filters.qc_version,
+      filters.filters_hash,
+      filters.node_id ?? null,
+      filters.metric ?? null,
+      filters.calibration_version ?? null,
+    ];
+    const { rows } = await pool.query(query, values);
+    return rows[0] ?? null;
+  }
+
   async invalidate(snapshotId, reason) {
     const pool = getPool();
     const { rows } = await pool.query(
