@@ -1,8 +1,11 @@
+import { useMemo, useState } from 'react';
+import { GeminiContextControls, getGeminiScopeOption, type GeminiScopeKey, type GeminiWindowKey } from '../../components/ai/GeminiContextControls';
 import { GeminiInsightPanel } from '../../components/ai/GeminiInsightPanel';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/States';
 import { useAgronomicInsights } from '../../hooks/useAgronomicInsights';
 import { useAnalyticsSnapshot } from '../../hooks/useAnalyticsSnapshot';
 import { useTimeZone } from '../../hooks/useTimeZone';
+import type { GeminiAnalysisType } from '../../types/gemini';
 import { formatDisplayTime, rangeForPreset } from '../../utils/time';
 
 function DeltaLabel({ value }: { value: number }) {
@@ -13,10 +16,22 @@ function DeltaLabel({ value }: { value: number }) {
 export function InsightsPage() {
   const insights = useAgronomicInsights();
   const { timezone } = useTimeZone();
-  const range = rangeForPreset('7d');
+  const [selectedScope, setSelectedScope] = useState<GeminiScopeKey>('pivot_1_main');
+  const [selectedWindow, setSelectedWindow] = useState<GeminiWindowKey>('7d');
+  const [selectedAnalysisType, setSelectedAnalysisType] = useState<GeminiAnalysisType>('weekly_summary');
+
+  const selectedScopeOption = getGeminiScopeOption(selectedScope);
+  const range = useMemo(() => {
+    if (selectedWindow === '7d') return rangeForPreset('7d');
+    const to = new Date();
+    const from = new Date(to);
+    from.setDate(from.getDate() - 30);
+    return { from: from.toISOString(), to: to.toISOString() };
+  }, [selectedWindow]);
+
   const snapshotState = useAnalyticsSnapshot({
-    node_id: 'MAIN',
-    metric: 'soil_moisture_percent',
+    node_id: selectedScopeOption.node_id,
+    metric: selectedScopeOption.metric,
     from: range.from,
     to: range.to,
     bucket: '1hour',
@@ -94,15 +109,22 @@ export function InsightsPage() {
         </div>
       </section>
 
+      <GeminiContextControls
+        selectedScope={selectedScope}
+        selectedWindow={selectedWindow}
+        selectedAnalysisType={selectedAnalysisType}
+        onScopeChange={setSelectedScope}
+        onWindowChange={setSelectedWindow}
+        onAnalysisTypeChange={setSelectedAnalysisType}
+      />
+
       <GeminiInsightPanel
         snapshot={snapshotState.snapshot ?? null}
-        defaultAnalysisType="weekly_summary"
-        timezone={timezone || 'UTC'}
-        cropContext={{
-          crop: 'alfalfa',
-          season_status: 'unknown',
-          calibration_present: false,
-        }}
+        analysisType={selectedAnalysisType}
+        timezone={timezone ?? 'UTC'}
+        contextLabel={selectedScopeOption.label}
+        windowLabel={selectedWindow}
+        scopeLabel={selectedScopeOption.label}
       />
     </div>
   );

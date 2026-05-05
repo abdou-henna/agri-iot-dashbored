@@ -539,3 +539,14 @@ Backend agronomic system is stable and safe for frontend integration.
 - No AI alerts: rendered as interpretation sections (summary/observations/possible explanations/checks/limitations), not deterministic alerts.
 - Validation result: TypeScript check and production build pass after integration.
 - Known limitations: requires backend Gemini key/proxy availability; low/invalid reliability can reduce usefulness; snapshot scope currently uses a weekly MAIN soil moisture context.
+
+## Phase 8.3–8.4 — Gemini Context Controls and UX Polish
+- Added Gemini context controls with explicit scope, window, and analysis selectors.
+- Implemented scope options for Pivot 1 MAIN soil, Pivot 2 N2 soil, Weather N3, and Farm summary with visible proxy limitation note.
+- Added 7d and 30d windows while preserving manual generation flow (no auto-run).
+- Refined interpretation UX sections: Summary, Key observations, Possible explanations, Risks and cautions, Recommended checks, and Limitations / Not claimed.
+- Kept backend proxy integration only; no direct frontend Gemini key usage or direct Google API calls.
+- Continued using Phase 7 processed analytics snapshot as sole interpretation input.
+- Confirmed no backend/schema/raw-data changes and no AI alerting/persistence behavior.
+- Validation: typecheck/build and prohibited-keyword scan pass.
+- Known limitations: farm_summary and pivot_comparison remain limited by single-snapshot input; interpretation quality depends on snapshot reliability and backend proxy availability.
