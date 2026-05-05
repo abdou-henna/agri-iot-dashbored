@@ -95,6 +95,35 @@ export function isSnapshotReusable(previous: AnalyticsSnapshot | null | undefine
   return isSnapshotIdentityCompatible(previous.identity, currentIdentity);
 }
 
+
+export interface DeltaTimeRange {
+  from: string;
+  to: string;
+  reason: string;
+  usedCursor: boolean;
+}
+
+export function getDeltaTimeRangeFromCursor(cursor: SnapshotCursor | null | undefined, fallbackFrom: string, to: string): DeltaTimeRange {
+  const cursorTime = cursor?.last_measured_at;
+  if (!cursorTime || Number.isNaN(Date.parse(cursorTime))) {
+    return { from: fallbackFrom, to, reason: 'no_valid_cursor; using logical window start', usedCursor: false };
+  }
+
+  const fallbackMs = Date.parse(fallbackFrom);
+  const cursorMs = Date.parse(cursorTime);
+  if (Number.isNaN(fallbackMs)) {
+    return { from: cursorTime, to, reason: 'valid_cursor_only; fallback_from_invalid', usedCursor: true };
+  }
+
+  const deltaFrom = new Date(Math.max(cursorMs, fallbackMs)).toISOString();
+  return {
+    from: deltaFrom,
+    to,
+    reason: 'inclusive_cursor_lower_bound; backend lacks exclusive 1ms cursor filter, dedupe handles overlap',
+    usedCursor: true,
+  };
+}
+
 export function getSnapshotDeltaCursor(snapshot: AnalyticsSnapshot | null | undefined): SnapshotCursor {
   return snapshot ? { ...snapshot.cursor } : {};
 }

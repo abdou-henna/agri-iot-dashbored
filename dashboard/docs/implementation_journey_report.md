@@ -438,3 +438,14 @@ Backend agronomic system is stable and safe for frontend integration.
 - Validation executed for backend/frontend checks in this environment (results listed in validation section).
 - Known limitations: compatibility is strict identity-based; delta-fetch execution wiring is not yet introduced in this phase.
 - Next step: use reusable cursor boundaries in analytics fetch pipelines, then persist operator-approved merged snapshots explicitly.
+
+## Phase 7.z.1 — Cursor-Based Delta Fetch Foundation
+
+- Added cursor-based delta-range derivation support so snapshot fetches can use `effectiveFrom` based on a reusable snapshot cursor, while keeping logical window identity (`from` → `to`) intact.
+- `useIncrementalAnalyticsSnapshot` now checks the latest persisted snapshot first, reuses compatible snapshots, derives a cursor delta range, and computes the current snapshot with `effectiveFrom` when reusable.
+- Autosave behavior remains unchanged (disabled): persistence still occurs only through explicit `saveMergedSnapshot`.
+- Raw data immutability is preserved: no writes to `sensor_readings`, `system_events`, `uploads`, or `agronomic_events`; only snapshot persistence flows are used.
+- No UI integration and no Gemini/AI integration were introduced in this phase.
+- Validation result: dashboard typecheck/build pass with the new delta foundation; backend readings API required no change because `from` already maps to `measured_at >= from`.
+- Known limitations: aggregate queries are still computed on logical full window (`from` → `to`) to avoid unsafe partial aggregate semantics in this phase.
+- Next recommended step: add safe aggregate-delta reconciliation and deterministic bucket-level merge/invalidation policy so aggregate compute can also reduce full-window reads.

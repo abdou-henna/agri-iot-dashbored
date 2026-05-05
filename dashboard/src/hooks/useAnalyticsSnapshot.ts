@@ -10,6 +10,7 @@ interface UseAnalyticsSnapshotParams {
   from: string;
   to: string;
   bucket: Bucket;
+  effectiveFrom?: string;
 }
 
 function normalizeBucket(bucket: Bucket): '10min' | 'hour' | 'day' {
@@ -18,8 +19,8 @@ function normalizeBucket(bucket: Bucket): '10min' | 'hour' | 'day' {
   return 'day';
 }
 
-export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket }: UseAnalyticsSnapshotParams) {
-  const analytics = useAnalytics({ node_id, metric: metric as AnalyticsMetricName, from, to, bucket });
+export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effectiveFrom }: UseAnalyticsSnapshotParams) {
+  const analytics = useAnalytics({ node_id, metric: metric as AnalyticsMetricName, from, to, bucket, effectiveFrom });
 
   const snapshot = useMemo<AnalyticsSnapshot>(() => {
     const nowIso = new Date().toISOString();
@@ -58,6 +59,14 @@ export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket }: UseA
       payload: {
         aggregates: analytics.aggregates,
         qc_flags: analytics.qcFlags,
+        features: {
+          delta_window: {
+            effective_from: analytics.effectiveFrom,
+            logical_from: from,
+            to,
+            used_delta: analytics.effectiveFrom !== from,
+          },
+        },
         quality,
         cursor,
       },
