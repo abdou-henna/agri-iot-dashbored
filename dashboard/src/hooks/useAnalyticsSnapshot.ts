@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import type { Bucket, MetricKey, NodeId } from '../types/common';
-import type { AnalyticsMetricName, AnalyticsSnapshot, DuplicateReadingMeta, QcFlag, SnapshotBucket, SnapshotIdentity } from '../types/analytics';
-import { useReadingAggregates } from './useReadingAggregates';
-import { useReadings } from './useReadings';
-import { cleanReadings, detectDuplicateReadings, getSensorCursorFromReadings, physicalRangeFlags } from '../utils/analytics';
+import type { AnalyticsMetricName, AnalyticsSnapshot, SnapshotIdentity } from '../types/analytics';
+import { useAnalytics } from './useAnalytics';
+import { getSensorCursorFromReadings } from '../utils/analytics';
 
 interface UseAnalyticsSnapshotParams {
   node_id: NodeId;
@@ -13,47 +12,14 @@ interface UseAnalyticsSnapshotParams {
   bucket: Bucket;
 }
 
-interface UseAnalyticsResult {
-  aggregates: Array<{ bucket_start: string; avg: number | null; min: number | null; max: number | null; count: number; missing_count: number }>;
-  qcFlags: QcFlag[];
-  duplicateMeta: DuplicateReadingMeta[];
-  cleanedReadings: ReturnType<typeof cleanReadings>;
-  isLoading: boolean;
-  isError: boolean;
-  error: unknown;
-}
-
-function normalizeBucket(bucket: Bucket): SnapshotBucket {
+function normalizeBucket(bucket: Bucket): '10min' | 'hour' | 'day' {
   if (bucket === '10min') return '10min';
   if (bucket === '1hour') return 'hour';
   return 'day';
 }
 
-function useAnalytics(params: UseAnalyticsSnapshotParams): UseAnalyticsResult {
-  const { node_id, metric, from, to, bucket } = params;
-  const readingsQuery = useReadings({ node_id, from, to });
-  const aggregateQuery = useReadingAggregates(node_id, metric, { from, to }, bucket);
-
-  const cleanedReadings = useMemo(
-    () => cleanReadings(readingsQuery.data?.readings ?? [], new Date().toISOString()),
-    [readingsQuery.data?.readings],
-  );
-  const duplicateMeta = useMemo(() => detectDuplicateReadings(readingsQuery.data?.readings ?? []), [readingsQuery.data?.readings]);
-  const qcFlags = useMemo(() => physicalRangeFlags(cleanedReadings, metric as AnalyticsMetricName), [cleanedReadings, metric]);
-
-  return {
-    aggregates: aggregateQuery.data?.points?.map((point) => ({ ...point })) ?? [],
-    qcFlags,
-    duplicateMeta,
-    cleanedReadings,
-    isLoading: readingsQuery.isLoading || aggregateQuery.isLoading,
-    isError: readingsQuery.isError || aggregateQuery.isError,
-    error: readingsQuery.error ?? aggregateQuery.error,
-  };
-}
-
 export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket }: UseAnalyticsSnapshotParams) {
-  const analytics = useAnalytics({ node_id, metric, from, to, bucket });
+  const analytics = useAnalytics({ node_id, metric: metric as AnalyticsMetricName, from, to, bucket });
 
   const snapshot = useMemo<AnalyticsSnapshot>(() => {
     const nowIso = new Date().toISOString();

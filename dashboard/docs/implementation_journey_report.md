@@ -394,3 +394,11 @@ Backend agronomic system is stable and safe for frontend integration.
 - No UI/backend/schema/API contract changes were introduced.
 - Validation result: `npm run typecheck` and `npm run build` pass.
 - Remaining limitations: reliability score remains undefined and invalidation reason still uses `query_filters_changed` placeholder for incompatible identities.
+
+## Phase 7.x — Snapshot Hook Architecture Cleanup
+
+- Removed local duplicated analytics derivation logic from `useAnalyticsSnapshot`.
+- `useAnalyticsSnapshot` now reuses the real shared `useAnalytics` hook.
+- Raw data remains read-only/derived-only with no in-place mutation.
+- No UI/backend/schema/API contract changes were introduced.
+- Validation result: `npm run typecheck` and `npm run build` pass.
