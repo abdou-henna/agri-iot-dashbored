@@ -563,6 +563,9 @@ The deterministic layer produces structured summaries:
 - Identity builder cleanup completed to remove duplicate snapshot-hook identity seeding.
 - Aggregate delta reconciliation foundation implemented with derived aggregate mode support.
 - Read-only/derived-only guarantee preserved: no raw-domain mutation paths introduced.
+- Reliability integration into snapshots completed using existing deterministic reliability hook outputs.
+- Alert integration into snapshots completed using existing deterministic alert evaluation outputs.
+- Final derived snapshot completion achieved with reliability and alert payload propagation.
 
 ---
 

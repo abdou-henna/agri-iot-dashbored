@@ -12,9 +12,11 @@ interface UseIncrementalAnalyticsSnapshotParams {
   from: string;
   to: string;
   bucket: Bucket;
+  includeReliability?: boolean;
+  includeAlerts?: boolean;
 }
 
-export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, bucket }: UseIncrementalAnalyticsSnapshotParams) {
+export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, bucket, includeReliability = true, includeAlerts = true }: UseIncrementalAnalyticsSnapshotParams) {
   const toAnalyticsSnapshot = (record: AnalyticsSnapshotRecord): AnalyticsSnapshot => ({
     snapshot_id: record.snapshot_id,
     identity: {
@@ -82,6 +84,8 @@ export function useIncrementalAnalyticsSnapshot({ node_id, metric, from, to, buc
     bucket,
     effectiveFrom: reusableSnapshot ? deltaRange.from : undefined,
     aggregateMode,
+    includeReliability,
+    includeAlerts,
   });
   const currentSnapshot = analyticsSnapshotQuery.snapshot;
 

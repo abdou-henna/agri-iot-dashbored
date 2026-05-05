@@ -109,6 +109,17 @@ export function mergeSnapshots(prev: AnalyticsSnapshot, delta: AnalyticsSnapshot
   }
   const mergedAggregates = mergeAggregatePoints(prev.payload.aggregates, delta.payload.aggregates);
   const mergedQcFlags = mergeQcFlags(prev.payload.qc_flags, delta.payload.qc_flags);
+  const mergedAlerts = (() => {
+    if (!prev.payload.alerts?.length && !delta.payload.alerts?.length) return delta.payload.alerts;
+    const combined = [...(prev.payload.alerts ?? []), ...(delta.payload.alerts ?? [])];
+    const seen = new Set<string>();
+    return combined.filter((alert) => {
+      const key = `${alert.alert_id}|${alert.alert_type}|${alert.triggered_at}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  })();
   const quality: SnapshotQualitySummary = {
     ...delta.quality,
     processed_count: prev.quality.processed_count + delta.quality.processed_count,
@@ -117,10 +128,19 @@ export function mergeSnapshots(prev: AnalyticsSnapshot, delta: AnalyticsSnapshot
     duplicate_count: prev.quality.duplicate_count + delta.quality.duplicate_count,
     conflict_count: prev.quality.conflict_count + delta.quality.conflict_count,
     qc_flag_count: mergedQcFlags.length,
+    reliability_score: delta.quality.reliability_score ?? prev.quality.reliability_score,
+    reliability_level: delta.quality.reliability_level ?? prev.quality.reliability_level,
   };
   const newSnapshot: AnalyticsSnapshot = {
     ...delta,
-    payload: { ...delta.payload, aggregates: mergedAggregates, qc_flags: mergedQcFlags, quality },
+    payload: {
+      ...delta.payload,
+      aggregates: mergedAggregates,
+      qc_flags: mergedQcFlags,
+      quality,
+      reliability: delta.payload.reliability ?? prev.payload.reliability,
+      alerts: mergedAlerts,
+    },
     quality,
     created_at: prev.created_at,
     updated_at: nowIso,

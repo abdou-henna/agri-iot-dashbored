@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import type { Bucket, MetricKey, NodeId } from '../types/common';
 import type { AnalyticsMetricName, AnalyticsSnapshot, SnapshotIdentity } from '../types/analytics';
 import { useAnalytics } from './useAnalytics';
+import { useReliabilityScores } from './useReliabilityScores';
+import { useAlertEvaluations } from './useAlertEvaluations';
 import { buildSensorSnapshotIdentityFromParams, getSensorCursorFromReadings } from '../utils/analytics';
 
 interface UseAnalyticsSnapshotParams {
@@ -12,10 +14,15 @@ interface UseAnalyticsSnapshotParams {
   bucket: Bucket;
   effectiveFrom?: string;
   aggregateMode?: 'api' | 'derived';
+  includeReliability?: boolean;
+  includeAlerts?: boolean;
 }
 
-export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode = 'api' }: UseAnalyticsSnapshotParams) {
+export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode = 'api', includeReliability = true, includeAlerts = true }: UseAnalyticsSnapshotParams) {
   const analytics = useAnalytics({ node_id, metric: metric as AnalyticsMetricName, from, to, bucket, effectiveFrom, aggregateMode });
+
+  const reliabilityQuery = useReliabilityScores({ from, to });
+  const alertEvaluationsQuery = useAlertEvaluations({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode });
 
   const snapshot = useMemo<AnalyticsSnapshot>(() => {
     const nowIso = new Date().toISOString();
@@ -25,6 +32,9 @@ export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effect
     const validCount = analytics.cleanedReadings.filter((reading) => reading[metric as AnalyticsMetricName] != null).length;
     const cursor = getSensorCursorFromReadings(analytics.cleanedReadings);
 
+    const reliability = includeReliability ? reliabilityQuery.byNode.map.get(node_id) : undefined;
+    const alerts = includeAlerts ? alertEvaluationsQuery.evaluations : undefined;
+
     const quality = {
       processed_count: analytics.cleanedReadings.length,
       valid_count: validCount,
@@ -32,7 +42,8 @@ export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effect
       duplicate_count: Math.max(0, duplicateCount),
       conflict_count: conflictCount,
       qc_flag_count: analytics.qcFlags.length,
-      reliability_score: undefined,
+      reliability_score: reliability?.score,
+      reliability_level: reliability?.level,
     };
 
     const identity: SnapshotIdentity = buildSensorSnapshotIdentityFromParams({
@@ -64,18 +75,20 @@ export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effect
         },
         quality,
         cursor,
+        reliability,
+        alerts,
       },
       quality,
       invalidated: false,
       created_at: nowIso,
       updated_at: nowIso,
     };
-  }, [analytics, bucket, from, metric, node_id, to]);
+  }, [alertEvaluationsQuery.evaluations, analytics, bucket, from, includeAlerts, includeReliability, metric, node_id, reliabilityQuery.byNode.map, to]);
 
   return {
     snapshot,
-    isLoading: analytics.isLoading,
-    isError: analytics.isError,
-    error: analytics.error,
+    isLoading: analytics.isLoading || (includeReliability && reliabilityQuery.isLoading) || (includeAlerts && alertEvaluationsQuery.isLoading),
+    isError: analytics.isError || (includeReliability && reliabilityQuery.isError) || (includeAlerts && alertEvaluationsQuery.isError),
+    error: analytics.error ?? (includeReliability ? reliabilityQuery.error : null) ?? (includeAlerts ? alertEvaluationsQuery.error : null),
   };
 }

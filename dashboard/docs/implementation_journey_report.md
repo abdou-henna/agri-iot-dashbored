@@ -479,3 +479,22 @@ Backend agronomic system is stable and safe for frontend integration.
 - No backend, schema/migration, UI, API wrapper, Gemini/AI, firmware, package, or autosave changes were introduced.
 - Validation result: `npm run typecheck` and `npm run build` pass for `dashboard`.
 - Remaining limitations: aggregate query hook is still instantiated for React hook-order safety; only execution is gated. Further optimization could reduce even hook-level setup overhead if architectural constraints allow.
+
+
+## Phase 7.z.4 — Reliability and Alert Snapshot Integration
+- `reliability_score` is now populated in analytics snapshots from the existing reliability hook output for the current node, with non-blocking behavior when reliability data is loading/unavailable.
+- Snapshot alerts are now populated from existing deterministic alert evaluations, with no new alert rules and no AI-generated alerts.
+- No reliability or alert logic was duplicated in snapshot assembly; integrations reuse existing hook outputs.
+- Raw data immutability is preserved: only derived snapshot payload/quality composition was updated.
+- No backend, schema, API wrapper, UI, or Gemini/AI changes were introduced in this phase.
+- Validation result: dashboard typecheck/build executed successfully after integration updates.
+- Known limitations: current alert/reliability scope depends on available deterministic hook outputs and source data coverage for the selected node/window.
+
+## Phase 7.z.4 — Reliability and Alert Hook Restoration
+- Restored reliability hook behavior from the simplified wrapper to multi-node deterministic scoring across MAIN, N2, and N3 using existing read-only hooks (`useReadings`, `useEvents`, `useNodes`, `useStatus`) and window-scoped event filtering.
+- Restored alert hook behavior from a reduced single-alert path to deterministic evaluation across existing supported evaluators (`unreliable_data`, `missing_node`, `stale_measurement`, plus trend-based drying/EC caution when enough aggregate evidence exists).
+- `useAnalyticsSnapshot` continues to reuse hook outputs (no inline reimplementation of reliability/alert computation), while preserving non-blocking snapshot construction.
+- Raw source domain immutability remains preserved; only derived snapshot/reliability/alert composition paths were modified.
+- No backend, schema, API wrapper, UI, or Gemini/AI changes were introduced.
+- Validation result: `npm run typecheck` and `npm run build` pass in `dashboard`.
+- Remaining limitations: trend alerts depend on available aggregate density and current deterministic feature proxies; no new alert rules were introduced.
