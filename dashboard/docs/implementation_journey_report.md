@@ -427,3 +427,14 @@ Backend agronomic system is stable and safe for frontend integration.
 - Raw data immutability preserved: writes remain scoped to `analytics_snapshots` only.
 - Validation result: WebService migration command failed in this environment due to missing local dependency resolution; dashboard typecheck/build succeeded.
 - Remaining limitations: list endpoint returns page length as `count` (not total matched rows), and validation still does not enforce version format patterns beyond non-empty strings.
+
+## Phase 7.z — Incremental Snapshot Reuse Foundation
+- Implemented latest snapshot endpoint `GET /api/v1/analytics-snapshots/latest` with required identity constraints (`domain`, `bucket`, `analytics_version`, `qc_version`, `filters_hash`) and optional selectors (`node_id`, `metric`, `calibration_version`), hard-filtered to `invalidated=false`, sorted by `window_end DESC, updated_at DESC`.
+- Added dashboard analytics snapshot API function `getLatestAnalyticsSnapshot(filters)` and incremental reuse hook foundation for persisted-latest + in-memory snapshot composition.
+- Merge preview behavior: if persisted snapshot exists and identity is compatible, a non-mutating preview merge is produced via `mergeSnapshots`; otherwise fallback uses current in-memory snapshot.
+- No autosave behavior added; persistence remains explicit only through `saveMergedSnapshot`.
+- Raw-domain immutability is preserved: no writes were added to `sensor_readings`, `system_events`, `uploads`, or `agronomic_events`.
+- No UI scope and no Gemini/AI integration were introduced in this phase.
+- Validation executed for backend/frontend checks in this environment (results listed in validation section).
+- Known limitations: compatibility is strict identity-based; delta-fetch execution wiring is not yet introduced in this phase.
+- Next step: use reusable cursor boundaries in analytics fetch pipelines, then persist operator-approved merged snapshots explicitly.

@@ -1,5 +1,5 @@
 import { apiGet, apiPost, apiPut } from './client';
-import type { AnalyticsSnapshot } from '../types/analytics';
+import type { AnalyticsSnapshot, SnapshotBucket, SnapshotDomain } from '../types/analytics';
 
 export interface AnalyticsSnapshotRecord {
   snapshot_id: string;
@@ -61,4 +61,19 @@ export function upsertAnalyticsSnapshot(snapshot: AnalyticsSnapshot) {
 
 export function invalidateAnalyticsSnapshot(snapshotId: string, reason: string) {
   return apiPost<AnalyticsSnapshotRecord>(`/api/v1/analytics-snapshots/${snapshotId}/invalidate`, { reason });
+}
+
+export interface LatestAnalyticsSnapshotFilters extends Record<string, unknown> {
+  domain: SnapshotDomain;
+  bucket: SnapshotBucket;
+  analytics_version: string;
+  qc_version: string;
+  filters_hash: string;
+  node_id?: string;
+  metric?: string;
+  calibration_version?: string;
+}
+
+export function getLatestAnalyticsSnapshot(filters: LatestAnalyticsSnapshotFilters) {
+  return apiGet<AnalyticsSnapshotRecord>('/api/v1/analytics-snapshots/latest', filters);
 }

@@ -88,3 +88,13 @@ export function mergeSnapshots(prev: AnalyticsSnapshot, delta: AnalyticsSnapshot
   };
   return { previous_snapshot_id: prev.snapshot_id, new_snapshot: newSnapshot, processed_new_records: delta.quality.processed_count, skipped_duplicate_records: delta.quality.duplicate_count, conflict_count: delta.quality.conflict_count, invalidated_previous: false };
 }
+
+export function isSnapshotReusable(previous: AnalyticsSnapshot | null | undefined, currentIdentity: SnapshotIdentity): boolean {
+  if (!previous) return false;
+  if (previous.invalidated) return false;
+  return isSnapshotIdentityCompatible(previous.identity, currentIdentity);
+}
+
+export function getSnapshotDeltaCursor(snapshot: AnalyticsSnapshot | null | undefined): SnapshotCursor {
+  return snapshot ? { ...snapshot.cursor } : {};
+}
