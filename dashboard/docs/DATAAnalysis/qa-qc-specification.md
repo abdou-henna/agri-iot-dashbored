@@ -7,6 +7,11 @@
 
 ---
 
+## Approved folder placement
+
+Phase 7/8 documentation in this file maps to the existing dashboard structure under `dashboard/src/` only.
+Do not introduce parallel roots such as `dashboard/core/`, `dashboard/ai/`, or `dashboard/modules/`.
+
 ## 1. Purpose
 
 This document defines the quality-control rules that must run before feature engineering, alerting, or Gemini interpretation.

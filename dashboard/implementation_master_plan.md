@@ -418,6 +418,41 @@ Build a **fully deterministic, auditable data pipeline** that transforms raw IoT
 
 This layer is **mandatory before any AI usage**.
 
+### Approved folder placement (Phase 7/8)
+
+All new analytics and AI documentation in Phases 7 and 8 must map to the existing `dashboard/src/` tree:
+
+```text
+dashboard/src/
+  api/
+    analytics.api.ts          # optional only if backend endpoints exist
+    gemini.api.ts
+  hooks/
+    useAnalytics.ts
+    useReliabilityScores.ts
+    useAlertEvaluations.ts
+    useGeminiInsights.ts
+    useAiRecommendations.ts
+  types/
+    analytics.ts
+    ai.ts
+  utils/
+    analytics/
+      cleaning.ts
+      qc.ts
+      metrics.ts
+      reliability.ts
+      alerts.ts
+    ai/
+      geminiMapper.ts
+      boundaries.ts
+  config/
+    aiBoundaries.ts
+    geminiPrompts.ts
+```
+
+No conflicting placement should be proposed under `dashboard/core/`, `dashboard/ai/`, or `dashboard/modules/`.
+
 ---
 
 ### Core Principles
