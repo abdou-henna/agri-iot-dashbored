@@ -368,3 +368,20 @@ Backend agronomic system is stable and safe for frontend integration.
 ### Remaining limitations
 - Latest upload mode depends on `upload_id` being present in the currently fetched `system_events` window (same limitation as data freshness/windowing).
 - Season lifecycle still uses the existing phase-mapped backend category (`season_setup`) and existing create-event contract; no backend or schema normalization was introduced in this phase.
+
+## Phase 7.x — In-Memory Analytics Snapshot Foundation
+
+- **Files created/updated:**
+  - `dashboard/src/types/analytics.ts`
+  - `dashboard/src/utils/analytics/snapshots.ts`
+  - `dashboard/src/utils/analytics/index.ts`
+  - `dashboard/src/hooks/useAnalyticsSnapshot.ts`
+- **Derived-only rule:** snapshot objects are computed from existing hook outputs; no snapshot operation mutates source records.
+- **No raw mutation:** snapshot utilities and hook logic clone/merge into new arrays/objects only.
+- **No persistence:** no localStorage/sessionStorage/database writes were introduced.
+- **Validation result:** `npm run typecheck` and `npm run build` pass for the dashboard package after this phase update.
+- **Known limitations:**
+  - `reliability_score` intentionally remains undefined in quality summary for this phase.
+  - QC flag merge currently deduplicates by structural identity and does not classify conflict severity.
+  - In-memory snapshot lifecycle is per-render and not shared across views.
+- **Next step:** wire Phase 7.y incremental merge flow with existing deterministic analytics pipeline and version-aware invalidation triggers.
