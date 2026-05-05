@@ -13,6 +13,7 @@ const migrations = [
   '001_init.sql',
   '002_patch.sql',
   '003_agronomic.sql',
+  '004_analytics_snapshots.sql',
 ];
 
 export async function migrateDatabase() {
