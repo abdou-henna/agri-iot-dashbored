@@ -784,3 +784,14 @@ Backend agronomic system is stable and safe for frontend integration.
   - No new hardcoded left/right directional utilities in `src/components/ui`.
 - Next step:
   - Begin Stage 4B page-level migration only after Vitest-ready environment validation passes (`test`, `typecheck`, `build`).
+
+## HeroUI Stage 4B — First Feedback State Migration
+- **Target file migrated:** `dashboard/src/components/feedback/States.tsx`.
+- **Primitives used:** `StateBlock` for loading/empty/error shells and `Button` for retry action.
+- **Public API preservation result:** preserved exported names (`LoadingBlock`, `ErrorBlock`, `EmptyState`), prop names, retry callback contract, and caller-provided text passthrough.
+- **Behavior parity:** loading/empty/error rendering paths and retry action are unchanged in semantics; no data logic/routing/analytics/Gemini behavior altered.
+- **Validation results:** repository checks, test/typecheck/build, and safety scans completed for Stage 4B scope.
+- **Forbidden scan results:** no newly introduced forbidden key patterns or agronomic forbidden claims in targeted folders.
+- **RTL scan result:** no new `left/right/ml/mr/pl/pr/text-left/text-right` hardcoded classes introduced in touched component.
+- **Known warnings:** existing non-blocking build warnings may still appear (TanStack Query `use client`, HeroUI CSS minify, large chunk) and were treated as non-blocking per plan.
+- **Next step:** migrate the next low-risk feedback/state group one component cluster at a time (no page-level migration).

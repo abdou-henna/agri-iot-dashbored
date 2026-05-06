@@ -1,25 +1,27 @@
 import type { ApiError } from '../../api/client';
+import { Button, StateBlock } from '../ui';
 
 export function LoadingBlock({ label = 'Loading data' }: { label?: string }) {
-  return <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">{label}...</div>;
+  return <StateBlock state="loading" title={`${label}...`} description="" className="text-sm" />;
 }
 
 export function ErrorBlock({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const apiError = error as Partial<ApiError>;
   return (
-    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-      <div className="font-semibold">Could not load data.</div>
-      <div>{apiError.message ?? 'Check WebService connectivity.'}</div>
-      {onRetry ? (
-        <button className="mt-3 rounded-md bg-red-700 px-3 py-2 text-white" onClick={onRetry}>
+    <StateBlock
+      state="error"
+      title="Could not load data."
+      description={apiError.message ?? 'Check WebService connectivity.'}
+      className="text-sm"
+      action={onRetry ? (
+        <Button variant="danger" size="sm" className="mt-3" onClick={onRetry}>
           Retry
-        </button>
-      ) : null}
-    </div>
+        </Button>
+      ) : undefined}
+    />
   );
 }
 
 export function EmptyState({ message }: { message: string }) {
-  return <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">{message}</div>;
+  return <StateBlock state="empty" title={message} description="" className="text-sm" />;
 }
-
