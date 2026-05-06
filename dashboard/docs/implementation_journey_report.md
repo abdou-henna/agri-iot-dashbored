@@ -746,8 +746,41 @@ Backend agronomic system is stable and safe for frontend integration.
 - Applied principles: semantic intent, accessibility, composition, progressive disclosure, predictable behavior, type safety, style/logic separation, customization, extensibility.
 
 ### Validation result
-- Scope validation and full test/typecheck/build validations executed and passed in this stage.
-- Required scans executed for Gemini key leakage, forbidden agronomic claims, and RTL hardcoded spacing risk inventory.
+- `npm run test -- --run` failed in this environment (`vitest: not found`).
+- `npm run typecheck` failed because Vitest module/types were unavailable in this environment.
+- `npm run build` was blocked by the typecheck failure.
+- Required scans were executed for Gemini key leakage, forbidden agronomic claims, and RTL hardcoded spacing risk inventory.
+- This is an environment/tooling limitation, not a runtime behavior change; rerun is required once Vitest is available.
 
 ### Next recommended step
 - Proceed to Stage 4A shared primitive wrappers using this i18n/RTL/theme contract, then migrate low-risk visual primitives first with behavior-parity checks.
+
+
+## HeroUI Stage 4A — Shared Primitive Wrapper Baseline
+
+- Files created:
+  - `dashboard/src/components/ui/Card.tsx`
+  - `dashboard/src/components/ui/Badge.tsx`
+  - `dashboard/src/components/ui/Button.tsx`
+  - `dashboard/src/components/ui/StateBlock.tsx`
+  - `dashboard/src/components/ui/SectionHeader.tsx`
+  - `dashboard/src/components/ui/index.ts`
+  - `dashboard/docs/heroui_stage4_shared_primitives_plan.md`
+- Files updated:
+  - `dashboard/docs/heroui_migration_plan.md`
+  - `dashboard/docs/ui_ux_design_system_plan.md`
+  - `dashboard/docs/implementation_journey_report.md`
+- HeroUI vs Tailwind wrapper decision:
+  - Stage 4A intentionally uses Tailwind-backed wrappers for low behavior/layout risk and to avoid page-level coupling.
+  - HeroUI semantic mapping is documented for Stage 4B introduction at call sites after validation gates are green.
+- Validation results:
+  - `npm run test -- --run`: failed in this environment if Vitest is unavailable.
+  - `npm run typecheck`: failed when Vitest module/types are unavailable.
+  - `npm run build`: blocked by typecheck failure in that environment.
+  - These failures are tooling/environment limitations, not runtime behavior changes.
+- Forbidden scan results:
+  - UI primitives contain no fetch/API/hooks/analytics/Gemini logic and no agronomic claim wording.
+- RTL scan result:
+  - No new hardcoded left/right directional utilities in `src/components/ui`.
+- Next step:
+  - Begin Stage 4B page-level migration only after Vitest-ready environment validation passes (`test`, `typecheck`, `build`).
