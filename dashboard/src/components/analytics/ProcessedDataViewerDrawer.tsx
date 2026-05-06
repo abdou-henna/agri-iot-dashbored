@@ -26,6 +26,7 @@ export function ProcessedDataViewerDrawer({ snapshot, agronomicIntelligence, con
         <div className="mb-3 flex items-center justify-between"><h3 className="text-lg font-semibold">Processed Data / Cleaned Analytics Viewer</h3><button type="button" className="rounded border px-3 py-1" onClick={() => setOpen(false)}>Close</button></div>
         <p className="mb-3 text-xs text-slate-600">This viewer shows deterministic processed data. Gemini interpretation is not processed data.</p>
         <div className="mb-3 rounded border p-3 text-xs">Snapshot metadata: {model.snapshot_meta.snapshot_id} · {model.snapshot_meta.window_start} → {model.snapshot_meta.window_end}</div>
+        <div className="mb-3 rounded border p-3 text-xs">Provenance source: {model.rows.some((row) => row.provenance_source === 'snapshot_provenance') ? 'Snapshot provenance' : 'Aggregate fallback'}</div>
         <ProcessedDataViewerTable model={model} />
         <div className="mt-3 grid gap-2 text-xs md:grid-cols-3"><div className="rounded border p-2">QC summary: {model.snapshot_qc_flags.length} flags</div><div className="rounded border p-2">Reliability summary: {model.snapshot_reliability.level}</div><div className="rounded border p-2">Deterministic alerts: {model.snapshot_alerts.length}</div></div>
         <div className="mt-3"><button type="button" className="rounded bg-slate-900 px-3 py-2 text-sm text-white" onClick={onExport}>Export CSV</button></div>

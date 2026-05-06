@@ -582,3 +582,18 @@ raw data must never be changed by analytics
 ```
 
 End of document.
+
+
+## Optional Row-Level Provenance (Backward-Compatible)
+
+The snapshot payload may now include an optional `provenance_rows` array for row-level lineage transparency.
+
+- This extension is backward-compatible because all provenance fields are optional.
+- Existing snapshots without `provenance_rows` remain valid and continue to be rendered by aggregate fallback logic.
+- Provenance rows expose `raw_value`, `cleaned_value`, and `processed_value` lineage for display/export clarity.
+- Timestamp semantics remain domain-specific:
+  - sensor: `measured_at`
+  - system: `event_time`
+  - agronomic: `started_at` and optional `ended_at`
+  - upload: `upload_received_at`
+- Provenance rows are transparency/reporting fields only. They do not alter deterministic formulas, QC logic, reliability scoring, or alert evaluation behavior.

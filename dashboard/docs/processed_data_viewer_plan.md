@@ -10,6 +10,7 @@ Define a reviewer-facing, read-only viewer that makes deterministic post-ingesti
 
 ## 3. Current available deterministic data sources
 Primary deterministic sources already exist and must be reused:
+- Optional `snapshot.payload.provenance_rows` is the preferred viewer source when available; aggregate snapshot rows remain a supported fallback for backward compatibility.
 - Analytics snapshot contracts and docs in `dashboard/docs/analytics-snapshot-contract.md`.
 - Cleaning, QC, metrics, reliability, and alerts logic in `dashboard/src/utils/analytics/*`.
 - Snapshot retrieval hooks:

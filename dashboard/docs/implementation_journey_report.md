@@ -643,3 +643,15 @@ Backend agronomic system is stable and safe for frontend integration.
 - Validation results: typecheck/build and forbidden scans executed successfully.
 - Known limitations: snapshot contract does not currently include raw-cleaned per-row pairs.
 - Next recommended step: extend snapshot contract to include optional row-level provenance metadata (raw-cleaned linkage) while preserving deterministic logic.
+
+
+## Processed Data Viewer Provenance Contract Extension
+
+- Files changed: analytics snapshot types, processed viewer types, adapter, table/drawer, export formatter, and processed-data documentation.
+- Optional contract fields added: `payload.provenance_rows` with row-level lineage and timestamp semantics.
+- Adapter behavior: provenance-first mapping when rows exist; aggregate fallback preserved when provenance is absent.
+- UI/export behavior: provenance source labels shown, lineage columns exported, and domain-appropriate timestamps retained.
+- Backward compatibility: existing snapshots without provenance continue to render and export via fallback path.
+- Validation results: typecheck/build and guardrail scans executed successfully in this change set.
+- Known limitations: aggregate fallback cannot reconstruct raw/cleaned lineage if snapshot contract omits provenance rows.
+- Next recommended step: add fixture-driven UI tests for provenance + fallback permutations across all domains.
