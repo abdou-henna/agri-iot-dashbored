@@ -148,3 +148,11 @@ Create a consistent visual system for the existing dashboard while preserving de
 - HeroUI semantic intent mapping added to keep wrappers intent-driven and type-safe.
 - Dashboard/chart professionalization rules added: explicit missing-data visibility, no null interpolation, preserved deterministic-vs-AI boundary.
 
+
+
+## Stage 4A primitive wrapper baseline
+- Establish semantic primitive APIs before feature/page migration: `Card`, `Badge`, `Button`, `StateBlock`, `SectionHeader`.
+- Primitive wrappers are UI-only and must not include analytics, Gemini, API, or business logic.
+- RTL/i18n requirements: logical and direction-safe styling (no hardcoded left/right), text and metadata layout must support both LTR and RTL contexts.
+- Dark-mode readiness: use semantic surface/border/text contrast classes that work for both light and dark modes.
+- No feature/page migration in Stage 4A; page migration starts in Stage 4B only after green validation in a Vitest-ready environment.

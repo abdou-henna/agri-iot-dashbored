@@ -83,3 +83,9 @@ Before shared primitive/page migration, the project adds i18n/RTL/dark-mode read
 - **Stop conditions:** unresolved accessibility blockers, mobile-critical flow regressions, unacceptable bundle/perf delta
 - **Rollback notes:** maintain release candidate tag and rollback commit references
 - **Acceptance criteria:** visual QA, mobile QA, accessibility review, and build-size/performance review completed with documented rollback strategy
+
+
+## Stage 4A update (shared primitives baseline)
+- Shared UI primitive wrappers were created under `dashboard/src/components/ui/` only.
+- No feature/page migration occurred in Stage 4A.
+- Stage 4B page migration may start only after `npm run test -- --run`, `npm run typecheck`, and `npm run build` pass in a Vitest-ready environment.
