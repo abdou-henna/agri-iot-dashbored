@@ -20,6 +20,7 @@
 - **Phase 4 backend:** COMPLETE (implemented and hardened).
 - **Phase 4 frontend integration:** PARTIAL.
 - **Phase 5:** NOT STARTED.
+- Gemini JSON schema patch added responseSchema and safe output normalization to prevent gemini_invalid_shape when Gemini omits optional arrays or top-level fields.
 
 ### Immediate next step
 - Phase 4 Frontend Integration: hooks first, then connected irrigation UI, then live runtime validation.
