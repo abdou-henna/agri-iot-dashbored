@@ -860,3 +860,6 @@ Backend agronomic system is stable and safe for frontend integration.
 - Fixed mobile command/status row wrapping with safe min/max width constraints, wrapped badges, and a mobile-first stacked action area.
 - No chart/data logic changes were made.
 - User runs npm/typecheck/build/test/dev validation locally.
+
+## UI Migration Guardrails Document
+This guardrails document was created to prevent recurrence of Overview migration failures (invalid HeroUI imports, type drift, responsive overflow, and spacing regressions) by standardizing workflow, constraints, and acceptance gates for all future UI-only changes.
