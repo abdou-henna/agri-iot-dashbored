@@ -787,3 +787,13 @@ Promotion acceptance criteria to production-quality:
   - Deterministic alerts remain distinct from Gemini interpretation.
   - Upload timestamps are clearly labeled as transfer metadata, not analysis timestamps.
 - **Clarification:** This is a transparency/reviewer feature and not a new analytics engine.
+
+## UI/UX Professionalization Roadmap
+- **Status:** Planned, not implemented.
+- **Scope:** Visual/design-system standardization only (cards, badges, tables, state messaging, responsive hierarchy).
+- **HeroUI dependency caution:** External HeroUI compatibility remains unverified in this pass; status is **insufficient external verification; pending manual HeroUI documentation access**.
+- **Execution rule:** Implementation must be staged and UI-only; no coupling with analytics logic, Gemini boundary behavior, backend/API contracts, schema, or firmware.
+- **Primary reference docs:**
+  - `dashboard/docs/ui_ux_audit.md`
+  - `dashboard/docs/heroui_feasibility_plan.md`
+  - `dashboard/docs/ui_ux_design_system_plan.md`

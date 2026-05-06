@@ -686,3 +686,27 @@ Backend agronomic system is stable and safe for frontend integration.
   - Local environment currently lacks executable/type-resolvable Vitest despite script wiring; test/build validation cannot complete until dependency availability is fixed in this container.
 - Next recommended step:
   - Ensure Vitest package and type resolution are available in `dashboard` (`node_modules` + lock alignment), then rerun test/typecheck/build and keep/adjust tests if any contract mismatches appear.
+
+## UI/UX Audit and HeroUI Feasibility Planning
+- Files created:
+  - `dashboard/docs/ui_ux_audit.md`
+  - `dashboard/docs/heroui_feasibility_plan.md`
+  - `dashboard/docs/ui_ux_design_system_plan.md`
+- HeroUI feasibility result:
+  - **insufficient external verification; pending manual HeroUI documentation access.**
+  - Current recommendation: adopt limited visual style without installing HeroUI.
+- Audit summary:
+  - Identified strong domain/navigation foundations with inconsistency hotspots in card/table/badge/state patterns.
+  - Flagged high-risk no-touch zones (analytics/Gemini/backend contracts) and prioritized low-risk UI standardization.
+- Design-system plan summary:
+  - Defined tokenized visual rules, deterministic-vs-AI separation, diagnostics language, table/drawer patterns, and staged rollout.
+  - Explicit preservation constraints included for reliability/limitations visibility and processed viewer read-only semantics.
+- Runtime/dependency integrity:
+  - No runtime source behavior changes.
+  - No dependency additions or config modifications.
+- Validation results:
+  - Docs-only diff boundary confirmed.
+  - test/typecheck/build executed after doc updates.
+  - HeroUI scan confirms no HeroUI terms added in package/config/src.
+- Next step:
+  - Run a dedicated UI-only refactor phase using `ui_ux_design_system_plan.md` stage sequence, with no analytics/Gemini/backend/schema changes.
