@@ -816,3 +816,14 @@ Backend agronomic system is stable and safe for frontend integration.
 - Forbidden scan results: no Gemini key/API endpoint references introduced; no agronomic-claim strings added.
 - RTL scan result: replaced `ml-4` with logical `ms-4`; no new left/right hardcoding introduced in migrated files.
 - Next step: Stage 4D can migrate remaining low-risk diagnostics shells (non-chart) after visual QA signoff.
+
+## HeroUI Stage 5A — Professional Overview Dashboard Redesign
+- **Target file:** `dashboard/src/features/overview/OverviewPage.tsx`.
+- **Visual goals implemented:** Introduced a stronger page-level operational snapshot hero panel, redesigned KPI cards with clearer hierarchy and sparkline framing, compact node status cards, and a more structured recent alerts panel with severity badges.
+- **Primitives used:** `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `Badge`, `SectionHeader`, and existing feedback state blocks.
+- **Primitive changes if any:** None required in shared primitive files for Stage 5A.
+- **Behavior/data parity summary:** Existing hooks, stale thresholds (`isOlderThanHours`), KPI metric sources, sparkline data transforms, alert event timestamps, and logs link behavior were preserved.
+- **Validation results:** Test, typecheck, and build executed after redesign; additional guard scans confirmed no restricted claims, secrets, or forbidden logic additions in Overview/UI scope.
+- **Visual QA notes:** Manual browser verification remains required for desktop/mobile/dark-mode inspection in this non-interactive environment.
+- **Known warnings:** Existing ecosystem warnings (TanStack Query `use client`, HeroUI CSS minify noise, large bundle chunk) remain non-blocking and unchanged by this stage.
+- **Next step:** Proceed to Stage 5B only after user visual approval of the new Overview composition language.

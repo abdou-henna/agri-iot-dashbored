@@ -156,3 +156,6 @@ Create a consistent visual system for the existing dashboard while preserving de
 - RTL/i18n requirements: logical and direction-safe styling (no hardcoded left/right), text and metadata layout must support both LTR and RTL contexts.
 - Dark-mode readiness: use semantic surface/border/text contrast classes that work for both light and dark modes.
 - No feature/page migration in Stage 4A; page migration starts in Stage 4B only after green validation in a Vitest-ready environment.
+
+## Stage 5A reference implementation note
+- Overview is now the first reference implementation for the professional dashboard visual system, establishing card hierarchy, KPI composition, status semantics, and alert presentation patterns for later page migrations.
