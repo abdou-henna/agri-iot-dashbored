@@ -132,3 +132,11 @@ Create a consistent visual system for the existing dashboard while preserving de
 - Reliability/limitations and low-confidence warnings must remain explicit and visible.
 - Processed Data Viewer must remain read-only and lineage-aware.
 - No unsupported agronomic claims may be introduced by UI copy or styling.
+
+## HeroUI Alignment Strategy
+- **Near-term:** continue current Tailwind-based visual standardization only (no HeroUI install yet).
+- **Medium-term:** execute compatibility migration path (React 19 then Tailwind CSS v4) with regression validation at each stage.
+- **Long-term:** adopt HeroUI components in controlled stages after compatibility baseline is proven.
+- Preserve deterministic-vs-AI separation in all visual patterns.
+- Keep reliability/limitations visibility explicit at point of recommendation.
+- Do not introduce unsupported agronomic claims through UI wording or component defaults.

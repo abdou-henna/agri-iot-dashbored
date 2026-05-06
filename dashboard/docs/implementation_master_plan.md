@@ -797,3 +797,10 @@ Promotion acceptance criteria to production-quality:
   - `dashboard/docs/ui_ux_audit.md`
   - `dashboard/docs/heroui_feasibility_plan.md`
   - `dashboard/docs/ui_ux_design_system_plan.md`
+
+## HeroUI Migration Roadmap
+- **Status:** planned, not implemented.
+- Direct HeroUI install is currently blocked by React/Tailwind major-version mismatch.
+- A staged migration is required: React 19 upgrade -> Tailwind CSS v4 upgrade -> HeroUI infrastructure -> controlled component migration.
+- **Current stage:** Stage 0 documentation-only compatibility audit and plan.
+- No runtime or dependency changes have been applied yet for HeroUI adoption.
