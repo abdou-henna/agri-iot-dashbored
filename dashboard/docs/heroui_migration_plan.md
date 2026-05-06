@@ -100,3 +100,8 @@ Before shared primitive/page migration, the project adds i18n/RTL/dark-mode read
 - Next candidates should continue one component group per PR with strict behavior parity validation.
 
 - Stage 4C begins visible UI migration with low-risk overview/diagnostics only. Charts, processed table/drawer, Gemini, agronomy panels deferred. Future batches expand only after this validates locally.
+
+## Stage 5A update (professional Overview redesign start)
+- Stage 5A begins professional page-level visual redesign with **Overview only**.
+- Charts, hooks, analytics, Gemini surfaces, backend/WebService, and data logic remain untouched.
+- Next migration stage proceeds only after user visual approval of Overview redesign outcomes.
