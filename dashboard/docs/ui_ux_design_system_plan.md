@@ -140,3 +140,11 @@ Create a consistent visual system for the existing dashboard while preserving de
 - Preserve deterministic-vs-AI separation in all visual patterns.
 - Keep reliability/limitations visibility explicit at point of recommendation.
 - Do not introduce unsupported agronomic claims through UI wording or component defaults.
+
+## Pre-Stage 4 foundation additions
+- Arabic/English readiness (`en`, `ar`) added as a prerequisite for primitive migration.
+- RTL/LTR readiness defined via document-level `lang`/`dir` strategy and start/end layout semantics.
+- Light/dark readiness defined with safe appearance preference model (`light`/`dark`/`system`).
+- HeroUI semantic intent mapping added to keep wrappers intent-driven and type-safe.
+- Dashboard/chart professionalization rules added: explicit missing-data visibility, no null interpolation, preserved deterministic-vs-AI boundary.
+
