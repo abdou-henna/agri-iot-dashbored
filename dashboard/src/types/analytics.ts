@@ -135,6 +135,36 @@ export interface SnapshotQualitySummary {
   reliability_level?: ReliabilityScore['level'];
 }
 
+
+export interface AnalyticsSnapshotProvenanceRow {
+  row_id: string;
+  domain: 'sensor' | 'system' | 'agronomic' | 'upload';
+  source_label: string;
+  node_id?: AnalyticsNodeId;
+  metric?: AnalyticsMetricName | string;
+  unit?: string | null;
+  raw_value: number | string | null;
+  cleaned_value: number | string | null;
+  processed_value: number | string | null;
+  processing_status: 'accepted' | 'downgraded' | 'excluded' | 'missing' | 'derived_only';
+  qc_flags: QcFlag[];
+  reliability: ReliabilityScore | null;
+  deterministic_alert_refs: Array<{
+    alert_id: string;
+    title: string;
+    severity: EventSeverity;
+    alert_type: string;
+  }>;
+  timestamps: {
+    measured_at?: string;
+    event_time?: string;
+    started_at?: string;
+    ended_at?: string;
+    upload_received_at?: string;
+  };
+  limitations: string[];
+}
+
 export interface SnapshotPayload {
   aggregates?: ReadonlyArray<AggregatePoint>;
   qc_flags?: ReadonlyArray<QcFlag>;
@@ -143,6 +173,7 @@ export interface SnapshotPayload {
   features?: Record<string, unknown>;
   quality?: SnapshotQualitySummary;
   cursor?: SnapshotCursor;
+  provenance_rows?: ReadonlyArray<AnalyticsSnapshotProvenanceRow>;
 }
 
 export type SnapshotInvalidationReason =

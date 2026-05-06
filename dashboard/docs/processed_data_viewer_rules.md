@@ -17,6 +17,7 @@ Strict implementation guardrails for building the Processed Data / Cleaned Analy
 - NEVER export secrets, raw payload secrets, API keys, or DB credentials.
 
 ## 3. Data source rules
+- Provenance rows are display/reporting lineage only and must not mutate or replace raw records.
 - Use existing deterministic analytics snapshot sources and analytics utility outputs only.
 - Do not add alternate side-channel data derivations.
 - Keep domain identifiers explicit in every row/view model.

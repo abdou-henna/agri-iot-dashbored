@@ -1,5 +1,5 @@
 import type { EventSeverity } from './common';
-import type { AnalyticsSnapshot, QcFlag, ReliabilityScore, AlertEvaluation } from './analytics';
+import type { AnalyticsSnapshot, AnalyticsSnapshotProvenanceRow, QcFlag, ReliabilityScore, AlertEvaluation } from './analytics';
 
 export type ProcessedDataDomain = 'sensor' | 'system' | 'agronomic' | 'upload';
 export type ProcessedDataStatus = 'accepted' | 'downgraded' | 'excluded' | 'missing' | 'derived_only';
@@ -32,6 +32,8 @@ export interface ProcessedDataAlertRef {
   alert_type: string;
 }
 
+export type ProcessedDataProvenanceSource = 'snapshot_provenance' | 'snapshot_aggregate_fallback';
+
 export interface ProcessedDataViewerRow {
   id: string;
   domain: ProcessedDataDomain;
@@ -47,6 +49,7 @@ export interface ProcessedDataViewerRow {
   deterministic_alerts: ProcessedDataAlertRef[];
   timestamps: ProcessedDataTimestampSet;
   limitations: string[];
+  provenance_source: ProcessedDataProvenanceSource;
 }
 
 export interface ProcessedDataViewerSnapshotMeta {
@@ -79,3 +82,6 @@ export interface ProcessedDataViewerFilters {
   alert_severity: 'all' | EventSeverity;
   search: string;
 }
+
+
+export type ProcessedDataViewerRowFromProvenance = Omit<ProcessedDataViewerRow, 'id' | 'provenance_source'> & Pick<AnalyticsSnapshotProvenanceRow, 'row_id'>;
