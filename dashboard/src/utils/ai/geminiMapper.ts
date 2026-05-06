@@ -70,6 +70,8 @@ export function buildGeminiInsightInput(snapshot: AnalyticsSnapshot, options: Bu
       predictive_risk_context: options.agronomicIntelligence.predictive_risk_context as unknown as Record<string, unknown>,
       reliability: options.agronomicIntelligence.reliability as unknown as Record<string, unknown>,
       deterministic_alerts: options.agronomicIntelligence.deterministic_alerts.map((item) => ({ ...item })) as Array<Record<string, unknown>>,
+      limitations: [...options.agronomicIntelligence.limitations],
+      forbidden_claims: [...options.agronomicIntelligence.forbidden_claims],
     } : undefined,
     forbidden_claims: GEMINI_FORBIDDEN_CLAIMS,
   };
