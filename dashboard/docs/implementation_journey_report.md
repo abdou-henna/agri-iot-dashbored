@@ -844,3 +844,10 @@ Backend agronomic system is stable and safe for frontend integration.
 - Fix: Overview page was restored to internal shared UI primitives and safe semantic markup while preserving Stage 5B visual intent and data behavior.
 - Execution model: user runs all npm/dev/build/test commands locally; no local package installation or environment repair was performed in this recovery step.
 - Future rule: before future HeroUI work, verify installed exports locally (or provide explicit export list) before coding page-level imports/usages.
+
+## HeroUI Stage 5B.3 — Overview Runtime Visual Polish
+
+- Fixed KPI sparkline container sizing so each card reserves stable chart height and avoids collapsed chart regions.
+- Fixed Operational Snapshot spacing with explicit card/header/body padding, cleaner section separation, and improved alert block breathing room.
+- No chart/data logic changes were made (hooks, transforms, semantics unchanged).
+- Validation execution is delegated to the user locally.
