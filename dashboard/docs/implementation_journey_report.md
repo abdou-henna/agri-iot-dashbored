@@ -851,3 +851,12 @@ Backend agronomic system is stable and safe for frontend integration.
 - Fixed Operational Snapshot spacing with explicit card/header/body padding, cleaner section separation, and improved alert block breathing room.
 - No chart/data logic changes were made (hooks, transforms, semantics unchanged).
 - Validation execution is delegated to the user locally.
+
+## HeroUI Stage 5B.3 — Overview Typecheck and Mobile Visual Polish
+
+- Fixed `metricLabel()` typing by switching to a partial `MetricKey` map with fallback label behavior retained.
+- Fixed KPI sparkline container visibility by giving the chart frame a stable reserved height and full-size inner wrapper.
+- Fixed Operational Snapshot spacing by improving header/body padding, card grid gaps, and warning block breathing room.
+- Fixed mobile command/status row wrapping with safe min/max width constraints, wrapped badges, and a mobile-first stacked action area.
+- No chart/data logic changes were made.
+- User runs npm/typecheck/build/test/dev validation locally.
