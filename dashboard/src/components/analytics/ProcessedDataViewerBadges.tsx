@@ -1,18 +1,19 @@
+import { Badge } from '../ui';
 import type { EventSeverity } from '../../types/common';
 import type { ProcessedDataReliability, ProcessedDataStatus } from '../../types/processedDataViewer';
 
 export function StatusBadge({ status }: { status: ProcessedDataStatus }) {
-  return <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{status}</span>;
+  return <Badge variant="default">{status}</Badge>;
 }
 
 export function ReliabilityBadge({ reliability }: { reliability: ProcessedDataReliability }) {
-  return <span className="rounded-full bg-blue-50 px-2 py-1 text-xs text-blue-700">{reliability.level} {reliability.score == null ? '' : `(${reliability.score.toFixed(2)})`}</span>;
+  return <Badge variant="info">{reliability.level} {reliability.score == null ? '' : `(${reliability.score.toFixed(2)})`}</Badge>;
 }
 
 export function QcFlagBadge({ code, severity }: { code: string; severity: EventSeverity }) {
-  return <span className="rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-800">{code} ({severity})</span>;
+  return <Badge variant="warning">{code} ({severity})</Badge>;
 }
 
 export function AlertSeverityBadge({ severity }: { severity: EventSeverity }) {
-  return <span className="rounded-full bg-rose-50 px-2 py-1 text-xs text-rose-700">{severity}</span>;
+  return <Badge variant="danger">{severity}</Badge>;
 }
