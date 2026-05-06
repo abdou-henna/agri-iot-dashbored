@@ -3,6 +3,8 @@ import type { GeminiAnalysisType, GeminiInsightInput } from '../../types/gemini'
 import { GEMINI_FORBIDDEN_CLAIMS } from '../../config/geminiPrompts';
 import { evaluateGeminiReliabilityGate } from './geminiReliabilityGate';
 
+import type { AgronomicIntelligenceOutput } from '../../types/agronomicIntelligence';
+
 interface BuildGeminiInsightOptions {
   analysis_type?: GeminiAnalysisType;
   timezone?: string;
@@ -10,6 +12,7 @@ interface BuildGeminiInsightOptions {
   season_status?: 'active' | 'inactive' | 'unknown';
   days_since_last_cut?: number | null;
   calibration_present?: boolean;
+  agronomicIntelligence?: AgronomicIntelligenceOutput | null;
 }
 
 export function buildGeminiInsightInput(snapshot: AnalyticsSnapshot, options: BuildGeminiInsightOptions = {}): GeminiInsightInput {
@@ -58,6 +61,16 @@ export function buildGeminiInsightInput(snapshot: AnalyticsSnapshot, options: Bu
       limitations: [...limitations],
     },
     alerts: (snapshot.payload.alerts ?? []).map((alert) => ({ ...alert })) as Array<Record<string, unknown>>,
+    agronomic_intelligence: options.agronomicIntelligence ? {
+      farm_state: options.agronomicIntelligence.farm_state as unknown as Record<string, unknown>,
+      irrigation_reasoning: options.agronomicIntelligence.irrigation_reasoning as unknown as Record<string, unknown>,
+      pivot_intelligence: options.agronomicIntelligence.pivot_intelligence as unknown as Record<string, unknown>,
+      cutting_regrowth_context: options.agronomicIntelligence.cutting_regrowth_context as unknown as Record<string, unknown>,
+      fertilization_context: options.agronomicIntelligence.fertilization_context as unknown as Record<string, unknown>,
+      predictive_risk_context: options.agronomicIntelligence.predictive_risk_context as unknown as Record<string, unknown>,
+      reliability: options.agronomicIntelligence.reliability as unknown as Record<string, unknown>,
+      deterministic_alerts: options.agronomicIntelligence.deterministic_alerts.map((item) => ({ ...item })) as Array<Record<string, unknown>>,
+    } : undefined,
     forbidden_claims: GEMINI_FORBIDDEN_CLAIMS,
   };
 }

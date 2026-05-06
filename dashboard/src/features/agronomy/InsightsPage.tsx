@@ -4,6 +4,8 @@ import { GeminiInsightPanel } from '../../components/ai/GeminiInsightPanel';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/States';
 import { useAgronomicInsights } from '../../hooks/useAgronomicInsights';
 import { useAnalyticsSnapshot } from '../../hooks/useAnalyticsSnapshot';
+import { useAgronomicIntelligence } from '../../hooks/useAgronomicIntelligence';
+import { AgronomicIntelligencePanel } from '../../components/agronomy/AgronomicIntelligencePanel';
 import { useTimeZone } from '../../hooks/useTimeZone';
 import type { GeminiAnalysisType } from '../../types/gemini';
 import { formatDisplayTime, rangeForPreset } from '../../utils/time';
@@ -16,6 +18,7 @@ function DeltaLabel({ value }: { value: number }) {
 export function InsightsPage() {
   const insights = useAgronomicInsights();
   const { timezone } = useTimeZone();
+  const agronomicIntel = useAgronomicIntelligence();
   const [selectedScope, setSelectedScope] = useState<GeminiScopeKey>('pivot_1_main');
   const [selectedWindow, setSelectedWindow] = useState<GeminiWindowKey>('7d');
   const [selectedAnalysisType, setSelectedAnalysisType] = useState<GeminiAnalysisType>('weekly_summary');
@@ -113,6 +116,8 @@ export function InsightsPage() {
         </div>
       </section>
 
+      <AgronomicIntelligencePanel data={agronomicIntel.agronomicIntelligence} />
+
       <GeminiContextControls
         selectedScope={selectedScope}
         selectedWindow={selectedWindow}
@@ -134,6 +139,7 @@ export function InsightsPage() {
         contextLabel={selectedScopeOption.label}
         windowLabel={selectedWindow}
         scopeLabel={selectedScopeOption.label}
+        agronomicIntelligence={agronomicIntel.agronomicIntelligence}
       />
     </div>
   );

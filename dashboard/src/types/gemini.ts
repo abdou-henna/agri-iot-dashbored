@@ -56,6 +56,16 @@ export interface GeminiInsightInput {
   agronomic_context: Record<string, unknown>;
   reliability: Record<string, unknown>;
   alerts: Array<Record<string, unknown>>;
+  agronomic_intelligence?: {
+    farm_state: Record<string, unknown>;
+    irrigation_reasoning: Record<string, unknown>;
+    pivot_intelligence: Record<string, unknown>;
+    cutting_regrowth_context: Record<string, unknown>;
+    fertilization_context: Record<string, unknown>;
+    predictive_risk_context: Record<string, unknown>;
+    reliability: Record<string, unknown>;
+    deterministic_alerts: Array<Record<string, unknown>>;
+  };
   forbidden_claims: GeminiForbiddenClaim[];
 }
 
