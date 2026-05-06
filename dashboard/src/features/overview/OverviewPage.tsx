@@ -13,6 +13,7 @@ import type { LatestReadingStatus } from '../../types/status';
 import { toTimeSeriesPoints } from '../../utils/chartData';
 import { ageLabel, formatDisplayTime, isOlderThanHours, rangeForPreset } from '../../utils/time';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/States';
+import { Badge, Card, CardContent, SectionHeader } from '../../components/ui';
 
 function latestFor(readings: LatestReadingStatus[] | undefined, nodeId: LatestReadingStatus['node_id']) {
   return readings?.find((reading) => reading.node_id === nodeId);
@@ -42,13 +43,13 @@ function KpiCard({
   const sparkline = useReadingAggregates(nodeId, metric, range, '1hour');
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <Card>
       <div className="text-xs font-semibold uppercase text-slate-500">{label}</div>
       <div className="mt-2 text-2xl font-semibold text-slate-950">{value}</div>
       <div className="mt-4">
         <Sparkline points={toTimeSeriesPoints(sparkline.data, timezone)} color={color} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -91,7 +92,7 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
+      <Card><CardContent className="p-4">
         <div className="grid gap-3 md:grid-cols-2">
           <div>
             <div className="text-xs font-semibold uppercase text-slate-500">Latest field measurement</div>
@@ -116,7 +117,7 @@ export function OverviewPage() {
             </div>
           ) : null}
         </div>
-      </section>
+      </CardContent></Card>
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         {kpis.map(([label, value, color, nodeId, metric]) => (
@@ -128,28 +129,28 @@ export function OverviewPage() {
         {(['MAIN', 'N2', 'N3'] as const).map((nodeId) => {
           const reading = latestFor(status.data?.latest_readings, nodeId);
           return (
-            <div key={nodeId} className="rounded-lg border border-slate-200 bg-white p-4">
+            <Card key={nodeId}><CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-semibold text-slate-900">{NODE_LABELS[nodeId]}</div>
                   <div className="text-sm text-slate-500">{nodeId}</div>
                 </div>
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs">{reading?.status ?? '—'}</span>
+                <Badge variant="muted">{reading?.status ?? '—'}</Badge>
               </div>
               <div className="mt-4 text-sm text-slate-600">Last measured: {formatDisplayTime(reading?.measured_at, { timezone })}</div>
               <div className="mt-1 text-sm text-slate-600">RSSI: {typeof reading?.rssi === 'number' ? reading.rssi : '—'}</div>
-            </div>
+            </CardContent></Card>
           );
         })}
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-900">Recent Alerts</h2>
+      <Card><CardContent className="p-4">
+        <SectionHeader title="Recent Alerts"
+          action={(
           <Link className="text-sm text-slate-700 underline" to="/diagnostics/logs">
             View all logs
           </Link>
-        </div>
+        )} />
         {events.isLoading ? <LoadingBlock label="Loading alerts" /> : null}
         {events.data?.events?.length ? (
           <div className="divide-y divide-slate-100">
@@ -164,7 +165,7 @@ export function OverviewPage() {
         ) : (
           <EmptyState message="No warning or error events in the current alert feed." />
         )}
-      </section>
+      </CardContent></Card>
     </div>
   );
 }
