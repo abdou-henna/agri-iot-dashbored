@@ -785,6 +785,15 @@ Backend agronomic system is stable and safe for frontend integration.
 - Next step:
   - Begin Stage 4B page-level migration only after Vitest-ready environment validation passes (`test`, `typecheck`, `build`).
 
+## HeroUI Stage 4B.2 — Processed Data Viewer Badges Migration
+- Target file: `dashboard/src/components/analytics/ProcessedDataViewerBadges.tsx`.
+- Primitives used: shared `Badge` primitive from `dashboard/src/components/ui`.
+- Public API preservation: preserved exported names (`StatusBadge`, `ReliabilityBadge`, `QcFlagBadge`, `AlertSeverityBadge`), prop names, and accepted values.
+- Behavior parity: preserved all displayed text semantics and mapping intent for status/reliability/QC/alert badge text; no threshold or analytics logic changes.
+- Validation result: repository checks were attempted in this environment; `test`/`typecheck`/`build` are blocked here by missing Vitest package/types, so local rerun is required.
+- Forbidden scan results: no forbidden API/Gemini/secret/domain-claim additions found in touched scope.
+- RTL scan result: no new left/right directional hardcoding introduced in migrated file.
+- Next step: validate Processed Data Viewer badge visuals locally, then proceed with next isolated Stage 4B call-site migration batch only after parity confirmation.
 ## HeroUI Stage 4B — First Feedback State Migration
 - **Target file migrated:** `dashboard/src/components/feedback/States.tsx`.
 - **Primitives used:** `StateBlock` for loading/empty/error shells and `Button` for retry action.

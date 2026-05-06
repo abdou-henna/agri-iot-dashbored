@@ -90,6 +90,10 @@ Before shared primitive/page migration, the project adds i18n/RTL/dark-mode read
 - No feature/page migration occurred in Stage 4A.
 - Stage 4B page migration may start only after `npm run test -- --run`, `npm run typecheck`, and `npm run build` pass in a Vitest-ready environment.
 
+## Stage 4B.2 note
+- Migrated Processed Data Viewer badges only (`ProcessedDataViewerBadges.tsx`) to shared primitive usage.
+- No table/drawer/page migration included in this step.
+- Larger Stage 4B batches should start only after local validation confirms parity.
 ## Stage 4B kickoff note
 - Stage 4B started with feedback state components only.
 - No page migration included in this step.
