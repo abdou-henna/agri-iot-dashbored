@@ -94,3 +94,7 @@ Before shared primitive/page migration, the project adds i18n/RTL/dark-mode read
 - Migrated Processed Data Viewer badges only (`ProcessedDataViewerBadges.tsx`) to shared primitive usage.
 - No table/drawer/page migration included in this step.
 - Larger Stage 4B batches should start only after local validation confirms parity.
+## Stage 4B kickoff note
+- Stage 4B started with feedback state components only.
+- No page migration included in this step.
+- Next candidates should continue one component group per PR with strict behavior parity validation.
