@@ -89,3 +89,8 @@ Before shared primitive/page migration, the project adds i18n/RTL/dark-mode read
 - Shared UI primitive wrappers were created under `dashboard/src/components/ui/` only.
 - No feature/page migration occurred in Stage 4A.
 - Stage 4B page migration may start only after `npm run test -- --run`, `npm run typecheck`, and `npm run build` pass in a Vitest-ready environment.
+
+## Stage 4B kickoff note
+- Stage 4B started with feedback state components only.
+- No page migration included in this step.
+- Next candidates should continue one component group per PR with strict behavior parity validation.
