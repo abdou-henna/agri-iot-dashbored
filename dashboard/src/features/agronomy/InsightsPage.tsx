@@ -7,6 +7,7 @@ import { useAnalyticsSnapshot } from '../../hooks/useAnalyticsSnapshot';
 import { useAgronomicIntelligence } from '../../hooks/useAgronomicIntelligence';
 import { AgronomicIntelligencePanel } from '../../components/agronomy/AgronomicIntelligencePanel';
 import { useTimeZone } from '../../hooks/useTimeZone';
+import { ProcessedDataViewerDrawer } from '../../components/analytics/ProcessedDataViewerDrawer';
 import type { GeminiAnalysisType } from '../../types/gemini';
 import { formatDisplayTime, rangeForPreset } from '../../utils/time';
 
@@ -117,6 +118,8 @@ export function InsightsPage() {
       </section>
 
       <AgronomicIntelligencePanel data={agronomicIntel.agronomicIntelligence} />
+
+      <ProcessedDataViewerDrawer snapshot={snapshotState.snapshot} agronomicIntelligence={agronomicIntel.agronomicIntelligence} contextLabel={selectedScopeOption.label} />
 
       <GeminiContextControls
         selectedScope={selectedScope}
