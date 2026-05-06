@@ -827,3 +827,13 @@ Backend agronomic system is stable and safe for frontend integration.
 - **Visual QA notes:** Manual browser verification remains required for desktop/mobile/dark-mode inspection in this non-interactive environment.
 - **Known warnings:** Existing ecosystem warnings (TanStack Query `use client`, HeroUI CSS minify noise, large bundle chunk) remain non-blocking and unchanged by this stage.
 - **Next step:** Proceed to Stage 5B only after user visual approval of the new Overview composition language.
+
+## HeroUI Stage 5B — Real HeroUI Overview Dashboard
+- Docs inspected: HeroUI design principles + Card/Chip/Button/Divider/Tabs/Tooltip/Skeleton component docs; local Stage 4/5 migration and design docs.
+- HeroUI components used: Card, CardHeader, CardBody, CardFooter, Chip, Button, Divider, Tabs/Tab, Tooltip, Skeleton in Overview.
+- Visual changes: replaced transitional wrapper cards with premium HeroUI card hierarchy, command row chips/actions, stronger section rhythm, framed sparkline containers, and polished alert feed rows.
+- Behavior/data parity: preserved existing hooks, stale thresholds, timestamp semantics, sparkline data transforms, alert filtering, and missing-value behavior.
+- Validation results: test, typecheck, build and required grep scans executed.
+- Visual QA notes: responsive/dark-mode oriented classes retained; manual browser inspection still required for final aesthetic sign-off.
+- Known warnings: none from implementation scope; non-blocking build warnings may still appear per project baseline.
+- Next step: migrate Diagnostics page group using Stage 5B Overview as visual reference only after user approval.

@@ -105,3 +105,7 @@ Before shared primitive/page migration, the project adds i18n/RTL/dark-mode read
 - Stage 5A begins professional page-level visual redesign with **Overview only**.
 - Charts, hooks, analytics, Gemini surfaces, backend/WebService, and data logic remain untouched.
 - Next migration stage proceeds only after user visual approval of Overview redesign outcomes.
+
+## Stage 5B update (real HeroUI Overview)
+- Stage 5B replaces the transitional Overview with a real HeroUI dashboard implementation.
+- Further page-level migrations should follow this Stage 5B reference only after explicit user approval.

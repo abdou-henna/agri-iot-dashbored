@@ -159,3 +159,7 @@ Create a consistent visual system for the existing dashboard while preserving de
 
 ## Stage 5A reference implementation note
 - Overview is now the first reference implementation for the professional dashboard visual system, establishing card hierarchy, KPI composition, status semantics, and alert presentation patterns for later page migrations.
+
+## Stage 5B reference baseline
+- The Overview page now serves as the first true HeroUI-based page-level visual reference.
+- Subsequent page migrations should align to this reference after explicit approval.
