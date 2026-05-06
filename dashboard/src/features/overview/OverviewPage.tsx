@@ -38,7 +38,7 @@ function statusColor(status: string | undefined): 'success' | 'warning' | 'dange
 }
 
 function metricLabel(metric: MetricKey) {
-  const map: Record<MetricKey, string> = {
+  const map: Partial<Record<MetricKey, string>> = {
     soil_moisture_percent: 'Soil moisture',
     soil_temperature_c: 'Soil temperature',
     air_temperature_c: 'Air temperature',
@@ -66,7 +66,7 @@ function KpiCard({ title, value, color, nodeId, metric, timezone }: { title: str
       </CardHeader>
       <CardContent className="flex flex-1 flex-col pt-0">
         <p className="text-xs text-slate-500">{metricLabel(metric)}</p>
-        <div className="mt-4 h-20 min-h-20 w-full overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100/50 p-2 dark:border-slate-700 dark:bg-slate-800/50">
+        <div className="mt-4 h-24 min-h-24 w-full overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100/50 p-2 dark:border-slate-700 dark:bg-slate-800/50">
           {sparkline.isLoading ? <div className="h-full w-full animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" /> : <div className="h-full w-full"><Sparkline points={toTimeSeriesPoints(sparkline.data, timezone)} color={color} /></div>}
         </div>
       </CardContent>
@@ -109,44 +109,50 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="rounded-2xl border-slate-200/80 bg-white/90 p-4 shadow-sm dark:bg-slate-900/90">
-        <SectionHeader
-          title="Overview Dashboard"
-          description="Operational command surface for ingestion, sensor freshness, and active alerts."
-          action={
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge size="sm" variant="info">Timezone: {timezone}</Badge>
-              <Badge size="sm" variant={isOlderThanHours(latestMeasurementAt, 2) ? 'warning' : 'success'}>Measurement: {ageLabel(latestMeasurementAt)}</Badge>
-              <Badge size="sm" variant={isOlderThanHours(lastUploadAt, 24) ? 'warning' : 'success'}>Upload: {ageLabel(lastUploadAt)}</Badge>
-              <Badge size="sm" variant={alertCount > 0 ? 'danger' : 'success'}>Alerts: {alertCount}</Badge>
-              <Link to="/diagnostics/logs"><Button size="sm" variant="secondary"><Upload className="h-4 w-4" aria-hidden="true" /> View logs</Button></Link>
+      <Card className="rounded-2xl border-slate-200/80 bg-white/90 shadow-sm dark:bg-slate-900/90">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex min-w-0 flex-col gap-3">
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Overview Dashboard</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Operational command surface for ingestion, sensor freshness, and active alerts.</p>
             </div>
-          }
-        />
+            <div className="flex min-w-0 max-w-full flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 max-w-full flex-wrap gap-2">
+                <Badge size="sm" variant="info" className="max-w-full break-words">Timezone: {timezone}</Badge>
+                <Badge size="sm" variant={isOlderThanHours(latestMeasurementAt, 2) ? 'warning' : 'success'} className="max-w-full break-words">Measurement: {ageLabel(latestMeasurementAt)}</Badge>
+                <Badge size="sm" variant={isOlderThanHours(lastUploadAt, 24) ? 'warning' : 'success'} className="max-w-full break-words">Upload: {ageLabel(lastUploadAt)}</Badge>
+                <Badge size="sm" variant={alertCount > 0 ? 'danger' : 'success'} className="max-w-full break-words">Alerts: {alertCount}</Badge>
+              </div>
+              <Link to="/diagnostics/logs" className="min-w-0 max-w-full">
+                <Button size="sm" variant="secondary" className="max-w-full whitespace-normal break-words"><Upload className="h-4 w-4 shrink-0" aria-hidden="true" /> View logs</Button>
+              </Link>
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
       <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 shadow-md dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/70">
-        <CardHeader className="gap-2 p-6 pb-4">
+        <CardHeader className="gap-2 p-5 pb-4 sm:p-6 sm:pb-4">
           <CardTitle>Operational Snapshot</CardTitle>
           <CardDescription>Live ingestion and field measurement recency for the current network.</CardDescription>
         </CardHeader>
         <div className="border-t border-slate-200 dark:border-slate-700" />
-        <CardContent className="space-y-4 p-6 pt-4">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-xl border border-slate-200/80 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+        <CardContent className="space-y-4 p-5 pt-4 sm:p-6 sm:pt-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-slate-200/80 bg-white/80 p-4 sm:p-5 dark:border-slate-700 dark:bg-slate-900/70">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Latest field measurement</p>
               <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{formatDisplayTime(latestMeasurementAt, { timezone })}</p>
               <p className="text-sm text-slate-500">Data age: {ageLabel(latestMeasurementAt)}</p>
             </div>
-            <div className="rounded-xl border border-slate-200/80 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+            <div className="rounded-xl border border-slate-200/80 bg-white/80 p-4 sm:p-5 dark:border-slate-700 dark:bg-slate-900/70">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Last data upload</p>
               <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{formatDisplayTime(lastUploadAt, { timezone })}</p>
               <p className="text-sm text-slate-500">Upload age: {ageLabel(lastUploadAt)}</p>
             </div>
           </div>
           <div className="space-y-3">
-            {isOlderThanHours(lastUploadAt, 24) ? <div className="flex items-start gap-2 rounded-xl border border-amber-300/70 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"><AlertTriangle className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>Last upload was over 24 hours ago. Dashboard may not reflect latest SD card data.</span></div> : null}
-            {isOlderThanHours(latestMeasurementAt, 2) ? <div className="flex items-start gap-2 rounded-xl border border-slate-300/80 bg-slate-100/70 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200"><Clock3 className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>No recent field measurement received.</span></div> : null}
+            {isOlderThanHours(lastUploadAt, 24) ? <div className="flex items-start gap-2 rounded-xl border border-amber-300/70 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"><AlertTriangle className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>Last upload was over 24 hours ago. Dashboard may not reflect latest SD card data.</span></div> : null}
+            {isOlderThanHours(latestMeasurementAt, 2) ? <div className="flex items-start gap-2 rounded-xl border border-slate-300/80 bg-slate-100/70 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200"><Clock3 className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>No recent field measurement received.</span></div> : null}
           </div>
         </CardContent>
       </Card>
