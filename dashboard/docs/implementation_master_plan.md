@@ -766,3 +766,24 @@ Promotion acceptance criteria to production-quality:
 - Gemini single and multi-snapshot pathways consume deterministic summaries consistently.
 - Phase 7/8 deterministic formulas and safety constraints remain non-destructively preserved.
 - Validation gates (typecheck/build/scans) pass.
+
+## Processed Data / Cleaned Analytics Viewer
+
+- **Status:** Planned, not implemented.
+- **Purpose:** Provide a transparency-first, reviewer-facing view of deterministic post-cleaning analytics outputs (raw vs cleaned lineage, QC, reliability, alerts, and snapshot metadata) without changing core analytics behavior.
+- **Docs created:**
+  - `dashboard/docs/processed_data_viewer_plan.md`
+  - `dashboard/docs/processed_data_viewer_rules.md`
+- **Roadmap position:** Implementation should occur after Post-Phase 9 Stage 3 completion.
+- **High-level scope:**
+  - Add a read-only viewer launched from Insights/Analytics context (drawer/sheet first).
+  - Display processed/derived records and snapshot summaries.
+  - Include filtering and safe export of reporting fields.
+  - Preserve strict data-domain and time-semantic boundaries.
+- **Acceptance criteria summary:**
+  - Raw values remain immutable and distinct from cleaned values.
+  - QC flags, reliability score/limitations, deterministic alerts, and snapshot metadata are visible in a single audit flow.
+  - Missing values remain missing.
+  - Deterministic alerts remain distinct from Gemini interpretation.
+  - Upload timestamps are clearly labeled as transfer metadata, not analysis timestamps.
+- **Clarification:** This is a transparency/reviewer feature and not a new analytics engine.

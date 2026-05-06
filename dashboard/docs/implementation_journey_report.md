@@ -619,3 +619,14 @@ Backend agronomic system is stable and safe for frontend integration.
 - Forbidden scan results: no frontend Gemini key or direct Google API usage; restricted terms present only in safe/forbidden contexts.
 - Known limitations: deterministic alerts remain MAIN-context only; no full multi-node alert harmonization.
 - Next step: Processed Data / Cleaned Analytics Viewer planning prompt.
+
+## Processed Data / Cleaned Analytics Viewer Planning
+
+- **Why this feature is needed:** Reviewers need a single, professional, read-only view showing how deterministic analytics progresses from raw readings through cleaning, QC, reliability scoring, and deterministic alerting, with snapshot metadata and limits made explicit.
+- **Docs created:**
+  - `dashboard/docs/processed_data_viewer_plan.md`
+  - `dashboard/docs/processed_data_viewer_rules.md`
+- **Implementation status:** Not started (planning baseline complete only).
+- **Code-impact statement:** No runtime source code changed for this planning task.
+- **Infrastructure-impact statement:** No schema, backend, or firmware changes were made.
+- **Recommended next step:** Run an implementation prompt focused on analytics-area viewer UI (drawer/sheet first), reusing existing snapshot contracts/hooks with strict read-only and safety-rule enforcement.
