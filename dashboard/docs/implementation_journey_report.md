@@ -572,3 +572,27 @@ Backend agronomic system is stable and safe for frontend integration.
 - Kept deterministic formulas, schema, and raw data handling unchanged.
 - Validation: typecheck/build pass and frontend key-pattern scan pass.
 - Known limitations: no AI persistence, no additional rate limiting, quality depends on snapshot availability/reliability/proxy uptime.
+
+## Phase 9–12 Compressed Agronomic Intelligence Implementation
+- Added deterministic agronomic intelligence engine types, utility functions, and composition hook.
+- Upgraded Gemini mapper input to include deterministic farm-state/event-response reasoning context.
+- Integrated a minimal deterministic intelligence panel in Insights page with clear separation from AI Interpretation.
+- No raw data mutation performed; no schema or migration changes made.
+- Safety boundaries preserved and expanded with explicit forbidden-claims and prompt constraints.
+- Validation: dashboard typecheck/build pass after implementation.
+- Known limitations: predictive risk context deferred; drying-rate and response lag are null when insufficient data.
+- Future work: reliability-weighted trend windows, richer pivot differential metrics, and deterministic alert projection.
+
+## Phase 9–12 Prototype Baseline and Planning Reset
+- Prototype reference: branch `phase-9-12-agronomic-intelligence-20260506-0721`, commit `d87f11f`.
+- Prototype created/changed runtime files across deterministic types/utilities/hook, Gemini mapper integration, and minimal deterministic UI panel.
+- Current classification: **prototype/skeleton**, not accepted as final implementation quality.
+- Non-acceptance reasons: point-based irrigation logic, null lag/drying metrics, MAIN-centric reliability, primitive deterministic panel, partial Gemini pathway integration, and deferred predictive risk internals.
+- New baseline docs added:
+  - `docs/agronomic_intelligence_master_plan.md`
+  - `docs/agronomic_intelligence_rules.md`
+  - `docs/agronomic_intelligence_prototype_audit.md`
+  - `docs/implementation_master_plan.md` (Phase 9–12 compressed roadmap section)
+- Next action: deterministic refinement patch only, following baseline rules and audit findings.
+- This task intentionally changed **no runtime source code**.
+- Validation result for this task: documentation-only diff scope and documentation secret-pattern scan completed.

@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useGeminiInsight } from '../../hooks/useGeminiInsight';
 import type { AnalyticsSnapshot } from '../../types/analytics';
 import type { GeminiAnalysisType } from '../../types/gemini';
+import type { AgronomicIntelligenceOutput } from '../../types/agronomicIntelligence';
 import { buildGeminiInsightInput } from '../../utils/ai/geminiMapper';
 import { buildGeminiMultiSnapshotInsightInput } from '../../utils/ai/geminiMultiSnapshotMapper';
 import { GeminiReliabilityGate } from './GeminiReliabilityGate';
@@ -15,6 +16,7 @@ interface GeminiInsightPanelProps {
   contextLabel: string;
   windowLabel: string;
   scopeLabel: string;
+  agronomicIntelligence?: AgronomicIntelligenceOutput | null;
 }
 
 function renderList(items: string[]) {
@@ -22,7 +24,7 @@ function renderList(items: string[]) {
   return <ul className="mt-1 list-disc space-y-1 pl-5 text-slate-700">{items.map((item) => <li key={item}>{item}</li>)}</ul>;
 }
 
-export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysisType, timezone = 'UTC', contextLabel, windowLabel, scopeLabel }: GeminiInsightPanelProps) {
+export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysisType, timezone = 'UTC', contextLabel, windowLabel, scopeLabel, agronomicIntelligence = null }: GeminiInsightPanelProps) {
   const isMulti = analysisType === 'pivot_comparison' || analysisType === 'farm_summary';
   const gate = useMemo(
     () => (isMulti ? evaluateGeminiMultiSnapshotReliabilityGate(comparisonSnapshots.map((item) => item.snapshot)) : evaluateGeminiReliabilityGate(snapshot)),
@@ -32,8 +34,8 @@ export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysi
   const input = useMemo(() => {
     if (isMulti) return buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots: comparisonSnapshots });
     if (!snapshot) return null;
-    return buildGeminiInsightInput(snapshot, { analysis_type: analysisType, timezone, crop: 'alfalfa', season_status: 'unknown', calibration_present: false });
-  }, [analysisType, comparisonSnapshots, isMulti, snapshot, timezone]);
+    return buildGeminiInsightInput(snapshot, { analysis_type: analysisType, timezone, crop: 'alfalfa', season_status: 'unknown', calibration_present: false, agronomicIntelligence });
+  }, [agronomicIntelligence, analysisType, comparisonSnapshots, isMulti, snapshot, timezone]);
 
   const gemini = useGeminiInsight(input);
   useEffect(() => { gemini.clear(); }, [analysisType, contextLabel, scopeLabel, windowLabel]);
