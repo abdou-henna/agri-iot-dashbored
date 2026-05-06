@@ -596,3 +596,15 @@ Backend agronomic system is stable and safe for frontend integration.
 - Next action: deterministic refinement patch only, following baseline rules and audit findings.
 - This task intentionally changed **no runtime source code**.
 - Validation result for this task: documentation-only diff scope and documentation secret-pattern scan completed.
+
+## Post-Phase 9 Stage 2 — Deterministic Agronomic Logic Refinement
+- Files changed: agronomicState.ts, irrigationReasoning.ts, pivotIntelligence.ts, fertilizationContext.ts, cuttingRegrowthReasoning.ts, useAgronomicIntelligence.ts, geminiMultiSnapshotMapper.ts, AgronomicIntelligencePanel.tsx, types updates.
+- Freshness fix: farm-state freshness now references `window_end` or latest measured_at; avoids historical Date.now freshness.
+- Irrigation refinement: 60m pre / 120m post median windows per pivot, sample counts, and per-pivot + overall response lag.
+- Pivot refinement: MAIN/N2 aligned recency comparison, 24h drying-rate deltas, and reliability-constrained confidence.
+- Fertilization refinement: 48h pre and 7d post event windows with median EC/moisture trend context and coverage limitations.
+- Reliability/alert integration: deterministic alert outputs wired from existing alert hook for MAIN moisture context.
+- Gemini parity: agronomic intelligence now available for multi-snapshot input path and retained in single-snapshot mapping.
+- Validation results: typecheck/build and forbidden scans executed successfully.
+- Known limitations: lag/trend outputs remain constrained by sample availability and event timing confidence.
+- Next step: Stage 3 Gemini/UI refinement.
