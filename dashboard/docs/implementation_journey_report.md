@@ -710,3 +710,12 @@ Backend agronomic system is stable and safe for frontend integration.
   - HeroUI scan confirms no HeroUI terms added in package/config/src.
 - Next step:
   - Run a dedicated UI-only refactor phase using `ui_ux_design_system_plan.md` stage sequence, with no analytics/Gemini/backend/schema changes.
+
+## HeroUI Stage 0 Compatibility Planning
+- Captured user-provided HeroUI v3 requirements: React 19+, Tailwind CSS v4, `@heroui/styles`, `@heroui/react`, and CSS import order requirements.
+- Verified current dashboard mismatch from `dashboard/package.json`: React 18.3.1 and Tailwind 3.4.7.
+- Created Stage 0 documentation set: `heroui_compatibility_audit.md`, `heroui_migration_plan.md`, and `heroui_stage0_upgrade_checklist.md`.
+- Updated feasibility/design-system/master-plan/journey docs to align on staged migration and blocked direct install.
+- No runtime, source, dependency, or configuration files were changed in Stage 0.
+- Validation run included tests, typecheck, build, diff-scope checks, and forbidden-string scans.
+- Next step: begin Stage 1 in a dedicated PR to upgrade React/ReactDOM to 19 with full regression checks before any HeroUI install.

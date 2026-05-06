@@ -53,9 +53,9 @@
    - Continue with internal design-system hardening; revisit HeroUI after manual verification.
 
 ## Recommendation
-**Adopt limited visual style without installing** for near-term UI professionalization.
+**Adopt HeroUI only after React 19 and Tailwind CSS v4 migration plan is executed and validated.**
 
 Rationale:
-- Local evidence supports immediate design-system consistency work without dependency risk.
-- HeroUI remains a future option, but integration decision must wait for manual doc verification.
-- Formal status for HeroUI package adoption remains: **insufficient external verification; pending manual HeroUI documentation access**.
+- User-provided HeroUI v3 requirements require React 19+ and Tailwind CSS v4.
+- Current project is React 18.3.1 and Tailwind 3.4.7, which is a direct compatibility mismatch.
+- Direct HeroUI installation should remain blocked until staged compatibility migration (React -> Tailwind -> HeroUI infrastructure) is complete and validated.
