@@ -118,3 +118,6 @@ Stage 5B.3 polishes Overview layout after runtime recovery without direct unveri
 ## Stage 5B.3 update (Overview polish completion)
 - Stage 5B.3 resolves Overview runtime/typecheck/mobile polish issues.
 - Internal UI primitives are retained and no unverified direct HeroUI imports are introduced.
+
+## Guardrails reference note
+- For future page/component migrations, follow `dashboard/docs/ui_migration_guardrails.md` as the mandatory runtime-safety and scope-control playbook.
