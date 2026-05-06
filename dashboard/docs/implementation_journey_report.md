@@ -804,3 +804,15 @@ Backend agronomic system is stable and safe for frontend integration.
 - **RTL scan result:** no new `left/right/ml/mr/pl/pr/text-left/text-right` hardcoded classes introduced in touched component.
 - **Known warnings:** existing non-blocking build warnings may still appear (TanStack Query `use client`, HeroUI CSS minify, large chunk) and were treated as non-blocking per plan.
 - **Next step:** migrate the next low-risk feedback/state group one component cluster at a time (no page-level migration).
+
+## HeroUI Stage 4C — Low-Risk Visual Surface Batch
+- Files migrated: `src/features/overview/OverviewPage.tsx`, `src/features/diagnostics/LogsPage.tsx`.
+- Primitives used: `Card`, `CardContent`, `SectionHeader`, `Badge`, `Button`.
+- Target selection rationale: only low-risk visible shells and labels/buttons in overview + diagnostics logs, with no chart config, hooks, API, or analytics behavior changes.
+- Skipped candidates: `SystemHealthPage` and `UploadsPage` chart/table-heavy regions deferred; `ProcessedDataViewerTable/Drawer`, Gemini/agronomy and forbidden scopes intentionally untouched.
+- Behavior parity: preserved existing queries, conditions, callbacks, routes/links, timestamps, and export behavior.
+- Validation: test/typecheck/build and grep scans executed (results captured in task output).
+- Known non-blocking warnings: existing build warnings for TanStack Query "use client", HeroUI CSS minify, and large chunks.
+- Forbidden scan results: no Gemini key/API endpoint references introduced; no agronomic-claim strings added.
+- RTL scan result: replaced `ml-4` with logical `ms-4`; no new left/right hardcoding introduced in migrated files.
+- Next step: Stage 4D can migrate remaining low-risk diagnostics shells (non-chart) after visual QA signoff.

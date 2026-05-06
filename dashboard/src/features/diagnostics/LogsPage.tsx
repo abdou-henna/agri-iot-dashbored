@@ -6,6 +6,7 @@ import { useEvents } from '../../hooks/useEvents';
 import { useTimeZone } from '../../hooks/useTimeZone';
 import type { EventSeverity, NodeId } from '../../types/common';
 import { formatDisplayTime, rangeForPreset } from '../../utils/time';
+import { Badge, Button, Card, CardContent, SectionHeader } from '../../components/ui';
 
 const severities: EventSeverity[] = ['info', 'warning', 'error', 'critical'];
 
@@ -55,17 +56,17 @@ export function LogsPage() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
+      <Card><CardContent className="p-4">
         <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-6">
           <div className="flex min-w-0 max-w-full flex-wrap gap-1.5 md:col-span-2">
             {severities.map((severity) => {
               const active = selectedSeverities.includes(severity);
               return (
-                <button
+                <Button
                   key={severity}
-                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold uppercase ${
-                    active ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'
-                  }`}
+                  size="sm"
+                  variant={active ? "primary" : "secondary"}
+                  className="rounded-full px-2.5 py-1 text-xs font-semibold uppercase"
                   onClick={() =>
                     setSelectedSeverities((current) =>
                       current.includes(severity) ? current.filter((item) => item !== severity) : [...current, severity],
@@ -73,7 +74,7 @@ export function LogsPage() {
                   }
                 >
                   {severity}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -84,13 +85,15 @@ export function LogsPage() {
               { label: 'N2', value: 'N2' },
               { label: 'N3', value: 'N3' },
             ].map((node) => (
-              <button
+              <Button
                 key={node.label}
-                className={`rounded-md border px-2.5 py-1.5 text-xs ${nodeId === node.value ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}
+                size="sm"
+                variant={nodeId === node.value ? "primary" : "secondary"}
+                className="px-2.5 py-1.5 text-xs"
                 onClick={() => setNodeId(node.value as NodeId | '')}
               >
                 {node.label}
-              </button>
+              </Button>
             ))}
           </div>
           <input
@@ -101,13 +104,13 @@ export function LogsPage() {
           />
           <input className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm" placeholder="Event Type" value={eventType} onChange={(event) => setEventType(event.target.value)} />
           <input className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm" placeholder="Error Code" value={errorCode} onChange={(event) => setErrorCode(event.target.value)} />
-          <button
+          <Button
             type="button"
             disabled={!latestUploadId}
             title={!latestUploadId ? 'No upload id available.' : ''}
-            className={`h-9 min-w-0 max-w-full whitespace-nowrap rounded-md border px-3 text-sm ${
-              latestUploadOnly ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'
-            } disabled:cursor-not-allowed disabled:opacity-60`}
+            variant={latestUploadOnly ? 'primary' : 'secondary'}
+            size="sm"
+            className="h-9 min-w-0 max-w-full whitespace-nowrap px-3 text-sm"
             onClick={() => {
               if (!latestUploadId) return;
               setLatestUploadOnly((prev) => !prev);
@@ -115,10 +118,12 @@ export function LogsPage() {
             }}
           >
             Latest upload logs
-          </button>
+          </Button>
           {!latestUploadId ? <div className="text-xs text-slate-500">No upload id available.</div> : null}
-          <button
-            className="h-9 min-w-0 max-w-full whitespace-nowrap rounded-md border border-slate-300 px-3 text-sm md:justify-self-end"
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-9 min-w-0 max-w-full whitespace-nowrap px-3 text-sm md:justify-self-end"
             onClick={() => {
               setSelectedSeverities(severities);
               setNodeId('');
@@ -129,11 +134,11 @@ export function LogsPage() {
             }}
           >
             Clear filters
-          </button>
+          </Button>
         </div>
-      </section>
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h3 className="text-sm font-semibold text-slate-800">Event Histogram (daily)</h3>
+      </CardContent></Card>
+      <Card><CardContent className="p-4">
+        <SectionHeader title="Event Histogram (daily)" />
         <div className="mt-2 grid max-h-52 gap-1 overflow-auto text-xs">
           {histogramRows.length ? histogramRows.map((row, idx) => (
             <div key={`${row.bucket_start}-${row.group_key}-${idx}`} className="grid grid-cols-[1fr_120px_80px] rounded bg-slate-50 px-2 py-1">
@@ -143,7 +148,7 @@ export function LogsPage() {
             </div>
           )) : <span className="text-slate-500">No aggregated events in selected range.</span>}
         </div>
-      </section>
+      </CardContent></Card>
 
       {events.isLoading ? <LoadingBlock label="Loading events" /> : null}
       {events.isError ? <ErrorBlock error={events.error} onRetry={() => events.refetch()} /> : null}
@@ -162,7 +167,7 @@ export function LogsPage() {
               <details key={event.event_id} className="group">
                 <summary className="grid cursor-pointer gap-2 px-4 py-3 text-sm md:grid-cols-[180px_110px_90px_1fr_160px_1fr]">
                   <span>{formatDisplayTime(event.event_time, { timezone, includeSeconds: true })}</span>
-                  <span className="font-semibold uppercase">{event.severity}</span>
+                  <Badge variant="warning" className="w-fit uppercase">{event.severity}</Badge>
                   <span>{event.node_id ?? 'Gateway'}</span>
                   <span className="font-mono">{event.event_type}</span>
                   <span className="font-mono">{event.error_code ?? '-'}</span>
@@ -185,7 +190,7 @@ export function LogsPage() {
                     </Link>
                   ) : null}
                   {event.upload_id ? (
-                    <Link className="ml-4 inline-block text-slate-900 underline" to={`/diagnostics/logs?upload_id=${encodeURIComponent(event.upload_id)}`}>
+                    <Link className="ms-4 inline-block text-slate-900 underline" to={`/diagnostics/logs?upload_id=${encodeURIComponent(event.upload_id)}`}>
                       Filter by this upload_id
                     </Link>
                   ) : null}
@@ -199,8 +204,8 @@ export function LogsPage() {
           </div>
         )}
       </section>
-      <button
-        className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+      <Button
+        variant="secondary"
         onClick={() => {
           const rows = events.data?.events ?? [];
           const header = ['event_time', 'severity', 'node_id', 'event_type', 'error_code', 'message', 'details', 'event_id', 'upload_id'];
@@ -228,7 +233,7 @@ export function LogsPage() {
         }}
       >
         Export CSV
-      </button>
+      </Button>
     </div>
   );
 }

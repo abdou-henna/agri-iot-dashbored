@@ -98,3 +98,5 @@ Before shared primitive/page migration, the project adds i18n/RTL/dark-mode read
 - Stage 4B started with feedback state components only.
 - No page migration included in this step.
 - Next candidates should continue one component group per PR with strict behavior parity validation.
+
+- Stage 4C begins visible UI migration with low-risk overview/diagnostics only. Charts, processed table/drawer, Gemini, agronomy panels deferred. Future batches expand only after this validates locally.
