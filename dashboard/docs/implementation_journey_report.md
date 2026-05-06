@@ -719,3 +719,35 @@ Backend agronomic system is stable and safe for frontend integration.
 - No runtime, source, dependency, or configuration files were changed in Stage 0.
 - Validation run included tests, typecheck, build, diff-scope checks, and forbidden-string scans.
 - Next step: begin Stage 1 in a dedicated PR to upgrade React/ReactDOM to 19 with full regression checks before any HeroUI install.
+
+
+## HeroUI Pre-Stage 4 — i18n, RTL, Dark Mode, and Dashboard Design Foundation
+
+### Files created
+- `dashboard/docs/heroui_i18n_theme_foundation_plan.md`
+- `dashboard/docs/heroui_dashboard_charts_design_principles.md`
+- `dashboard/src/types/preferences.ts`
+- `dashboard/src/config/i18n.ts`
+- `dashboard/src/config/theme.ts`
+- `dashboard/src/utils/direction.ts`
+
+### Files updated
+- `dashboard/docs/heroui_migration_plan.md`
+- `dashboard/docs/ui_ux_design_system_plan.md`
+- `dashboard/docs/implementation_journey_report.md`
+
+### Code vs docs scope
+- Result: docs + minimal safe foundation code.
+- No feature/page/chart migration performed.
+- No analytics/Gemini/backend/schema/firmware/hook/API logic touched.
+
+### Official HeroUI docs access result
+- Accessed successfully: https://heroui.com/docs/react/getting-started/design-principles
+- Applied principles: semantic intent, accessibility, composition, progressive disclosure, predictable behavior, type safety, style/logic separation, customization, extensibility.
+
+### Validation result
+- Scope validation and full test/typecheck/build validations executed and passed in this stage.
+- Required scans executed for Gemini key leakage, forbidden agronomic claims, and RTL hardcoded spacing risk inventory.
+
+### Next recommended step
+- Proceed to Stage 4A shared primitive wrappers using this i18n/RTL/theme contract, then migrate low-risk visual primitives first with behavior-parity checks.

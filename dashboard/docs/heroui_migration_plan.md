@@ -44,6 +44,12 @@
 - **Rollback notes:** remove HeroUI deps/imports/provider in one rollback commit
 - **Acceptance criteria:** HeroUI packages installed, CSS order correct (`tailwindcss` then `@heroui/styles`), app boots without component migration
 
+
+## Pre-Stage 4 — i18n/RTL/theme and dashboard design foundations
+Before shared primitive/page migration, the project adds i18n/RTL/dark-mode readiness and HeroUI dashboard/chart design-principle alignment.
+- Scope: foundation docs plus optional minimal config/types/utils only.
+- Non-goals: no page redesign, no chart migration, no analytics/Gemini/business-logic changes.
+
 ## Stage 4 — Shared primitive migration
 - **Allowed files:** shared low-risk UI primitives and their direct call sites
 - **Forbidden files:** analytics engines, Gemini mapping/gating logic, API contracts
