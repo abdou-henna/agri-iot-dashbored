@@ -101,6 +101,7 @@ export interface GeminiMultiSnapshotInsightInput {
   cross_snapshot_limitations: string[];
   reliability: Record<string, unknown>;
   forbidden_claims: GeminiForbiddenClaim[];
+  agronomic_intelligence?: GeminiInsightInput['agronomic_intelligence'];
 }
 export interface GeminiInsightRequestState {
   insight: GeminiInsightOutput | null;

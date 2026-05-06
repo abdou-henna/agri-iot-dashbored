@@ -7,10 +7,13 @@ interface BuildMultiSnapshotParams {
   analysisType: GeminiAnalysisType;
   timezone: string;
   snapshots: Array<{ scopeLabel: string; snapshot: AnalyticsSnapshot | null }>;
+  agronomicIntelligence?: import('../../types/agronomicIntelligence').AgronomicIntelligenceOutput | null;
 }
 
+let agronomicIntelligenceInput: import('../../types/agronomicIntelligence').AgronomicIntelligenceOutput | null = null;
+
 function toSummary(scopeLabel: string, snapshot: AnalyticsSnapshot, timezone: string): GeminiSnapshotSummary {
-  const single = buildGeminiInsightInput(snapshot, { analysis_type: 'weekly_summary', timezone });
+  const single = buildGeminiInsightInput(snapshot, { analysis_type: 'weekly_summary', timezone, agronomicIntelligence: agronomicIntelligenceInput });
   return {
     scope_label: scopeLabel,
     node_id: snapshot.identity.node_id ?? 'unknown',
@@ -30,12 +33,14 @@ function toSummary(scopeLabel: string, snapshot: AnalyticsSnapshot, timezone: st
   };
 }
 
-export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots }: BuildMultiSnapshotParams): GeminiInsightInput | GeminiMultiSnapshotInsightInput | null {
+export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots, agronomicIntelligence }: BuildMultiSnapshotParams): GeminiInsightInput | GeminiMultiSnapshotInsightInput | null {
   const valid = snapshots.filter((entry): entry is { scopeLabel: string; snapshot: AnalyticsSnapshot } => Boolean(entry.snapshot));
   if (!valid.length) return null;
 
+  agronomicIntelligenceInput = agronomicIntelligence ?? null;
+
   if (analysisType !== 'pivot_comparison' && analysisType !== 'farm_summary' && valid[0]?.snapshot) {
-    return buildGeminiInsightInput(valid[0].snapshot, { analysis_type: analysisType, timezone });
+    return buildGeminiInsightInput(valid[0].snapshot, { analysis_type: analysisType, timezone, agronomicIntelligence });
   }
 
   const first = valid[0].snapshot;
@@ -74,6 +79,16 @@ export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, s
         reliability_score: entry.snapshot.quality.reliability_score ?? null,
       })),
     },
+    agronomic_intelligence: agronomicIntelligence ? {
+      farm_state: agronomicIntelligence.farm_state as unknown as Record<string, unknown>,
+      irrigation_reasoning: agronomicIntelligence.irrigation_reasoning as unknown as Record<string, unknown>,
+      pivot_intelligence: agronomicIntelligence.pivot_intelligence as unknown as Record<string, unknown>,
+      cutting_regrowth_context: agronomicIntelligence.cutting_regrowth_context as unknown as Record<string, unknown>,
+      fertilization_context: agronomicIntelligence.fertilization_context as unknown as Record<string, unknown>,
+      predictive_risk_context: agronomicIntelligence.predictive_risk_context as unknown as Record<string, unknown>,
+      reliability: agronomicIntelligence.reliability as unknown as Record<string, unknown>,
+      deterministic_alerts: agronomicIntelligence.deterministic_alerts.map((item) => ({ ...item })) as Array<Record<string, unknown>>,
+    } : undefined,
     forbidden_claims: GEMINI_FORBIDDEN_CLAIMS,
   };
 }
