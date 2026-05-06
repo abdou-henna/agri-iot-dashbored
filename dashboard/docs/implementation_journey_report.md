@@ -630,3 +630,16 @@ Backend agronomic system is stable and safe for frontend integration.
 - **Code-impact statement:** No runtime source code changed for this planning task.
 - **Infrastructure-impact statement:** No schema, backend, or firmware changes were made.
 - **Recommended next step:** Run an implementation prompt focused on analytics-area viewer UI (drawer/sheet first), reusing existing snapshot contracts/hooks with strict read-only and safety-rule enforcement.
+
+
+## Processed Data / Cleaned Analytics Viewer Implementation
+- Files changed: added processed data viewer types, adapter, export utility, badges, table, drawer, and Insights wiring.
+- UI placement: drawer trigger placed in Insights page near deterministic intelligence panels.
+- Data sources: existing analytics snapshot hook output and optional agronomic intelligence context only.
+- Raw/cleaned/processed handling: raw/cleaned remain null when unavailable in snapshot contract; processed uses existing aggregate fields without recomputation.
+- QC/reliability/alerts display: row-level rendering with snapshot-level fallback and visible limitations.
+- Export behavior: client-side CSV export with safe fields and missing preserved as empty/missing values.
+- Safety guarantees: read-only viewer, no fetch in viewer components, no Gemini key/API calls, no deterministic algorithm changes.
+- Validation results: typecheck/build and forbidden scans executed successfully.
+- Known limitations: snapshot contract does not currently include raw-cleaned per-row pairs.
+- Next recommended step: extend snapshot contract to include optional row-level provenance metadata (raw-cleaned linkage) while preserving deterministic logic.
