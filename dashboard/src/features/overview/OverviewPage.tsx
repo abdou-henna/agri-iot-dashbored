@@ -54,7 +54,7 @@ function KpiCard({ title, value, color, nodeId, metric, timezone }: { title: str
   const sparkline = useReadingAggregates(nodeId, metric, range, '1hour');
 
   return (
-    <Card className="h-full rounded-2xl border-slate-200/80 bg-white/90 shadow-sm dark:bg-slate-900/90">
+    <Card className="flex h-full min-h-[250px] flex-col rounded-2xl border-slate-200/80 bg-white/90 shadow-sm dark:bg-slate-900/90">
       <CardHeader className="pb-2">
         <div className="flex w-full items-start justify-between gap-3">
           <div>
@@ -64,10 +64,10 @@ function KpiCard({ title, value, color, nodeId, metric, timezone }: { title: str
           <Badge size="sm" variant="muted">{NODE_LABELS[nodeId]}</Badge>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="flex flex-1 flex-col pt-0">
         <p className="text-xs text-slate-500">{metricLabel(metric)}</p>
-        <div className="mt-3 rounded-xl border border-slate-200/80 bg-slate-100/50 p-2 dark:border-slate-700 dark:bg-slate-800/50">
-          {sparkline.isLoading ? <div className="h-12 w-full animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" /> : <Sparkline points={toTimeSeriesPoints(sparkline.data, timezone)} color={color} />}
+        <div className="mt-4 h-20 min-h-20 w-full overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100/50 p-2 dark:border-slate-700 dark:bg-slate-800/50">
+          {sparkline.isLoading ? <div className="h-full w-full animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" /> : <div className="h-full w-full"><Sparkline points={toTimeSeriesPoints(sparkline.data, timezone)} color={color} /></div>}
         </div>
       </CardContent>
     </Card>
@@ -125,13 +125,13 @@ export function OverviewPage() {
         />
       </Card>
 
-      <Card className="rounded-2xl border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 shadow-md dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/70">
-        <CardHeader className="gap-2">
+      <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 shadow-md dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/70">
+        <CardHeader className="gap-2 p-6 pb-4">
           <CardTitle>Operational Snapshot</CardTitle>
           <CardDescription>Live ingestion and field measurement recency for the current network.</CardDescription>
         </CardHeader>
         <div className="border-t border-slate-200 dark:border-slate-700" />
-        <CardContent className="gap-4 py-4">
+        <CardContent className="space-y-4 p-6 pt-4">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl border border-slate-200/80 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Latest field measurement</p>
@@ -144,7 +144,7 @@ export function OverviewPage() {
               <p className="text-sm text-slate-500">Upload age: {ageLabel(lastUploadAt)}</p>
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {isOlderThanHours(lastUploadAt, 24) ? <div className="flex items-start gap-2 rounded-xl border border-amber-300/70 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"><AlertTriangle className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>Last upload was over 24 hours ago. Dashboard may not reflect latest SD card data.</span></div> : null}
             {isOlderThanHours(latestMeasurementAt, 2) ? <div className="flex items-start gap-2 rounded-xl border border-slate-300/80 bg-slate-100/70 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200"><Clock3 className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>No recent field measurement received.</span></div> : null}
           </div>

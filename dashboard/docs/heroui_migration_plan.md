@@ -112,3 +112,5 @@ Before shared primitive/page migration, the project adds i18n/RTL/dark-mode read
 
 ## Stage 5B.2 runtime stability note
 - Until verified locally, page-level code must not import unverified HeroUI named exports directly.
+
+Stage 5B.3 polishes Overview layout after runtime recovery without direct unverified HeroUI imports.
