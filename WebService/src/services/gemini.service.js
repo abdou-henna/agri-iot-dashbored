@@ -21,6 +21,93 @@ const FORBIDDEN_KEYS = new Set([
 const CONFIDENCE_LEVELS = new Set(['high', 'medium', 'low']);
 const FORBIDDEN_AI_ALERT_TERMS = ['critical alert', 'emergency shutdown', 'fatal risk'];
 
+
+const GEMINI_INSIGHT_RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    summary: { type: 'string' },
+    confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+    key_observations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          description: { type: 'string' },
+          confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+        },
+        required: ['title', 'description', 'confidence'],
+      },
+    },
+    risks: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          severity: { type: 'string', enum: ['info', 'warning', 'error'] },
+          confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+          explanation: { type: 'string' },
+          limitations: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['title', 'severity', 'confidence', 'explanation', 'limitations'],
+      },
+    },
+    hypotheses: { type: 'array', items: { type: 'string' } },
+    recommended_checks: { type: 'array', items: { type: 'string' } },
+    not_claimed: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['summary', 'confidence', 'key_observations', 'risks', 'hypotheses', 'recommended_checks', 'not_claimed'],
+};
+
+function normalizeConfidence(value) {
+  return CONFIDENCE_LEVELS.has(value) ? value : 'low';
+}
+
+function normalizeGeminiInsightOutput(parsed) {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+
+  const source = parsed;
+  const keyObservations = Array.isArray(source.key_observations) ? source.key_observations : [];
+  const risks = Array.isArray(source.risks) ? source.risks : [];
+  const hypotheses = Array.isArray(source.hypotheses) ? source.hypotheses.filter((item) => typeof item === 'string') : [];
+  const recommendedChecks = Array.isArray(source.recommended_checks) ? source.recommended_checks.filter((item) => typeof item === 'string') : [];
+
+  const normalizedNotClaimed = Array.isArray(source.not_claimed) ? source.not_claimed.filter((item) => typeof item === 'string') : [];
+  if (!normalizedNotClaimed.length) {
+    normalizedNotClaimed.push(
+      'AI output is interpretation only and must not override deterministic analytics.',
+      'No disease, nutrient, yield, ET, pH, NPK, or ECe claim is made.',
+    );
+  }
+
+  return {
+    summary: typeof source.summary === 'string' && source.summary.trim()
+      ? source.summary
+      : 'AI interpretation was returned without a summary. Review limitations before use.',
+    confidence: normalizeConfidence(source.confidence),
+    key_observations: keyObservations
+      .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+      .map((item) => ({
+        title: typeof item.title === 'string' ? item.title : 'Observation',
+        description: typeof item.description === 'string' ? item.description : 'No description provided by AI output.',
+        confidence: normalizeConfidence(item.confidence),
+      })),
+    risks: risks
+      .filter((risk) => risk && typeof risk === 'object' && !Array.isArray(risk))
+      .map((risk) => ({
+        title: typeof risk.title === 'string' ? risk.title : 'Risk item',
+        severity: ['info', 'warning', 'error'].includes(risk.severity) ? risk.severity : 'info',
+        confidence: normalizeConfidence(risk.confidence),
+        explanation: typeof risk.explanation === 'string' ? risk.explanation : 'No explanation provided by AI output.',
+        limitations: Array.isArray(risk.limitations) ? risk.limitations.filter((item) => typeof item === 'string') : [],
+      })),
+    hypotheses,
+    recommended_checks: recommendedChecks,
+    not_claimed: normalizedNotClaimed,
+  };
+}
+
 function hasForbiddenKey(value) {
   if (!value || typeof value !== 'object') return false;
   if (Array.isArray(value)) return value.some((item) => hasForbiddenKey(item));
@@ -98,7 +185,10 @@ class GeminiService {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: JSON.stringify(input) }] }],
           systemInstruction: { parts: [{ text: GEMINI_SYSTEM_PROMPT }] },
-          generationConfig: { responseMimeType: 'application/json' },
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: GEMINI_INSIGHT_RESPONSE_SCHEMA,
+          },
         }),
       });
     } catch (error) {
@@ -131,11 +221,21 @@ class GeminiService {
       return { status: 502, error: 'gemini_invalid_json', message: 'Gemini output is not valid JSON.' };
     }
 
-    if (!isValidOutputShape(parsed)) {
+    const normalized = normalizeGeminiInsightOutput(parsed);
+    if (!normalized || !isValidOutputShape(normalized)) {
+      console.warn('[gemini] invalid output shape', {
+        hasSummary: typeof parsed?.summary === 'string',
+        hasConfidence: typeof parsed?.confidence === 'string',
+        hasKeyObservations: Array.isArray(parsed?.key_observations),
+        hasRisks: Array.isArray(parsed?.risks),
+        hasHypotheses: Array.isArray(parsed?.hypotheses),
+        hasRecommendedChecks: Array.isArray(parsed?.recommended_checks),
+        hasNotClaimed: Array.isArray(parsed?.not_claimed),
+      });
       return { status: 502, error: 'gemini_invalid_shape', message: 'Gemini output is missing required fields.' };
     }
 
-    return { status: 200, data: parsed };
+    return { status: 200, data: normalized };
   }
 }
 

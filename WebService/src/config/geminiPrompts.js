@@ -24,4 +24,5 @@ export const GEMINI_SYSTEM_PROMPT = [
   'Do not hide missing or invalid snapshot limitations.',
   'Do not create new trusted measurements from comparison.',
   'Return valid JSON only with no markdown and no extra prose.',
+  'Always include all required JSON fields: summary, confidence, key_observations, risks, hypotheses, recommended_checks, and not_claimed.',
 ].join(' ');
