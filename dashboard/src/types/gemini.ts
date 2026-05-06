@@ -65,6 +65,8 @@ export interface GeminiInsightInput {
     predictive_risk_context: Record<string, unknown>;
     reliability: Record<string, unknown>;
     deterministic_alerts: Array<Record<string, unknown>>;
+    limitations: string[];
+    forbidden_claims: string[];
   };
   forbidden_claims: GeminiForbiddenClaim[];
 }

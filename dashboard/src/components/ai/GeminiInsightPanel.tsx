@@ -32,7 +32,7 @@ export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysi
   );
 
   const input = useMemo(() => {
-    if (isMulti) return buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots: comparisonSnapshots });
+    if (isMulti) return buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots: comparisonSnapshots, agronomicIntelligence });
     if (!snapshot) return null;
     return buildGeminiInsightInput(snapshot, { analysis_type: analysisType, timezone, crop: 'alfalfa', season_status: 'unknown', calibration_present: false, agronomicIntelligence });
   }, [agronomicIntelligence, analysisType, comparisonSnapshots, isMulti, snapshot, timezone]);
@@ -49,7 +49,7 @@ export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysi
       <div className="mb-3">
         <h2 className="text-base font-semibold text-slate-900">AI Interpretation</h2>
         <p className="mt-1 text-xs text-slate-600">Context: {contextLabel} · Window: {windowLabel} · Analysis: {analysisType}</p>
-        <p className="mt-1 text-xs text-slate-500">Based on processed analytics only. Does not replace deterministic alerts, agronomist review, or field inspection.</p>
+        <p className="mt-1 text-xs text-slate-500">Based on deterministic summaries. Does not override deterministic alerts, and does not replace agronomist review or field inspection.</p>
       </div>
 
       <div className="mb-3 flex flex-wrap gap-2 text-xs">

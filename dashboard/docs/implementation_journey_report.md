@@ -608,3 +608,14 @@ Backend agronomic system is stable and safe for frontend integration.
 - Validation results: typecheck/build and forbidden scans executed successfully.
 - Known limitations: lag/trend outputs remain constrained by sample availability and event timing confidence.
 - Next step: Stage 3 Gemini/UI refinement.
+
+## Post-Phase 9 Stage 3 — Gemini and UI Refinement
+- Files changed: `src/utils/ai/geminiMultiSnapshotMapper.ts`, `src/utils/ai/geminiMapper.ts`, `src/config/geminiPrompts.ts`, `src/types/gemini.ts`, `src/components/ai/GeminiInsightPanel.tsx`, `src/components/agronomy/AgronomicIntelligencePanel.tsx`.
+- Global mapper state fix: removed module-level mutable agronomic context and passed context explicitly per call to avoid cross-request leakage.
+- Gemini prompt/input refinements: prompt now explicitly requires deterministic field explanations (median windows, sample counts, response lag, confidence, reliability caps, MAIN-context alert limit, fertilization windows, drying-rate differential) and strict uncertainty handling.
+- AI UI refinements: strengthened labels to clarify deterministic basis and non-override behavior while preserving structured sections and actions.
+- Deterministic panel refinements: expanded sectioned deterministic display with confidence + limitations, sample counts, response lag, drying-rate differential units, and "Not enough data" null handling.
+- Validation results: typecheck/build and safety scans passed in Stage 3 scope.
+- Forbidden scan results: no frontend Gemini key or direct Google API usage; restricted terms present only in safe/forbidden contexts.
+- Known limitations: deterministic alerts remain MAIN-context only; no full multi-node alert harmonization.
+- Next step: Processed Data / Cleaned Analytics Viewer planning prompt.

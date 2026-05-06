@@ -2,18 +2,17 @@ import type { AnalyticsSnapshot } from '../../types/analytics';
 import type { GeminiAnalysisType, GeminiInsightInput, GeminiMultiSnapshotInsightInput, GeminiSnapshotSummary } from '../../types/gemini';
 import { GEMINI_FORBIDDEN_CLAIMS } from '../../config/geminiPrompts';
 import { buildGeminiInsightInput } from './geminiMapper';
+import type { AgronomicIntelligenceOutput } from '../../types/agronomicIntelligence';
 
 interface BuildMultiSnapshotParams {
   analysisType: GeminiAnalysisType;
   timezone: string;
   snapshots: Array<{ scopeLabel: string; snapshot: AnalyticsSnapshot | null }>;
-  agronomicIntelligence?: import('../../types/agronomicIntelligence').AgronomicIntelligenceOutput | null;
+  agronomicIntelligence?: AgronomicIntelligenceOutput | null;
 }
 
-let agronomicIntelligenceInput: import('../../types/agronomicIntelligence').AgronomicIntelligenceOutput | null = null;
-
-function toSummary(scopeLabel: string, snapshot: AnalyticsSnapshot, timezone: string): GeminiSnapshotSummary {
-  const single = buildGeminiInsightInput(snapshot, { analysis_type: 'weekly_summary', timezone, agronomicIntelligence: agronomicIntelligenceInput });
+function toSummary(scopeLabel: string, snapshot: AnalyticsSnapshot, timezone: string, agronomicIntelligence: AgronomicIntelligenceOutput | null): GeminiSnapshotSummary {
+  const single = buildGeminiInsightInput(snapshot, { analysis_type: 'weekly_summary', timezone, agronomicIntelligence });
   return {
     scope_label: scopeLabel,
     node_id: snapshot.identity.node_id ?? 'unknown',
@@ -36,8 +35,6 @@ function toSummary(scopeLabel: string, snapshot: AnalyticsSnapshot, timezone: st
 export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots, agronomicIntelligence }: BuildMultiSnapshotParams): GeminiInsightInput | GeminiMultiSnapshotInsightInput | null {
   const valid = snapshots.filter((entry): entry is { scopeLabel: string; snapshot: AnalyticsSnapshot } => Boolean(entry.snapshot));
   if (!valid.length) return null;
-
-  agronomicIntelligenceInput = agronomicIntelligence ?? null;
 
   if (analysisType !== 'pivot_comparison' && analysisType !== 'farm_summary' && valid[0]?.snapshot) {
     return buildGeminiInsightInput(valid[0].snapshot, { analysis_type: analysisType, timezone, agronomicIntelligence });
@@ -69,7 +66,7 @@ export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, s
       days_since_last_cut: null,
       known_limitations: crossSnapshotLimitations,
     },
-    snapshots: valid.map((entry) => toSummary(entry.scopeLabel, entry.snapshot, timezone)),
+    snapshots: valid.map((entry) => toSummary(entry.scopeLabel, entry.snapshot, timezone, agronomicIntelligence ?? null)),
     cross_snapshot_limitations: crossSnapshotLimitations,
     reliability: {
       snapshot_count: valid.length,
@@ -88,6 +85,8 @@ export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, s
       predictive_risk_context: agronomicIntelligence.predictive_risk_context as unknown as Record<string, unknown>,
       reliability: agronomicIntelligence.reliability as unknown as Record<string, unknown>,
       deterministic_alerts: agronomicIntelligence.deterministic_alerts.map((item) => ({ ...item })) as Array<Record<string, unknown>>,
+      limitations: [...agronomicIntelligence.limitations],
+      forbidden_claims: [...agronomicIntelligence.forbidden_claims],
     } : undefined,
     forbidden_claims: GEMINI_FORBIDDEN_CLAIMS,
   };
