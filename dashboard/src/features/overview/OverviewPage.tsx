@@ -1,8 +1,9 @@
 import { AlertTriangle, Clock3, Database, RadioTower, Upload } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Card, CardBody, CardFooter, CardHeader, Chip, Divider, Skeleton, Tab, Tabs, Tooltip } from '@heroui/react';
 import { Sparkline } from '../../components/charts/BasicCharts';
+import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/States';
+import { Badge, Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, SectionHeader } from '../../components/ui';
 import { COLORS, NODE_LABELS } from '../../config/constants';
 import { useEvents } from '../../hooks/useEvents';
 import { useReadingAggregates } from '../../hooks/useReadingAggregates';
@@ -13,7 +14,6 @@ import type { MetricKey, NodeId } from '../../types/common';
 import type { LatestReadingStatus } from '../../types/status';
 import { toTimeSeriesPoints } from '../../utils/chartData';
 import { ageLabel, formatDisplayTime, isOlderThanHours, rangeForPreset } from '../../utils/time';
-import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/States';
 
 function latestFor(readings: LatestReadingStatus[] | undefined, nodeId: LatestReadingStatus['node_id']) {
   return readings?.find((reading) => reading.node_id === nodeId);
@@ -24,17 +24,17 @@ function readingValue(reading: LatestReadingStatus | undefined, key: keyof Lates
   return typeof value === 'number' ? `${value.toFixed(1)} ${unit}` : '—';
 }
 
-function severityColor(severity: string): 'danger' | 'warning' | 'secondary' {
+function severityColor(severity: string): 'danger' | 'warning' | 'muted' {
   if (severity === 'critical' || severity === 'error') return 'danger';
   if (severity === 'warning') return 'warning';
-  return 'secondary';
+  return 'muted';
 }
 
-function statusColor(status: string | undefined): 'success' | 'warning' | 'danger' | 'secondary' {
+function statusColor(status: string | undefined): 'success' | 'warning' | 'danger' | 'muted' {
   if (status === 'ok' || status === 'online') return 'success';
   if (status === 'warning') return 'warning';
   if (status === 'critical' || status === 'error' || status === 'offline') return 'danger';
-  return 'secondary';
+  return 'muted';
 }
 
 function metricLabel(metric: MetricKey) {
@@ -54,22 +54,22 @@ function KpiCard({ title, value, color, nodeId, metric, timezone }: { title: str
   const sparkline = useReadingAggregates(nodeId, metric, range, '1hour');
 
   return (
-    <Card className="h-full rounded-2xl border border-default-200/80 bg-content1/90 shadow-sm">
+    <Card className="h-full rounded-2xl border-slate-200/80 bg-white/90 shadow-sm dark:bg-slate-900/90">
       <CardHeader className="pb-2">
         <div className="flex w-full items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-default-500">{title}</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{value}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</p>
           </div>
-          <Chip size="sm" variant="flat" color="default">{NODE_LABELS[nodeId]}</Chip>
+          <Badge size="sm" variant="muted">{NODE_LABELS[nodeId]}</Badge>
         </div>
       </CardHeader>
-      <CardBody className="pt-0">
-        <p className="text-xs text-default-500">{metricLabel(metric)}</p>
-        <div className="mt-3 rounded-xl border border-default-200/70 bg-default-100/40 p-2">
-          {sparkline.isLoading ? <Skeleton className="h-12 w-full rounded-lg" /> : <Sparkline points={toTimeSeriesPoints(sparkline.data, timezone)} color={color} />}
+      <CardContent className="pt-0">
+        <p className="text-xs text-slate-500">{metricLabel(metric)}</p>
+        <div className="mt-3 rounded-xl border border-slate-200/80 bg-slate-100/50 p-2 dark:border-slate-700 dark:bg-slate-800/50">
+          {sparkline.isLoading ? <div className="h-12 w-full animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" /> : <Sparkline points={toTimeSeriesPoints(sparkline.data, timezone)} color={color} />}
         </div>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -109,44 +109,46 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-default-200/80 bg-content1/80 p-4 shadow-sm">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Overview Dashboard</h1>
-          <p className="text-sm text-default-500">Operational command surface for ingestion, sensor freshness, and active alerts.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Chip size="sm" variant="flat" color="secondary">Timezone: {timezone}</Chip>
-          <Chip size="sm" variant="flat" color={isOlderThanHours(latestMeasurementAt, 2) ? 'warning' : 'success'}>Measurement: {ageLabel(latestMeasurementAt)}</Chip>
-          <Chip size="sm" variant="flat" color={isOlderThanHours(lastUploadAt, 24) ? 'warning' : 'success'}>Upload: {ageLabel(lastUploadAt)}</Chip>
-          <Chip size="sm" variant="flat" color={alertCount > 0 ? 'danger' : 'success'}>Alerts: {alertCount}</Chip>
-          <Button as={Link} to="/diagnostics/logs" size="sm" color="primary" variant="flat" startContent={<Upload className="h-4 w-4" aria-hidden="true" />}>View logs</Button>
-        </div>
-      </header>
-
-      <Card className="rounded-2xl border border-default-200/80 bg-gradient-to-br from-content1 via-default-50/50 to-content2/70 shadow-md">
-        <CardHeader className="flex-col items-start gap-2">
-          <h2 className="text-lg font-semibold text-foreground">Operational Snapshot</h2>
-          <p className="text-sm text-default-500">Live ingestion and field measurement recency for the current network.</p>
-        </CardHeader>
-        <Divider />
-        <CardBody className="gap-4 py-4">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-xl border border-default-200/80 bg-content1/70 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-default-500">Latest field measurement</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">{formatDisplayTime(latestMeasurementAt, { timezone })}</p>
-              <p className="text-sm text-default-500">Data age: {ageLabel(latestMeasurementAt)}</p>
+      <Card className="rounded-2xl border-slate-200/80 bg-white/90 p-4 shadow-sm dark:bg-slate-900/90">
+        <SectionHeader
+          title="Overview Dashboard"
+          description="Operational command surface for ingestion, sensor freshness, and active alerts."
+          action={
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge size="sm" variant="info">Timezone: {timezone}</Badge>
+              <Badge size="sm" variant={isOlderThanHours(latestMeasurementAt, 2) ? 'warning' : 'success'}>Measurement: {ageLabel(latestMeasurementAt)}</Badge>
+              <Badge size="sm" variant={isOlderThanHours(lastUploadAt, 24) ? 'warning' : 'success'}>Upload: {ageLabel(lastUploadAt)}</Badge>
+              <Badge size="sm" variant={alertCount > 0 ? 'danger' : 'success'}>Alerts: {alertCount}</Badge>
+              <Link to="/diagnostics/logs"><Button size="sm" variant="secondary"><Upload className="h-4 w-4" aria-hidden="true" /> View logs</Button></Link>
             </div>
-            <div className="rounded-xl border border-default-200/80 bg-content1/70 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-default-500">Last data upload</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">{formatDisplayTime(lastUploadAt, { timezone })}</p>
-              <p className="text-sm text-default-500">Upload age: {ageLabel(lastUploadAt)}</p>
+          }
+        />
+      </Card>
+
+      <Card className="rounded-2xl border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 shadow-md dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/70">
+        <CardHeader className="gap-2">
+          <CardTitle>Operational Snapshot</CardTitle>
+          <CardDescription>Live ingestion and field measurement recency for the current network.</CardDescription>
+        </CardHeader>
+        <div className="border-t border-slate-200 dark:border-slate-700" />
+        <CardContent className="gap-4 py-4">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-xl border border-slate-200/80 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Latest field measurement</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{formatDisplayTime(latestMeasurementAt, { timezone })}</p>
+              <p className="text-sm text-slate-500">Data age: {ageLabel(latestMeasurementAt)}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200/80 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Last data upload</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{formatDisplayTime(lastUploadAt, { timezone })}</p>
+              <p className="text-sm text-slate-500">Upload age: {ageLabel(lastUploadAt)}</p>
             </div>
           </div>
           <div className="space-y-2">
-            {isOlderThanHours(lastUploadAt, 24) ? <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm"><AlertTriangle className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>Last upload was over 24 hours ago. Dashboard may not reflect latest SD card data.</span></div> : null}
-            {isOlderThanHours(latestMeasurementAt, 2) ? <div className="flex items-start gap-2 rounded-xl border border-default-300/80 bg-default-100/70 p-3 text-sm"><Clock3 className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>No recent field measurement received.</span></div> : null}
+            {isOlderThanHours(lastUploadAt, 24) ? <div className="flex items-start gap-2 rounded-xl border border-amber-300/70 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"><AlertTriangle className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>Last upload was over 24 hours ago. Dashboard may not reflect latest SD card data.</span></div> : null}
+            {isOlderThanHours(latestMeasurementAt, 2) ? <div className="flex items-start gap-2 rounded-xl border border-slate-300/80 bg-slate-100/70 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200"><Clock3 className="mt-0.5 h-4 w-4" aria-hidden="true" /><span>No recent field measurement received.</span></div> : null}
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
 
       <section>
@@ -160,57 +162,49 @@ export function OverviewPage() {
         {(['MAIN', 'N2', 'N3'] as const).map((nodeId) => {
           const reading = latestFor(status.data?.latest_readings, nodeId);
           return (
-            <Card key={nodeId} className="rounded-2xl border border-default-200/80 bg-content1/90 shadow-sm">
+            <Card key={nodeId} className="rounded-2xl border-slate-200/80 bg-white/90 shadow-sm dark:bg-slate-900/90">
               <CardHeader className="pb-2">
                 <div className="flex w-full items-start justify-between gap-2">
                   <div>
-                    <h3 className="text-base font-semibold text-foreground">{NODE_LABELS[nodeId]}</h3>
-                    <p className="text-xs uppercase tracking-wide text-default-500">Node {nodeId}</p>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{NODE_LABELS[nodeId]}</h3>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Node {nodeId}</p>
                   </div>
-                  <Chip size="sm" variant="flat" color={statusColor(reading?.status)}>{reading?.status ?? 'unknown'}</Chip>
+                  <Badge size="sm" variant={statusColor(reading?.status)}>{reading?.status ?? 'unknown'}</Badge>
                 </div>
               </CardHeader>
-              <CardBody className="pt-0 text-sm text-default-600">
+              <CardContent className="pt-0 text-sm text-slate-600 dark:text-slate-300">
                 <p className="flex items-center gap-2"><Database className="h-4 w-4" aria-hidden="true" /> Last measured: {formatDisplayTime(reading?.measured_at, { timezone })}</p>
                 <p className="mt-2 flex items-center gap-2"><RadioTower className="h-4 w-4" aria-hidden="true" /> RSSI: {typeof reading?.rssi === 'number' ? reading.rssi : '—'}</p>
-              </CardBody>
+              </CardContent>
             </Card>
           );
         })}
       </section>
 
-      <Card className="rounded-2xl border border-default-200/80 bg-content1/90 shadow-sm">
+      <Card className="rounded-2xl border-slate-200/80 bg-white/90 shadow-sm dark:bg-slate-900/90">
         <CardHeader>
-          <div className="flex w-full flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Recent Alerts</h2>
-              <p className="text-sm text-default-500">Latest warning, error, and critical events from diagnostics feeds.</p>
-            </div>
-            <Tooltip content="Open full diagnostics logs">
-              <Button as={Link} to="/diagnostics/logs" size="sm" variant="light" color="primary" startContent={<Upload className="h-4 w-4" aria-hidden="true" />}>View all logs</Button>
-            </Tooltip>
-          </div>
+          <SectionHeader
+            title="Recent Alerts"
+            description="Latest warning, error, and critical events from diagnostics feeds."
+            action={<Link to="/diagnostics/logs"><Button size="sm" variant="ghost"><Upload className="h-4 w-4" aria-hidden="true" /> View all logs</Button></Link>}
+          />
         </CardHeader>
-        <Divider />
-        <CardBody>
-          <Tabs aria-label="Alert feed tabs" size="sm" variant="underlined" selectedKey="latest">
-            <Tab key="latest" title="Latest alerts">
-              {events.isLoading ? <LoadingBlock label="Loading alerts" /> : null}
-              {events.data?.events?.length ? (
-                <div className="mt-2 space-y-2">
-                  {events.data.events.slice(0, 5).map((event) => (
-                    <div key={event.event_id} className="grid gap-2 rounded-xl border border-default-200/70 bg-content2/40 p-3 text-sm md:grid-cols-[170px_120px_1fr]">
-                      <span className="text-default-500">{formatDisplayTime(event.event_time, { timezone })}</span>
-                      <Chip size="sm" variant="flat" color={severityColor(event.severity)}>{event.severity}</Chip>
-                      <span className="font-mono text-foreground">{event.event_type}</span>
-                    </div>
-                  ))}
+        <div className="border-t border-slate-200 dark:border-slate-700" />
+        <CardContent>
+          {events.isLoading ? <LoadingBlock label="Loading alerts" /> : null}
+          {events.data?.events?.length ? (
+            <div className="mt-2 space-y-2" aria-label="Latest alerts">
+              {events.data.events.slice(0, 5).map((event) => (
+                <div key={event.event_id} className="grid gap-2 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-sm dark:border-slate-700 dark:bg-slate-800/50 md:grid-cols-[170px_120px_1fr]">
+                  <span className="text-slate-500">{formatDisplayTime(event.event_time, { timezone })}</span>
+                  <Badge size="sm" variant={severityColor(event.severity)}>{event.severity}</Badge>
+                  <span className="font-mono text-slate-900 dark:text-slate-100">{event.event_type}</span>
                 </div>
-              ) : <EmptyState message="No warning or error events in the current alert feed." />}
-            </Tab>
-          </Tabs>
-        </CardBody>
-        <CardFooter className="pt-0 text-xs text-default-500">Alert timestamps use event_time and follow the selected timezone.</CardFooter>
+              ))}
+            </div>
+          ) : <EmptyState message="No warning or error events in the current alert feed." />}
+        </CardContent>
+        <CardFooter className="pt-0 text-xs text-slate-500">Alert timestamps use event_time and follow the selected timezone.</CardFooter>
       </Card>
     </div>
   );

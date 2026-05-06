@@ -109,3 +109,6 @@ Before shared primitive/page migration, the project adds i18n/RTL/dark-mode read
 ## Stage 5B update (real HeroUI Overview)
 - Stage 5B replaces the transitional Overview with a real HeroUI dashboard implementation.
 - Further page-level migrations should follow this Stage 5B reference only after explicit user approval.
+
+## Stage 5B.2 runtime stability note
+- Until verified locally, page-level code must not import unverified HeroUI named exports directly.

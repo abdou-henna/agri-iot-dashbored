@@ -163,3 +163,6 @@ Create a consistent visual system for the existing dashboard while preserving de
 ## Stage 5B reference baseline
 - The Overview page now serves as the first true HeroUI-based page-level visual reference.
 - Subsequent page migrations should align to this reference after explicit approval.
+
+## Runtime stability note (Stage 5B.2)
+- Runtime stability takes priority over direct HeroUI imports; internal primitives remain the safe abstraction until installed v3 API is locally verified.

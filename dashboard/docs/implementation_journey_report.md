@@ -837,3 +837,10 @@ Backend agronomic system is stable and safe for frontend integration.
 - Visual QA notes: responsive/dark-mode oriented classes retained; manual browser inspection still required for final aesthetic sign-off.
 - Known warnings: none from implementation scope; non-blocking build warnings may still appear per project baseline.
 - Next step: migrate Diagnostics page group using Stage 5B Overview as visual reference only after user approval.
+
+## HeroUI Stage 5B.2 — Runtime Recovery Without Local Command Execution
+
+- Root cause: direct HeroUI named exports were used in page code without verifying installed package exports, causing runtime module export errors (`CardBody` missing).
+- Fix: Overview page was restored to internal shared UI primitives and safe semantic markup while preserving Stage 5B visual intent and data behavior.
+- Execution model: user runs all npm/dev/build/test commands locally; no local package installation or environment repair was performed in this recovery step.
+- Future rule: before future HeroUI work, verify installed exports locally (or provide explicit export list) before coding page-level imports/usages.
