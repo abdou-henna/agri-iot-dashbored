@@ -655,3 +655,34 @@ Backend agronomic system is stable and safe for frontend integration.
 - Validation results: typecheck/build and guardrail scans executed successfully in this change set.
 - Known limitations: aggregate fallback cannot reconstruct raw/cleaned lineage if snapshot contract omits provenance rows.
 - Next recommended step: add fixture-driven UI tests for provenance + fallback permutations across all domains.
+
+## Test Runner Bootstrap and Processed Data Viewer Tests
+- Files changed:
+  - `dashboard/package.json`
+  - `dashboard/src/utils/analytics/processedDataViewerAdapter.test.ts`
+  - `dashboard/src/utils/analytics/processedDataViewerExport.test.ts`
+- Test runner added:
+  - Added `test` script as `vitest` in dashboard package scripts.
+- Dependency/script changes:
+  - Script only in this patch (`"test": "vitest"`).
+  - No deterministic analytics runtime logic changes.
+- Adapter test coverage:
+  - Provenance-present sensor row mapping (`snapshot_provenance`) with raw/cleaned/processed preservation.
+  - Aggregate fallback mapping (`snapshot_aggregate_fallback`) with raw/cleaned null preservation and missing status.
+  - Domain timestamp semantics validation across sensor/system/agronomic/upload rows.
+  - Missing-value preservation checks for both provenance and fallback paths.
+- Export test coverage:
+  - Provenance CSV lineage columns and semantic timestamp assertions.
+  - Aggregate fallback CSV missing-field behavior (`missing` processed value, no `0` coercion).
+  - Secret-safety assertions for forbidden tokens.
+  - CSV escaping assertions for commas, quotes, and newlines.
+- Missing-value/secret-safety coverage:
+  - Explicit assertions that null values remain null/missing and forbidden secret markers are absent.
+- Validation results:
+  - `npm run test -- --run` failed in this container (`vitest: not found`).
+  - `npm run typecheck` failed because `vitest` module/types are unavailable in this environment.
+  - `npm run build` was blocked by failing typecheck.
+- Known limitations:
+  - Local environment currently lacks executable/type-resolvable Vitest despite script wiring; test/build validation cannot complete until dependency availability is fixed in this container.
+- Next recommended step:
+  - Ensure Vitest package and type resolution are available in `dashboard` (`node_modules` + lock alignment), then rerun test/typecheck/build and keep/adjust tests if any contract mismatches appear.
