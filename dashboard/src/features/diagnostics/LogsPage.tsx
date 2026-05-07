@@ -55,7 +55,7 @@ export function LogsPage() {
   }, [latestUploadOnly, latestUploadId]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Card><CardContent className="p-4">
         <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-6">
           <div className="flex min-w-0 max-w-full flex-wrap gap-1.5 md:col-span-2">

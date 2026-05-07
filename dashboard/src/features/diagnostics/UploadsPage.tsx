@@ -5,6 +5,7 @@ import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/
 import { COLORS } from '../../config/constants';
 import { useTimeZone } from '../../hooks/useTimeZone';
 import { useUploads } from '../../hooks/useUploads';
+import { Badge, Card, CardContent, SectionHeader } from '../../components/ui';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/time';
 
 export function UploadsPage() {
@@ -54,13 +55,11 @@ export function UploadsPage() {
   );
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700">
-        This page shows when data was transferred, not when measurements occurred.
-      </div>
+    <div className="space-y-6">
+      <Card className="rounded-2xl border-slate-200/80 bg-white/90 dark:bg-slate-900/90"><CardContent className="p-4 sm:p-5"><SectionHeader title="Uploads" description="Transfer diagnostics only. Measurement time remains in measured_at on sensor pages." meta={<Badge variant="info">Timezone: {timezone}</Badge>} /></CardContent></Card>
       {uploads.isLoading ? <LoadingBlock label="Loading uploads" /> : null}
       {uploads.isError ? <ErrorBlock error={uploads.error} onRetry={() => uploads.refetch()} /> : null}
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="hidden grid-cols-[1.2fr_1fr_1fr_1fr_120px_100px_120px] gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-slate-500 md:grid">
           <span>Upload ID</span>
           <span>Device upload start</span>
@@ -100,7 +99,7 @@ export function UploadsPage() {
           </div>
         )}
       </section>
-      <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="font-semibold">U-1: Uploads per day</div>
         <div className="mt-3 h-64">
           {dailyRows.length ? (
@@ -121,7 +120,7 @@ export function UploadsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="font-semibold">U-2: Readings count per upload</div>
         <div className="mt-3 h-64">
           {perUploadRows.length ? (

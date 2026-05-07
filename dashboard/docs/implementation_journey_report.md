@@ -863,3 +863,13 @@ Backend agronomic system is stable and safe for frontend integration.
 
 ## UI Migration Guardrails Document
 This guardrails document was created to prevent recurrence of Overview migration failures (invalid HeroUI imports, type drift, responsive overflow, and spacing regressions) by standardizing workflow, constraints, and acceptance gates for all future UI-only changes.
+
+## Stage 6A — App Shell and Low-Risk Page Shell Alignment
+- Files changed: `src/components/layout/AppShell.tsx`, `src/features/diagnostics/LogsPage.tsx`, `src/features/diagnostics/UploadsPage.tsx`, `src/features/weather/WeatherPage.tsx`, `src/features/soil/SoilPage.tsx`, plus this documentation set.
+- Shell/topbar/sidebar changes: refined AppShell spacing, mobile-safe header wrapping, improved sidebar item rhythm/active contrast, and dark-mode-ready surfaces while keeping routes/labels intact.
+- Pages aligned: Logs, Uploads, Weather, Pivot 1/Pivot 2 shells moved toward Overview spacing rhythm and safer mobile/table container alignment.
+- Guardrails followed: UI-only edits, internal primitives preferred, no unverified HeroUI imports, no router/hook/API/data/chart logic changes.
+- No npm commands were run by Codex in this stage.
+- User local validation required: typecheck/build/test/dev and viewport QA (375/768/1440) before acceptance.
+- Known limitations: visual QA cannot be fully verified in this non-interactive environment.
+- Next step: Stage 6B focused on diagnostics/comparison shell polish with strict chart-internals freeze.
