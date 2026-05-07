@@ -166,3 +166,7 @@ Create a consistent visual system for the existing dashboard while preserving de
 
 ## Runtime stability note (Stage 5B.2)
 - Runtime stability takes priority over direct HeroUI imports; internal primitives remain the safe abstraction until installed v3 API is locally verified.
+
+
+## Stage 6A note
+- AppShell becomes the navigation/layout reference after Overview stabilization.

@@ -71,7 +71,7 @@ export function WeatherPage() {
   }, [dailyTemp.data?.points, dailyHumidity.data?.points, dailyPressure.data?.points]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h2 className="text-xl font-semibold text-slate-950">Weather - Shared Context</h2>
         <TimeRangeSelector value={preset} onChange={setPreset} />
@@ -128,7 +128,7 @@ export function WeatherPage() {
       <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">Daily Summary</div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[640px] text-start text-sm">
             <thead className="text-xs uppercase text-slate-500">
               <tr>
                 <th className="px-4 py-3">Date</th>

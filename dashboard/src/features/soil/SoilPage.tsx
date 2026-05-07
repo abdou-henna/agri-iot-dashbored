@@ -79,7 +79,7 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
     nodeId === 'MAIN' && readings.data?.readings?.length ? readings.data.readings.every((reading) => reading.status === 'error') : false;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
@@ -132,7 +132,7 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
       <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">Daily Summary</div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[640px] text-start text-sm">
             <thead className="text-xs uppercase text-slate-500">
               <tr>
                 <th className="px-4 py-3">Date</th>

@@ -121,3 +121,7 @@ Stage 5B.3 polishes Overview layout after runtime recovery without direct unveri
 
 ## Guardrails reference note
 - For future page/component migrations, follow `dashboard/docs/ui_migration_guardrails.md` as the mandatory runtime-safety and scope-control playbook.
+
+
+## Stage 6A note
+- Stage 6A aligns AppShell/topbar/sidebar and low-risk page shells using internal primitives and guardrails. No unverified HeroUI imports. Charts/data logic untouched.
