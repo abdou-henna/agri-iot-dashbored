@@ -56,11 +56,11 @@ export function UploadsPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="rounded-2xl border-slate-200/80 bg-white/90 dark:bg-slate-900/90"><CardContent className="p-4 sm:p-5"><SectionHeader title="Uploads" description="Transfer diagnostics only. Measurement time remains in measured_at on sensor pages." meta={<Badge variant="info">Timezone: {timezone}</Badge>} /></CardContent></Card>
+      <Card className="rounded-2xl border-zinc-200/80 bg-white dark:bg-zinc-900/90"><CardContent className="p-4 sm:p-5"><SectionHeader title="Uploads" description="Transfer diagnostics only. Measurement time remains in measured_at on sensor pages." meta={<Badge variant="info">Timezone: {timezone}</Badge>} /></CardContent></Card>
       {uploads.isLoading ? <LoadingBlock label="Loading uploads" /> : null}
       {uploads.isError ? <ErrorBlock error={uploads.error} onRetry={() => uploads.refetch()} /> : null}
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="hidden grid-cols-[1.2fr_1fr_1fr_1fr_120px_100px_120px] gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-slate-500 md:grid">
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="hidden grid-cols-[1.2fr_1fr_1fr_1fr_120px_100px_120px] gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-xs font-semibold uppercase text-zinc-500 md:grid">
           <span>Upload ID</span>
           <span>Device upload start</span>
           <span>Device upload finish</span>
@@ -70,10 +70,10 @@ export function UploadsPage() {
           <span>Status</span>
         </div>
         {uploads.data?.uploads?.length ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-zinc-100">
             {uploads.data.uploads.map((upload) => (
               <details key={upload.upload_id}>
-                <summary className="grid cursor-pointer gap-2 px-4 py-3 text-sm md:grid-cols-[1.2fr_1fr_1fr_1fr_120px_100px_120px]">
+                <summary className="grid cursor-pointer gap-2 px-4 py-3 text-sm transition-colors hover:bg-zinc-50/70 md:grid-cols-[1.2fr_1fr_1fr_1fr_120px_100px_120px]">
                   <span className="font-mono">{upload.upload_id}</span>
                   <span>{formatDisplayTime(upload.started_at, { timezone })}</span>
                   <span>{formatDisplayTime(upload.finished_at, { timezone })}</span>
@@ -82,11 +82,11 @@ export function UploadsPage() {
                   <span>{upload.raw_summary?.events_count ?? upload.events_count}</span>
                   <span className="font-semibold">{upload.status}</span>
                 </summary>
-                <div className="bg-slate-50 px-4 py-4 text-sm">
+                <div className="bg-zinc-50 px-4 py-4 text-sm">
                   <div>Device upload finish: {formatDisplayTime(upload.finished_at, { timezone })}</div>
                   <div>Notes: {upload.notes ?? '-'}</div>
                   <pre className="mt-3 overflow-auto rounded-md bg-white p-3 text-xs">{JSON.stringify(upload.raw_summary ?? {}, null, 2)}</pre>
-                  <Link className="mt-3 inline-block text-slate-900 underline" to={`/diagnostics/logs?upload_id=${upload.upload_id}`}>
+                  <Link className="mt-3 inline-block text-zinc-900 underline" to={`/diagnostics/logs?upload_id=${upload.upload_id}`}>
                     Filter logs by this upload
                   </Link>
                 </div>
@@ -99,8 +99,8 @@ export function UploadsPage() {
           </div>
         )}
       </section>
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="font-semibold">U-1: Uploads per day</div>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">U-1: Uploads per day</div>
         <div className="mt-3 h-64">
           {dailyRows.length ? (
             <ResponsiveContainer>
@@ -115,13 +115,13 @@ export function UploadsPage() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-slate-500">No uploads to chart.</div>
+            <div className="text-zinc-500">No uploads to chart.</div>
           )}
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="font-semibold">U-2: Readings count per upload</div>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">U-2: Readings count per upload</div>
         <div className="mt-3 h-64">
           {perUploadRows.length ? (
             <ResponsiveContainer>
@@ -140,7 +140,7 @@ export function UploadsPage() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-slate-500">No uploads to chart.</div>
+            <div className="text-zinc-500">No uploads to chart.</div>
           )}
         </div>
       </section>

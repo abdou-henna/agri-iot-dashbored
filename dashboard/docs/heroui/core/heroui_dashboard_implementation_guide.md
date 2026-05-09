@@ -6,6 +6,24 @@
 
 ---
 
+## Scope and stop conditions
+
+**Visual target:** HeroUI v3.0.3 dashboard style as shown in the reference screenshots.  
+**Scope:** UI presentation layer only — components, layout, styling, wrappers.
+
+**Hard stops — halt the task immediately if any of the following become necessary:**
+
+- Editing custom hooks or data-fetching logic (`useQuery`, `useMutation`, `useSensor*`, `useAnalytics*`, etc.)
+- Touching API endpoints, backend routes, or webservice code
+- Modifying analytics computation, Gemini prompt logic, QC scoring, or reliability calculations
+- Changing backend schema, firmware, migration files, or test infrastructure
+- Altering chart data transforms or timestamp semantics
+- Installing or upgrading packages without an explicit staged-migration approval
+
+If a UI change requires any of the above to work correctly, stop, document the blocker, and surface it for review before proceeding.
+
+---
+
 ## 1. Design target from reference screenshots
 
 The desired dashboard style is a clean, soft, professional analytics interface with:

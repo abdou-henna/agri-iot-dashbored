@@ -19,40 +19,41 @@ export function SettingsPage() {
 
   useEffect(() => {
     window.localStorage.setItem('smartFarm.chartTheme', theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
   return (
     <div className="max-w-3xl space-y-5">
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="font-semibold text-slate-900">Display Time Zone</h2>
-        <select className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2" value={mode} onChange={(event) => setMode(event.target.value as TimeZoneMode)}>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Display Time Zone</h2>
+        <select className="mt-3 w-full rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" value={mode} onChange={(event) => setMode(event.target.value as TimeZoneMode)}>
           <option value="farm">Farm local time</option>
           <option value="browser">Browser local time</option>
           <option value="utc">UTC</option>
         </select>
-        <p className="mt-2 text-sm text-slate-500">All times shown in {timezone}</p>
+        <p className="mt-2 text-sm text-zinc-500">All times shown in {timezone}</p>
       </section>
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="font-semibold text-slate-900">Default Date Range</h2>
-        <select className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2" value={defaultRange} onChange={(event) => setDefaultRange(event.target.value)}>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Default Date Range</h2>
+        <select className="mt-3 w-full rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" value={defaultRange} onChange={(event) => setDefaultRange(event.target.value)}>
           <option value="24h">Last 24h</option>
           <option value="7d">7d</option>
           <option value="30d">30d</option>
         </select>
       </section>
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="font-semibold text-slate-900">Chart Theme</h2>
-        <select className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2" value={theme} onChange={(event) => setTheme(event.target.value)}>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Dashboard Appearance</h2>
+        <select className="mt-3 w-full rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" value={theme} onChange={(event) => setTheme(event.target.value)}>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
         </select>
       </section>
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="font-semibold text-slate-900">Data Export</h2>
-        <p className="mt-1 text-sm text-slate-500">Download CSV snapshots of stored dashboard data. Each domain is exported separately to preserve data semantics.</p>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Data Export</h2>
+        <p className="mt-1 text-sm text-zinc-500">Download CSV snapshots of stored dashboard data. Each domain is exported separately to preserve data semantics.</p>
         <div className="mt-3 grid gap-2">
-          <label className="text-sm font-medium text-slate-700">Date range</label>
-          <select className="w-full rounded-md border border-slate-200 px-3 py-2" value={exportPreset} onChange={(event) => setExportPreset(event.target.value as typeof exportPreset)}>
+          <label className="text-sm font-medium text-zinc-700">Date range</label>
+          <select className="w-full rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" value={exportPreset} onChange={(event) => setExportPreset(event.target.value as typeof exportPreset)}>
             <option value="24h">Last 24h</option>
             <option value="7d">Last 7d</option>
             <option value="30d">Last 30d</option>
@@ -60,12 +61,12 @@ export function SettingsPage() {
           </select>
           {exportPreset === 'custom' ? (
             <div className="grid gap-2 sm:grid-cols-2">
-              <input type="datetime-local" className="w-full rounded-md border border-slate-200 px-3 py-2" value={customFrom} onChange={(event) => setCustomFrom(event.target.value)} />
-              <input type="datetime-local" className="w-full rounded-md border border-slate-200 px-3 py-2" value={customTo} onChange={(event) => setCustomTo(event.target.value)} />
+              <input type="datetime-local" className="w-full rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" value={customFrom} onChange={(event) => setCustomFrom(event.target.value)} />
+              <input type="datetime-local" className="w-full rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" value={customTo} onChange={(event) => setCustomTo(event.target.value)} />
             </div>
           ) : null}
-          <label className="mt-2 text-sm font-medium text-slate-700">Dataset</label>
-          <select className="w-full rounded-md border border-slate-200 px-3 py-2" value={selectedDataset} onChange={(event) => setSelectedDataset(event.target.value as ExportDataset)}>
+          <label className="mt-2 text-sm font-medium text-zinc-700">Dataset</label>
+          <select className="w-full rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" value={selectedDataset} onChange={(event) => setSelectedDataset(event.target.value as ExportDataset)}>
             <option value="sensor_readings">Sensor readings</option>
             <option value="system_events">System events</option>
             <option value="uploads">Uploads</option>
@@ -74,7 +75,7 @@ export function SettingsPage() {
           </select>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             <button
-              className="rounded-md bg-slate-900 px-3 py-2 text-white disabled:opacity-50"
+              className="rounded-lg bg-emerald-600 px-3 py-2 text-white hover:bg-emerald-700 disabled:opacity-50"
               disabled={isExporting}
               onClick={async () => {
                 const range = exportPreset === 'custom'
@@ -87,7 +88,7 @@ export function SettingsPage() {
               {isExporting ? 'Exporting...' : 'Export selected'}
             </button>
             <button
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 disabled:opacity-50"
+              className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               disabled={isExporting}
               onClick={async () => {
                 const range = exportPreset === 'custom'
@@ -100,7 +101,7 @@ export function SettingsPage() {
               Export all
             </button>
           </div>
-          <p className="text-xs text-slate-500">{exportNote}</p>
+          <p className="text-xs text-zinc-500">{exportNote}</p>
           {exportError ? <p className="text-sm text-red-600">{exportError}</p> : null}
           {exportMessage ? <p className="text-sm text-green-700">{exportMessage}</p> : null}
         </div>

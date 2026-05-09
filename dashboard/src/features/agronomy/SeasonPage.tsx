@@ -7,8 +7,8 @@ function localNoonIsoFromDate(dateValue: string) {
   return new Date(`${targetDate}T12:00:00`).toISOString();
 }
 
-const INPUT_CLASS = 'mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm';
-const SELECT_CLASS = 'mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200';
+const INPUT_CLASS = 'mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100';
+const SELECT_CLASS = 'mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100';
 
 export function SeasonPage() {
   const { activeSeason, startSeason, endSeason, isLoading, error } = useSeason();
@@ -19,10 +19,10 @@ export function SeasonPage() {
   const [confidence, setConfidence] = useState<'exact' | 'estimated'>('exact');
   const [formError, setFormError] = useState<string | null>(null);
 
-  return <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+  return <section className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
     <h2 className="text-lg font-semibold">Season</h2>
     <div className="text-sm">Active season: {activeSeason ? `${formatDisplayTime(activeSeason.started_at)}${activeSeason.ended_at ? ` → ${formatDisplayTime(activeSeason.ended_at)}` : ' (active)'}` : 'None'}</div>
-    {activeSeason?.notes ? <div className="text-sm text-slate-600">Notes: {activeSeason.notes}</div> : null}
+    {activeSeason?.notes ? <div className="text-sm text-zinc-600">Notes: {activeSeason.notes}</div> : null}
 
     <div className="grid gap-3 md:grid-cols-2">
       <div>

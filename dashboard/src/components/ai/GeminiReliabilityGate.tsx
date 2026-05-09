@@ -9,7 +9,7 @@ interface GeminiReliabilityGateProps {
 const toneClasses: Record<GeminiReliabilityGateResult['mode'], string> = {
   allowed: 'border-sky-200 bg-sky-50 text-sky-900',
   caution: 'border-amber-200 bg-amber-50 text-amber-900',
-  blocked: 'border-slate-300 bg-slate-100 text-slate-800',
+  blocked: 'border-zinc-300 bg-zinc-100 text-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200',
 };
 
 export function GeminiReliabilityGate({ gate, snapshot }: GeminiReliabilityGateProps) {

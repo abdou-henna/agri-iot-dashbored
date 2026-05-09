@@ -10,6 +10,7 @@ pnpm-debug.log*
 .vscode/
 .idea/
 /dist/
+.claude
 
 # Dashboard app artifacts
 dashboard/node_modules/

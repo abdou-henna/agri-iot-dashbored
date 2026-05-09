@@ -20,17 +20,33 @@ export function ProcessedDataViewerDrawer({ snapshot, agronomicIntelligence, con
   };
 
   return <>
-    <button type="button" className="rounded-md border border-slate-300 px-3 py-2 text-sm" onClick={() => setOpen(true)}>View processed data</button>
-    {open ? <div className="fixed inset-0 z-50 bg-black/30">
-      <div className="absolute right-0 top-0 h-full w-full overflow-y-auto bg-white p-4 md:w-[80%] lg:w-[70%]">
-        <div className="mb-3 flex items-center justify-between"><h3 className="text-lg font-semibold">Processed Data / Cleaned Analytics Viewer</h3><button type="button" className="rounded border px-3 py-1" onClick={() => setOpen(false)}>Close</button></div>
-        <p className="mb-3 text-xs text-slate-600">This viewer shows deterministic processed data. Gemini interpretation is not processed data.</p>
-        <div className="mb-3 rounded border p-3 text-xs">Snapshot metadata: {model.snapshot_meta.snapshot_id} · {model.snapshot_meta.window_start} → {model.snapshot_meta.window_end}</div>
-        <div className="mb-3 rounded border p-3 text-xs">Provenance source: {model.rows.some((row) => row.provenance_source === 'snapshot_provenance') ? 'Snapshot provenance' : 'Aggregate fallback'}</div>
-        <ProcessedDataViewerTable model={model} />
-        <div className="mt-3 grid gap-2 text-xs md:grid-cols-3"><div className="rounded border p-2">QC summary: {model.snapshot_qc_flags.length} flags</div><div className="rounded border p-2">Reliability summary: {model.snapshot_reliability.level}</div><div className="rounded border p-2">Deterministic alerts: {model.snapshot_alerts.length}</div></div>
-        <div className="mt-3"><button type="button" className="rounded bg-slate-900 px-3 py-2 text-sm text-white" onClick={onExport}>Export CSV</button></div>
+    <button type="button" className="rounded-lg border border-zinc-300 px-3 py-2 text-sm transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800" onClick={() => setOpen(true)}>View processed data</button>
+    {open ? (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 md:p-8">
+        <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex shrink-0 items-start justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
+            <div>
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Processed Data / Cleaned Analytics Viewer</h3>
+              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Read-only · deterministic processed data · Gemini interpretation is not processed data</p>
+            </div>
+            <button type="button" className="ml-4 shrink-0 rounded-lg border border-zinc-200 px-3 py-1 text-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" onClick={() => setOpen(false)}>Close</button>
+          </div>
+          <div className="overflow-y-auto px-6 py-4">
+            <div className="mb-3 rounded-lg border border-zinc-200 bg-zinc-50/60 p-3 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300">Snapshot metadata: {model.snapshot_meta.snapshot_id} · {model.snapshot_meta.window_start} → {model.snapshot_meta.window_end}</div>
+            <div className="mb-3 rounded-lg border border-zinc-200 bg-zinc-50/60 p-3 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300">Provenance source: {model.rows.some((row) => row.provenance_source === 'snapshot_provenance') ? 'Snapshot provenance' : 'Aggregate fallback'}</div>
+            <ProcessedDataViewerTable model={model} />
+            <div className="mt-3 grid gap-2 text-xs md:grid-cols-3">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-2 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300">QC summary: {model.snapshot_qc_flags.length} flags</div>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-2 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300">Reliability summary: {model.snapshot_reliability.level}</div>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-2 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300">Deterministic alerts: {model.snapshot_alerts.length}</div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button type="button" className="rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white transition-colors hover:bg-emerald-700" onClick={onExport}>Export CSV</button>
+              <button type="button" className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800" onClick={() => setOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div> : null}
+    ) : null}
   </>;
 }

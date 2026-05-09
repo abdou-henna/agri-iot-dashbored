@@ -82,7 +82,7 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
+          <h2 className="text-xl font-semibold text-zinc-900">{title}</h2>
         </div>
         <TimeRangeSelector value={preset} onChange={setPreset} />
       </div>
@@ -102,15 +102,15 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
           ['EC', metricValue(latest, 'soil_ec_us_cm', 'uS/cm')],
           ['Status', latest?.status ?? '—'],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="text-xs font-semibold uppercase text-slate-500">{label}</div>
-            <div className="mt-2 text-xl font-semibold text-slate-950">{value}</div>
+          <div key={label} className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="text-xs font-semibold uppercase text-zinc-500">{label}</div>
+            <div className="mt-2 text-xl font-semibold text-zinc-900">{value}</div>
           </div>
         ))}
       </section>
 
       {soilMetrics.map(([metric, label, domain], index) => (
-        <ChartFrame key={metric} title={label} actions={<button className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700" onClick={() => setExpandedChart(metric)}><Maximize2 className="h-3.5 w-3.5" /></button>}>
+        <ChartFrame key={metric} title={label} actions={<button className="rounded-md border border-zinc-200 px-2 py-1 text-xs text-zinc-700" onClick={() => setExpandedChart(metric)}><Maximize2 className="h-3.5 w-3.5" /></button>}>
           {metricQueries[index].isLoading ? <LoadingBlock /> : null}
           <MetricLineChart points={toTimeSeriesPoints(metricData[index], timezone)} color={color} yDomain={domain} />
           <DataConfidenceStrip />
@@ -129,11 +129,11 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
         </ChartFrame>
       </div>
 
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">Daily Summary</div>
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <div className="border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700">Daily Summary</div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-start text-sm">
-            <thead className="text-xs uppercase text-slate-500">
+            <thead className="text-xs uppercase text-zinc-500">
               <tr>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Moisture avg/min/max</th>
@@ -141,7 +141,7 @@ export function SoilPage({ nodeId }: { nodeId: Extract<NodeId, 'MAIN' | 'N2'> })
                 <th className="px-4 py-3">EC avg/min/max</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-zinc-100">
               {dailyRows.map((row) => (
                 <tr key={row.day}>
                   <td className="px-4 py-3">{formatDisplayDate(row.day, timezone)}</td>

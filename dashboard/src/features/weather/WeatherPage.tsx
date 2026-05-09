@@ -73,7 +73,7 @@ export function WeatherPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h2 className="text-xl font-semibold text-slate-950">Weather - Shared Context</h2>
+        <h2 className="text-xl font-semibold text-zinc-900">Weather - Shared Context</h2>
         <TimeRangeSelector value={preset} onChange={setPreset} />
       </div>
       <section className="grid gap-3 md:grid-cols-4">
@@ -83,14 +83,14 @@ export function WeatherPage() {
           ['Pressure', metricValue(latest, 'air_pressure_hpa', 'hPa')],
           ['Status', latest?.status ?? '—'],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="text-xs font-semibold uppercase text-slate-500">{label}</div>
-            <div className="mt-2 text-xl font-semibold text-slate-950">{value}</div>
+          <div key={label} className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="text-xs font-semibold uppercase text-zinc-500">{label}</div>
+            <div className="mt-2 text-xl font-semibold text-zinc-900">{value}</div>
           </div>
         ))}
       </section>
       {weatherMetrics.map(([metric, label, domain], index) => (
-        <ChartFrame key={metric} title={label} actions={<button className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700" onClick={() => setExpandedChart(metric)}><Maximize2 className="h-3.5 w-3.5" /></button>}>
+        <ChartFrame key={metric} title={label} actions={<button className="rounded-md border border-zinc-200 px-2 py-1 text-xs text-zinc-700" onClick={() => setExpandedChart(metric)}><Maximize2 className="h-3.5 w-3.5" /></button>}>
           <MetricLineChart points={toTimeSeriesPoints(queries[index].data, timezone)} color={COLORS.weather} yDomain={domain} />
           <DataConfidenceStrip />
         </ChartFrame>
@@ -125,11 +125,11 @@ export function WeatherPage() {
         </ChartFrame>
       </div>
 
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">Daily Summary</div>
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <div className="border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700">Daily Summary</div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-start text-sm">
-            <thead className="text-xs uppercase text-slate-500">
+            <thead className="text-xs uppercase text-zinc-500">
               <tr>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Air temp avg/min/max</th>
@@ -137,7 +137,7 @@ export function WeatherPage() {
                 <th className="px-4 py-3">Pressure avg/min/max</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-zinc-100">
               {dailyRows.map((row) => (
                 <tr key={row.day}>
                   <td className="px-4 py-3">{formatDisplayDate(row.day, timezone)}</td>

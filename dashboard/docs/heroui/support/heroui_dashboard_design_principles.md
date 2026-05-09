@@ -1,0 +1,1 @@
+> **Stub — see authoritative file.** This file is a placeholder. The full content lives in `heroui_dashboard_charts_design_principles.md` in this same folder. Refer to that file for all dashboard and chart design principle rules.

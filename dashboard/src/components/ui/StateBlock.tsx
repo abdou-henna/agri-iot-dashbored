@@ -13,8 +13,8 @@ interface StateBlockProps {
 const cx = (...classes: Array<string | undefined>) => classes.filter(Boolean).join(' ');
 
 const stateClasses: Record<StateType, string> = {
-  loading: 'border-slate-300 bg-slate-50 text-slate-800 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
-  empty: 'border-slate-300 bg-white text-slate-800 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100',
+  loading: 'border-zinc-300 bg-zinc-50 text-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100',
+  empty: 'border-zinc-300 bg-white text-zinc-800 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100',
   error: 'border-rose-300 bg-rose-50 text-rose-900 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-100',
   warning: 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100',
   success: 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-100',
@@ -23,7 +23,7 @@ const stateClasses: Record<StateType, string> = {
 
 export function StateBlock({ state, title, description, action, className }: StateBlockProps) {
   return (
-    <section className={cx('rounded-lg border p-4', stateClasses[state], className)} aria-live={state === 'error' ? 'assertive' : 'polite'}>
+    <section className={cx('rounded-2xl border p-4', stateClasses[state], className)} aria-live={state === 'error' ? 'assertive' : 'polite'}>
       <h3 className="text-sm font-semibold">{title}</h3>
       <p className="mt-1 text-sm opacity-90">{description}</p>
       {action ? <div className="mt-3">{action}</div> : null}

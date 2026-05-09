@@ -54,7 +54,7 @@ function ComparisonChart({
   const comparison = useComparisonMetric(metric, preset);
 
   return (
-    <ChartFrame title={title} actions={<button className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700" onClick={() => onExpand(metric)}><Maximize2 className="h-3.5 w-3.5" /></button>}>
+    <ChartFrame title={title} actions={<button className="rounded-md border border-zinc-200 px-2 py-1 text-xs text-zinc-700" onClick={() => onExpand(metric)}><Maximize2 className="h-3.5 w-3.5" /></button>}>
       <DualMetricChart
         points={comparison.points}
         leftName="Pivot 1"
@@ -77,7 +77,7 @@ export function ComparisonPage() {
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h2 className="text-xl font-semibold text-slate-950">Pivot Comparison</h2>
+        <h2 className="text-xl font-semibold text-zinc-900">Pivot Comparison</h2>
         <TimeRangeSelector value={preset} onChange={setPreset} />
       </div>
 
@@ -94,11 +94,11 @@ export function ComparisonPage() {
         ) : null}
       </ChartExpandModal>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="font-semibold text-slate-900">Delta Panel</h2>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <h2 className="font-semibold text-zinc-900">Delta Panel</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           {[formatDelta('Moisture', '%', moisture.p1Latest, moisture.p2Latest), formatDelta('Temperature', 'C', temperature.p1Latest, temperature.p2Latest), formatDelta('EC', 'uS/cm', ec.p1Latest, ec.p2Latest)].map((text) => (
-            <div key={text} className="rounded-md border border-slate-200 p-3 text-sm text-slate-700">
+            <div key={text} className="rounded-xl border border-zinc-200 p-3 text-sm text-zinc-700">
               {text}
             </div>
           ))}
@@ -107,9 +107,9 @@ export function ComparisonPage() {
       <ComparisonChart metric="soil_moisture_percent" title="Soil Moisture Comparison" domain={[0, 100]} preset={preset} onExpand={setExpandedMetric} />
       <ComparisonChart metric="soil_temperature_c" title="Soil Temperature Comparison" domain={[-20, 80]} preset={preset} onExpand={setExpandedMetric} />
       <ComparisonChart metric="soil_ec_us_cm" title="Soil EC Comparison" domain={[0, 20000]} preset={preset} onExpand={setExpandedMetric} />
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="font-semibold text-slate-900">Soil Moisture vs Air Temperature</h2>
-        <p className="mt-2 text-sm text-slate-500">Correlation scatter is reserved until aligned soil and weather aggregate samples can be fetched safely without merging pivot identities.</p>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <h2 className="font-semibold text-zinc-900">Soil Moisture vs Air Temperature</h2>
+        <p className="mt-2 text-sm text-zinc-500">Correlation scatter is reserved until aligned soil and weather aggregate samples can be fetched safely without merging pivot identities.</p>
       </section>
     </div>
   );

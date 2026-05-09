@@ -3,7 +3,7 @@ import { useCuttingEvents, useSeason, useYield } from '../../hooks/useAgronomyPh
 import type { TargetScope } from '../../types/common';
 import { formatDisplayTime } from '../../utils/time';
 
-const SELECT_CLASS = 'mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200';
+const SELECT_CLASS = 'mt-2 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100';
 
 function localNoonIsoFromDate(dateValue: string) {
   const targetDate = dateValue || new Date().toISOString().slice(0, 10);
@@ -26,7 +26,7 @@ export function CuttingYieldPage() {
   const sortedCuttings = useMemo(() => cuttings, [cuttings]);
 
   return <div className="space-y-4">
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="text-lg font-semibold">Cutting</h2>
       <label className="mt-3 block text-sm font-medium">Date</label>
       <input type="date" className={SELECT_CLASS} value={cuttingDate} onChange={(event) => setCuttingDate(event.target.value)} />
@@ -48,22 +48,22 @@ export function CuttingYieldPage() {
           </select>
         </div>
       </div>
-      <button className="mt-3 rounded-md bg-slate-900 px-3 py-2 text-white disabled:opacity-50" disabled={!activeSeason} onClick={async () => {
+      <button className="mt-3 rounded-lg bg-emerald-600 px-3 py-2 text-white hover:bg-emerald-700 disabled:opacity-50" disabled={!activeSeason} onClick={async () => {
         setFormError(null);
         if (!activeSeason) return setFormError('Active season required for cutting events.');
         await createCutting({ target_scope: targetScope, started_at: localNoonIsoFromDate(cuttingDate), confidence });
       }}>Record cutting</button>
-      <div className="mt-3 space-y-2 text-sm">{sortedCuttings.length ? sortedCuttings.map((item) => <div key={item.agro_event_id} className="rounded bg-slate-50 p-2">{formatDisplayTime(item.started_at)} · {item.agro_event_id}</div>) : 'No cuttings yet.'}</div>
+      <div className="mt-3 space-y-2 text-sm">{sortedCuttings.length ? sortedCuttings.map((item) => <div key={item.agro_event_id} className="rounded bg-zinc-50 p-2">{formatDisplayTime(item.started_at)} · {item.agro_event_id}</div>) : 'No cuttings yet.'}</div>
     </section>
 
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="text-lg font-semibold">Yield</h2>
       <select className={SELECT_CLASS} value={yieldCuttingId} onChange={(e) => setYieldCuttingId(e.target.value)}>
         <option value="">Select cutting event</option>
         {sortedCuttings.map((cutting) => <option key={cutting.agro_event_id} value={cutting.agro_event_id}>{cutting.agro_event_id}</option>)}
       </select>
-      <input className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2" placeholder="Yield amount" value={yieldAmount} onChange={(e) => setYieldAmount(e.target.value)} />
-      <button className="mt-2 rounded-md bg-slate-900 px-3 py-2 text-white" onClick={async () => {
+      <input className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Yield amount" value={yieldAmount} onChange={(e) => setYieldAmount(e.target.value)} />
+      <button className="mt-2 rounded-lg bg-emerald-600 px-3 py-2 text-white hover:bg-emerald-700" onClick={async () => {
         setFormError(null);
         if (!yieldCuttingId) return setFormError('Yield must reference a cutting_event.');
         const amount = Number(yieldAmount);
@@ -72,7 +72,7 @@ export function CuttingYieldPage() {
         setYieldAmount('');
       }}>Add yield record</button>
       {formError ? <div className="mt-2 text-sm text-red-600">{formError}</div> : null}
-      <div className="mt-3 space-y-2 text-sm">{yields.length ? yields.map((item) => <div key={item.agro_event_id} className="rounded bg-slate-50 p-2">{item.agro_event_id}</div>) : 'No yield records yet.'}</div>
+      <div className="mt-3 space-y-2 text-sm">{yields.length ? yields.map((item) => <div key={item.agro_event_id} className="rounded bg-zinc-50 p-2">{item.agro_event_id}</div>) : 'No yield records yet.'}</div>
     </section>
   </div>;
 }

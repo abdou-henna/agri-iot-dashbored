@@ -42,11 +42,11 @@ export interface DualSeriesPoint {
 
 export function EmptyChartState({ message = 'No data in selected range', onRetry }: { message?: string; onRetry?: () => void }) {
   return (
-    <div className="flex min-h-48 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-center">
+    <div className="flex min-h-48 items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center">
       <div>
-        <div className="text-sm font-medium text-slate-700">{message}</div>
+        <div className="text-sm font-medium text-zinc-700">{message}</div>
         {onRetry ? (
-          <button className="mt-3 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700" onClick={onRetry}>
+          <button className="mt-3 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700" onClick={onRetry}>
             Retry
           </button>
         ) : null}
@@ -71,11 +71,11 @@ export function ChartFrame({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-          {subtitle ? <p className="mt-1 text-sm text-slate-500">{subtitle}</p> : null}
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-zinc-900">{title}</h2>
+          {subtitle ? <p className="mt-1 text-sm text-zinc-500">{subtitle}</p> : null}
         </div>
         {actions ? <div className="shrink-0">{actions}</div> : null}
       </div>
@@ -139,7 +139,7 @@ export function MetricLineChart({
 }
 
 export function Sparkline({ points, color }: { points: TimeSeriesPoint[]; color: string }) {
-  if (points.length === 0) return <div className="h-10 rounded-sm bg-slate-100" />;
+  if (points.length === 0) return <div className="h-10 rounded-sm bg-zinc-100" />;
   return (
     <div className="h-10 w-full">
       <ResponsiveContainer>
@@ -249,15 +249,15 @@ export function TimeRangeSelector({
       {(['24h', '7d', '30d'] as const).map((range) => (
         <button
           key={range}
-          className={`rounded-md border px-3 py-2 text-sm ${
-            value === range ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'
+          className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+            value === range ? 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700' : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
           }`}
           onClick={() => onChange(range)}
         >
           {range}
         </button>
       ))}
-      <button className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-400" disabled title="Custom range is reserved for a later phase">
+      <button className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-400 cursor-not-allowed" disabled title="Custom range is reserved for a later phase">
         Custom
       </button>
     </div>
@@ -295,12 +295,12 @@ export function ChartExpandModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-2 md:items-center md:p-6" role="dialog" aria-modal="true">
       <button className="absolute inset-0" aria-label="Close expanded chart" onClick={onClose} />
-      <div className="relative z-10 max-h-[95vh] w-full overflow-y-auto rounded-lg bg-white p-4 md:p-6">
+      <div className="relative z-10 max-h-[95vh] w-full overflow-y-auto rounded-2xl bg-white p-4 shadow-lg md:p-6">
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <h3 className="text-base font-semibold text-slate-900 md:text-lg">{title}</h3>
+          <h3 className="text-base font-semibold text-zinc-900 md:text-lg">{title}</h3>
           <div className="flex flex-wrap items-center gap-2">
             {controls}
-            <button className="rounded-md border border-slate-200 px-3 py-2 text-sm" onClick={onClose}>Close</button>
+            <button className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors" onClick={onClose}>Close</button>
           </div>
         </div>
         {children}

@@ -7,7 +7,7 @@ type ParagraphProps = HTMLAttributes<HTMLParagraphElement>;
 const cx = (...classes: Array<string | undefined>) => classes.filter(Boolean).join(' ');
 
 export function Card({ className, children, ...props }: DivProps) {
-  return <section className={cx('rounded-lg border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100', className)} {...props}>{children}</section>;
+  return <section className={cx('rounded-2xl border border-zinc-200/80 bg-white text-zinc-900 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100', className)} {...props}>{children}</section>;
 }
 
 export function CardHeader({ className, children, ...props }: DivProps) {
@@ -15,11 +15,11 @@ export function CardHeader({ className, children, ...props }: DivProps) {
 }
 
 export function CardTitle({ className, children, ...props }: HeadingProps) {
-  return <h3 className={cx('text-base font-semibold leading-tight text-slate-900 dark:text-slate-100', className)} {...props}>{children}</h3>;
+  return <h3 className={cx('text-base font-semibold leading-tight text-zinc-900 dark:text-zinc-100', className)} {...props}>{children}</h3>;
 }
 
 export function CardDescription({ className, children, ...props }: ParagraphProps) {
-  return <p className={cx('text-sm text-slate-600 dark:text-slate-300', className)} {...props}>{children}</p>;
+  return <p className={cx('text-sm text-zinc-600 dark:text-zinc-300', className)} {...props}>{children}</p>;
 }
 
 export function CardContent({ className, children, ...props }: DivProps) {

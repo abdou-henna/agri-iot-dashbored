@@ -1,0 +1,1 @@
+> **Stub — see authoritative file.** This file is a placeholder. The full content lives in `heroui_i18n_theme_foundation_plan.md` in this same folder. Refer to that file for i18n/RTL/theme foundation rules.

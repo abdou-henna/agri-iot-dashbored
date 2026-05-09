@@ -56,27 +56,27 @@ export function SystemHealthPage() {
   return (
     <div className="space-y-5">
       <section className="grid gap-4 md:grid-cols-[280px_1fr]">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-semibold text-slate-900">Gateway</h2>
-          <div className="mt-3 space-y-2 text-sm text-slate-600">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Gateway</h2>
+          <div className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
             <div>ID: {gateway?.gateway_id ?? 'GW01'}</div>
             <div>Firmware: {gateway?.firmware_version ?? '-'}</div>
             <div>Last upload: {formatDisplayTime(gateway?.last_upload_at, { timezone })}</div>
             <div>Last seen: {formatDisplayTime(gateway?.last_seen_at, { timezone })}</div>
           </div>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-semibold text-slate-900">Nodes</h2>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Nodes</h2>
           {nodes.data?.nodes?.length ? (
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               {nodes.data.nodes.map((node) => (
-                <div key={node.node_id} className="rounded-md border border-slate-200 p-3 text-sm">
+                <div key={node.node_id} className="rounded-xl border border-zinc-200 p-3 text-sm dark:border-zinc-700 dark:text-zinc-300">
                   <div className="font-semibold">{node.node_id}</div>
                   <div>{node.node_type}</div>
                   <div>Last seen: {formatDisplayTime(node.last_seen_at, { timezone })}</div>
                   <div>Seq: {node.last_seq ?? '-'}</div>
                   <button
-                    className="mt-2 rounded border border-slate-200 px-2 py-1 text-xs"
+                    className="mt-2 rounded-lg border border-zinc-200 px-2 py-1 text-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
                     onClick={async () => {
                       const latest = (rawReadings.data?.readings ?? []).find((reading) => reading.node_id === node.node_id);
                       if (!latest) return;
@@ -94,8 +94,8 @@ export function SystemHealthPage() {
           )}
         </div>
       </section>
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="font-semibold text-slate-900">Diagnostics</h2>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Diagnostics</h2>
         <div className="mt-3 grid gap-2 text-sm">
           <div>Severity summary: info {severityCounts.info ?? 0} · warning {severityCounts.warning ?? 0} · error {severityCounts.error ?? 0} · critical {severityCounts.critical ?? 0}</div>
           <div>Error code frequency: {Object.entries(errorCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([code, count]) => `${code}(${count})`).join(', ') || '—'}</div>
@@ -108,16 +108,16 @@ export function SystemHealthPage() {
       <ChartFrame title="SNR Trend (N2 vs N3)">
         <DualMetricChart points={snrPoints} leftName="N2" rightName="N3" leftColor={COLORS.pivot2} rightColor={COLORS.weather} yDomain={[-20, 15]} />
       </ChartFrame>
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h3 className="font-semibold text-slate-900">Sequence Gap Detector</h3>
-        <div className="mt-2 space-y-1 text-sm">
-          {seqGaps.length ? seqGaps.slice(0, 20).map((row) => <div key={row.record_id}>{row.node_id} gap before seq {row.node_seq} at {formatDisplayTime(row.measured_at, { timezone })}</div>) : <span>No sequence gaps found.</span>}
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Sequence Gap Detector</h3>
+        <div className="mt-2 space-y-1.5 text-sm">
+          {seqGaps.length ? seqGaps.slice(0, 20).map((row) => <div key={row.record_id} className="rounded-lg bg-zinc-50/80 px-3 py-2 dark:bg-zinc-800/60 dark:text-zinc-300">{row.node_id} gap before seq {row.node_seq} at {formatDisplayTime(row.measured_at, { timezone })}</div>) : <span>No sequence gaps found.</span>}
         </div>
       </section>
       {rawPayload ? (
-        <section ref={payloadRef} className="rounded-lg border border-slate-200 bg-white p-4">
-          <h3 className="font-semibold text-slate-900">Raw Payload</h3>
-          <pre className="mt-2 overflow-auto rounded-md bg-slate-50 p-3 text-xs">{JSON.stringify(rawPayload, null, 2)}</pre>
+        <section ref={payloadRef} className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Raw Payload</h3>
+          <pre className="mt-2 overflow-auto rounded-md bg-zinc-50 p-3 text-xs dark:bg-zinc-800 dark:text-zinc-300">{JSON.stringify(rawPayload, null, 2)}</pre>
         </section>
       ) : null}
     </div>

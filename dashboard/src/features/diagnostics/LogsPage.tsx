@@ -10,6 +10,27 @@ import { Badge, Button, Card, CardContent, SectionHeader } from '../../component
 
 const severities: EventSeverity[] = ['info', 'warning', 'error', 'critical'];
 
+function severityVariant(severity: EventSeverity): 'info' | 'warning' | 'danger' | 'critical' {
+  if (severity === 'error') return 'danger';
+  if (severity === 'critical') return 'critical';
+  if (severity === 'warning') return 'warning';
+  return 'info';
+}
+
+const SEVERITY_ACTIVE: Record<EventSeverity, string> = {
+  info: 'border border-sky-200 bg-sky-100 text-sky-800 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-300',
+  warning: 'border border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300',
+  error: 'border border-rose-200 bg-rose-100 text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300',
+  critical: 'border border-purple-200 bg-purple-100 text-purple-800 dark:border-purple-800 dark:bg-purple-950/60 dark:text-purple-300',
+};
+const SEVERITY_INACTIVE = 'border border-zinc-200 bg-zinc-100 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400';
+const SEVERITY_TEXT: Record<string, string> = {
+  info: 'text-sky-700 dark:text-sky-400',
+  warning: 'text-amber-700 dark:text-amber-400',
+  error: 'text-rose-700 dark:text-rose-400',
+  critical: 'text-purple-700 dark:text-purple-400',
+};
+
 export function LogsPage() {
   const [selectedSeverities, setSelectedSeverities] = useState<EventSeverity[]>(severities);
   const [nodeId, setNodeId] = useState<NodeId | ''>('');
@@ -56,17 +77,16 @@ export function LogsPage() {
 
   return (
     <div className="space-y-6">
-      <Card><CardContent className="p-4">
-        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-6">
-          <div className="flex min-w-0 max-w-full flex-wrap gap-1.5 md:col-span-2">
+      <Card><CardContent className="p-3">
+        <div className="flex min-w-0 flex-wrap gap-2">
+          <div className="flex min-w-0 flex-wrap gap-1.5">
             {severities.map((severity) => {
               const active = selectedSeverities.includes(severity);
               return (
-                <Button
+                <button
                   key={severity}
-                  size="sm"
-                  variant={active ? "primary" : "secondary"}
-                  className="rounded-full px-2.5 py-1 text-xs font-semibold uppercase"
+                  type="button"
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase transition-colors ${active ? SEVERITY_ACTIVE[severity] : SEVERITY_INACTIVE}`}
                   onClick={() =>
                     setSelectedSeverities((current) =>
                       current.includes(severity) ? current.filter((item) => item !== severity) : [...current, severity],
@@ -74,11 +94,12 @@ export function LogsPage() {
                   }
                 >
                   {severity}
-                </Button>
+                </button>
               );
             })}
           </div>
-          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-1">
+          <div className="h-5 w-px self-center bg-zinc-200 dark:bg-zinc-700" />
+          <div className="flex flex-wrap items-center gap-1">
             {[
               { label: 'All', value: '' },
               { label: 'MAIN', value: 'MAIN' },
@@ -96,21 +117,23 @@ export function LogsPage() {
               </Button>
             ))}
           </div>
+        </div>
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
           <input
-            className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm"
+            className="h-8 w-44 min-w-0 rounded-lg border border-zinc-300 bg-white px-3 text-xs dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             placeholder="Upload ID (e.g. UPL-...)"
             value={uploadId}
             onChange={(event) => setUploadId(event.target.value)}
           />
-          <input className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm" placeholder="Event Type" value={eventType} onChange={(event) => setEventType(event.target.value)} />
-          <input className="h-9 min-w-0 max-w-full rounded-md border border-slate-300 px-3 text-sm" placeholder="Error Code" value={errorCode} onChange={(event) => setErrorCode(event.target.value)} />
+          <input className="h-8 w-36 min-w-0 rounded-lg border border-zinc-300 bg-white px-3 text-xs dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Event Type" value={eventType} onChange={(event) => setEventType(event.target.value)} />
+          <input className="h-8 w-36 min-w-0 rounded-lg border border-zinc-300 bg-white px-3 text-xs dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Error Code" value={errorCode} onChange={(event) => setErrorCode(event.target.value)} />
           <Button
             type="button"
             disabled={!latestUploadId}
             title={!latestUploadId ? 'No upload id available.' : ''}
             variant={latestUploadOnly ? 'primary' : 'secondary'}
             size="sm"
-            className="h-9 min-w-0 max-w-full whitespace-nowrap px-3 text-sm"
+            className="h-8 whitespace-nowrap px-3 text-xs"
             onClick={() => {
               if (!latestUploadId) return;
               setLatestUploadOnly((prev) => !prev);
@@ -119,11 +142,10 @@ export function LogsPage() {
           >
             Latest upload logs
           </Button>
-          {!latestUploadId ? <div className="text-xs text-slate-500">No upload id available.</div> : null}
           <Button
             variant="secondary"
             size="sm"
-            className="h-9 min-w-0 max-w-full whitespace-nowrap px-3 text-sm md:justify-self-end"
+            className="h-8 whitespace-nowrap px-3 text-xs"
             onClick={() => {
               setSelectedSeverities(severities);
               setNodeId('');
@@ -135,25 +157,26 @@ export function LogsPage() {
           >
             Clear filters
           </Button>
+          {!latestUploadId ? <span className="text-xs text-zinc-500">No upload id available.</span> : null}
         </div>
       </CardContent></Card>
       <Card><CardContent className="p-4">
         <SectionHeader title="Event Histogram (daily)" />
         <div className="mt-2 grid max-h-52 gap-1 overflow-auto text-xs">
           {histogramRows.length ? histogramRows.map((row, idx) => (
-            <div key={`${row.bucket_start}-${row.group_key}-${idx}`} className="grid grid-cols-[1fr_120px_80px] rounded bg-slate-50 px-2 py-1">
+            <div key={`${row.bucket_start}-${row.group_key}-${idx}`} className="grid grid-cols-[1fr_120px_80px] rounded-lg bg-zinc-50/80 px-2 py-1 dark:bg-zinc-800/60 dark:text-zinc-300">
               <span>{formatDisplayTime(row.bucket_start, { timezone })}</span>
-              <span className="uppercase">{row.group_key}</span>
+              <span className={`uppercase ${SEVERITY_TEXT[row.group_key] ?? 'text-zinc-500 dark:text-zinc-400'}`}>{row.group_key}</span>
               <span>{row.count}</span>
             </div>
-          )) : <span className="text-slate-500">No aggregated events in selected range.</span>}
+          )) : <span className="text-zinc-500">No aggregated events in selected range.</span>}
         </div>
       </CardContent></Card>
 
       {events.isLoading ? <LoadingBlock label="Loading events" /> : null}
       {events.isError ? <ErrorBlock error={events.error} onRetry={() => events.refetch()} /> : null}
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <div className="hidden grid-cols-[180px_110px_90px_1fr_160px_1fr] gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-slate-500 md:grid">
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="hidden grid-cols-[180px_110px_90px_1fr_160px_1fr] gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-xs font-semibold uppercase text-zinc-500 md:grid dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
           <span>Time</span>
           <span>Severity</span>
           <span>Node</span>
@@ -162,35 +185,35 @@ export function LogsPage() {
           <span>Message</span>
         </div>
         {events.data?.events?.length ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {events.data.events.map((event) => (
               <details key={event.event_id} className="group">
-                <summary className="grid cursor-pointer gap-2 px-4 py-3 text-sm md:grid-cols-[180px_110px_90px_1fr_160px_1fr]">
+                <summary className="grid cursor-pointer gap-2 px-4 py-3 text-sm transition-colors hover:bg-zinc-50/70 md:grid-cols-[180px_110px_90px_1fr_160px_1fr] dark:hover:bg-zinc-800/50">
                   <span>{formatDisplayTime(event.event_time, { timezone, includeSeconds: true })}</span>
-                  <Badge variant="warning" className="w-fit uppercase">{event.severity}</Badge>
+                  <Badge variant={severityVariant(event.severity)} className="w-fit uppercase">{event.severity}</Badge>
                   <span>{event.node_id ?? 'Gateway'}</span>
                   <span className="font-mono">{event.event_type}</span>
                   <span className="font-mono">{event.error_code ?? '-'}</span>
                   <span>{event.message ?? '-'}</span>
                 </summary>
-                <div className="bg-slate-50 px-4 py-4 text-sm">
+                <div className="bg-zinc-50 px-4 py-4 text-sm dark:bg-zinc-800/50 dark:text-zinc-300">
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>event_id: <span className="font-mono">{event.event_id}</span></div>
                     <div>gateway_id: <span className="font-mono">{event.gateway_id}</span></div>
                     <div>upload_id: <span className="font-mono">{event.upload_id ?? '-'}</span></div>
                     <div>Server received: {formatDisplayTime(event.received_at, { timezone, includeSeconds: true })}</div>
                   </div>
-                  <pre className="mt-3 overflow-auto rounded-md bg-white p-3 text-xs">{JSON.stringify(event.details ?? {}, null, 2)}</pre>
+                  <pre className="mt-3 overflow-auto rounded-md bg-white p-3 text-xs dark:bg-zinc-900 dark:text-zinc-300">{JSON.stringify(event.details ?? {}, null, 2)}</pre>
                   {event.node_id ? (
                     <Link
-                      className="mt-3 inline-block text-slate-900 underline"
+                      className="mt-3 inline-block text-zinc-900 underline dark:text-zinc-300"
                       to={`${event.node_id === 'N3' ? '/weather' : event.node_id === 'N2' ? '/soil/pivot-2' : '/soil/pivot-1'}?from=${encodeURIComponent(new Date(new Date(event.event_time).getTime() - 5 * 60_000).toISOString())}&to=${encodeURIComponent(new Date(new Date(event.event_time).getTime() + 5 * 60_000).toISOString())}`}
                     >
                       View nearby readings
                     </Link>
                   ) : null}
                   {event.upload_id ? (
-                    <Link className="ms-4 inline-block text-slate-900 underline" to={`/diagnostics/logs?upload_id=${encodeURIComponent(event.upload_id)}`}>
+                    <Link className="ms-4 inline-block text-zinc-900 underline dark:text-zinc-300" to={`/diagnostics/logs?upload_id=${encodeURIComponent(event.upload_id)}`}>
                       Filter by this upload_id
                     </Link>
                   ) : null}

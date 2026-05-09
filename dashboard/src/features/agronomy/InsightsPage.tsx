@@ -50,16 +50,16 @@ export function InsightsPage() {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-base font-semibold text-slate-900">Irrigation vs Soil Moisture</h2>
-        <p className="mt-1 text-xs text-slate-500">Nearest readings by measured_at only. Before window: 60 min. After window: 120 min.</p>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <h2 className="text-base font-semibold text-zinc-900">Irrigation vs Soil Moisture</h2>
+        <p className="mt-1 text-xs text-zinc-500">Nearest readings by measured_at only. Before window: 60 min. After window: 120 min.</p>
         <div className="mt-3 space-y-2">
           {insights.irrigationMoisture.length ? insights.irrigationMoisture.map((item) => (
-            <div key={`${item.agro_event_id}-${item.node_id}`} className="rounded-md bg-slate-50 p-3 text-xs">
-              <div className="font-semibold text-slate-900">{item.node_id} · {item.agro_event_id}</div>
-              <div className="mt-1 text-slate-600">Start: {formatDisplayTime(item.started_at)} · End: {formatDisplayTime(item.ended_at)}</div>
+            <div key={`${item.agro_event_id}-${item.node_id}`} className="rounded-xl bg-zinc-50 p-3 text-xs">
+              <div className="font-semibold text-zinc-900">{item.node_id} · {item.agro_event_id}</div>
+              <div className="mt-1 text-zinc-600">Start: {formatDisplayTime(item.started_at)} · End: {formatDisplayTime(item.ended_at)}</div>
               {item.status === 'ok' && item.before && item.after && typeof item.delta === 'number' ? (
-                <div className="mt-1 text-slate-700">
+                <div className="mt-1 text-zinc-700">
                   Before {item.before.value.toFixed(1)}% ({formatDisplayTime(item.before.measured_at)}) → After {item.after.value.toFixed(1)}% ({formatDisplayTime(item.after.measured_at)}) · Δ <DeltaLabel value={item.delta} />
                 </div>
               ) : (
@@ -70,48 +70,48 @@ export function InsightsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-base font-semibold text-slate-900">Cutting / Yield Summary</h2>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <h2 className="text-base font-semibold text-zinc-900">Cutting / Yield Summary</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">Cutting events</h3>
+            <h3 className="text-sm font-semibold text-zinc-800">Cutting events</h3>
             <div className="mt-2 space-y-2">
               {insights.cuttingEvents.length ? insights.cuttingEvents.map((event) => (
-                <div key={event.agro_event_id} className="rounded-md bg-slate-50 p-2 text-xs text-slate-700">
+                <div key={event.agro_event_id} className="rounded-xl bg-zinc-50 p-2 text-xs text-zinc-700">
                   <div className="font-semibold">{event.agro_event_id}</div>
                   <div>{formatDisplayTime(event.started_at)}</div>
                 </div>
-              )) : <div className="text-xs text-slate-500">No cutting events found.</div>}
+              )) : <div className="text-xs text-zinc-500">No cutting events found.</div>}
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">Yield records</h3>
+            <h3 className="text-sm font-semibold text-zinc-800">Yield records</h3>
             <div className="mt-2 space-y-2">
               {insights.yieldsWithLinks.length ? insights.yieldsWithLinks.map((item) => (
-                <div key={item.record.agro_event_id} className="rounded-md bg-slate-50 p-2 text-xs text-slate-700">
+                <div key={item.record.agro_event_id} className="rounded-xl bg-zinc-50 p-2 text-xs text-zinc-700">
                   <div className="font-semibold">{item.record.agro_event_id}</div>
                   <div>{formatDisplayTime(item.record.started_at)}</div>
                   <div className="mt-1">{item.linked ? `linked to cutting: ${item.cutting_event_id}` : 'unlinked yield record'}</div>
                 </div>
-              )) : <div className="text-xs text-slate-500">No yield records found.</div>}
+              )) : <div className="text-xs text-zinc-500">No yield records found.</div>}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-base font-semibold text-slate-900">Reliability Summary</h2>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <h2 className="text-base font-semibold text-zinc-900">Reliability Summary</h2>
         <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-          <div className="rounded-md bg-slate-50 p-3">
-            <div className="text-xs uppercase text-slate-500">Missing N2 readings</div>
+          <div className="rounded-xl bg-zinc-50 p-3">
+            <div className="text-xs uppercase text-zinc-500">Missing N2 readings</div>
             <div className="mt-1 text-xl font-semibold">{insights.reliability.missingN2Readings}</div>
           </div>
-          <div className="rounded-md bg-slate-50 p-3">
-            <div className="text-xs uppercase text-slate-500">Missing N3 readings</div>
+          <div className="rounded-xl bg-zinc-50 p-3">
+            <div className="text-xs uppercase text-zinc-500">Missing N3 readings</div>
             <div className="mt-1 text-xl font-semibold">{insights.reliability.missingN3Readings}</div>
           </div>
-          <div className="rounded-md bg-slate-50 p-3">
-            <div className="text-xs uppercase text-slate-500">Sensor error records</div>
+          <div className="rounded-xl bg-zinc-50 p-3">
+            <div className="text-xs uppercase text-zinc-500">Sensor error records</div>
             <div className="mt-1 text-xl font-semibold">{insights.reliability.sensorErrorRecords}</div>
           </div>
         </div>
