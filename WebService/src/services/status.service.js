@@ -3,78 +3,97 @@ import { getPool } from '../db.js';
 class StatusService {
   async getEvents(filters) {
     const pool = getPool();
-    let query = `
-      SELECT
-        event_id,
-        upload_id,
-        gateway_id,
-        node_id,
-        event_type,
-        severity,
-        event_time,
-        received_at,
-        message,
-        details,
-        error_code
-      FROM system_events
-      WHERE 1=1
-    `;
-    const values = [];
-    let paramIndex = 1;
+
+    let where = 'WHERE 1=1';
+    const filterValues = [];
+    let idx = 1;
 
     if (filters.gatewayId) {
-      query += ` AND gateway_id = $${paramIndex}`;
-      values.push(filters.gatewayId);
-      paramIndex++;
+      where += ` AND gateway_id = $${idx}`;
+      filterValues.push(filters.gatewayId);
+      idx++;
     }
 
     if (filters.nodeId) {
-      query += ` AND node_id = $${paramIndex}`;
-      values.push(filters.nodeId);
-      paramIndex++;
+      where += ` AND node_id = $${idx}`;
+      filterValues.push(filters.nodeId);
+      idx++;
     }
 
     if (filters.severity) {
-      query += ` AND severity = $${paramIndex}`;
-      values.push(filters.severity);
-      paramIndex++;
+      where += ` AND severity = $${idx}`;
+      filterValues.push(filters.severity);
+      idx++;
     }
 
     if (filters.eventType) {
-      query += ` AND event_type = $${paramIndex}`;
-      values.push(filters.eventType);
-      paramIndex++;
+      where += ` AND event_type = $${idx}`;
+      filterValues.push(filters.eventType);
+      idx++;
     }
 
     if (filters.errorCode) {
-      query += ` AND error_code = $${paramIndex}`;
-      values.push(filters.errorCode);
-      paramIndex++;
+      where += ` AND error_code = $${idx}`;
+      filterValues.push(filters.errorCode);
+      idx++;
     }
 
     if (filters.uploadId) {
-      query += ` AND upload_id = $${paramIndex}`;
-      values.push(filters.uploadId);
-      paramIndex++;
+      where += ` AND upload_id = $${idx}`;
+      filterValues.push(filters.uploadId);
+      idx++;
     }
 
-    if (filters.from) {
-      query += ` AND event_time >= $${paramIndex}`;
-      values.push(filters.from);
-      paramIndex++;
+    // start/end take precedence over from/to for event_time filtering
+    const fromTime = filters.start ?? filters.from;
+    const toTime = filters.end ?? filters.to;
+
+    if (fromTime) {
+      where += ` AND event_time >= $${idx}`;
+      filterValues.push(fromTime);
+      idx++;
     }
 
-    if (filters.to) {
-      query += ` AND event_time <= $${paramIndex}`;
-      values.push(filters.to);
-      paramIndex++;
+    if (toTime) {
+      where += ` AND event_time <= $${idx}`;
+      filterValues.push(toTime);
+      idx++;
     }
 
-    query += ` ORDER BY event_time DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    values.push(filters.limit, filters.offset);
+    const limit = filters.limit;
+    const offset = filters.offset;
 
-    const result = await pool.query(query, values);
-    return result.rows;
+    const [countResult, dataResult] = await Promise.all([
+      pool.query(
+        `SELECT COUNT(*)::int AS total_count FROM system_events ${where}`,
+        filterValues,
+      ),
+      pool.query(
+        `SELECT
+          event_id,
+          upload_id,
+          gateway_id,
+          node_id,
+          event_type,
+          severity,
+          event_time,
+          received_at,
+          message,
+          details,
+          error_code
+        FROM system_events ${where}
+        ORDER BY event_time DESC
+        LIMIT $${idx} OFFSET $${idx + 1}`,
+        [...filterValues, limit, offset],
+      ),
+    ]);
+
+    return {
+      events: dataResult.rows,
+      total_count: countResult.rows[0]?.total_count ?? 0,
+      limit,
+      offset,
+    };
   }
 
   async getSystemStatus() {

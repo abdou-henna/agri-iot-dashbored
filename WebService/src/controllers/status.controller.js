@@ -1,5 +1,17 @@
 import { statusService } from '../services/status.service.js';
 
+function parseLimit(raw) {
+  const n = parseInt(raw);
+  if (!Number.isFinite(n) || n < 1) return 50;
+  return Math.min(n, 1000);
+}
+
+function parseOffset(raw) {
+  const n = parseInt(raw);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return n;
+}
+
 export async function getEvents(req, res, next) {
   try {
     const {
@@ -11,11 +23,13 @@ export async function getEvents(req, res, next) {
       upload_id,
       from,
       to,
-      limit = 100,
-      offset = 0
+      start,
+      end,
+      limit,
+      offset,
     } = req.query;
 
-    const events = await statusService.getEvents({
+    const result = await statusService.getEvents({
       gatewayId: gateway_id,
       nodeId: node_id,
       severity,
@@ -24,13 +38,18 @@ export async function getEvents(req, res, next) {
       uploadId: upload_id,
       from: from ? new Date(from) : undefined,
       to: to ? new Date(to) : undefined,
-      limit: Math.min(parseInt(limit) || 100, 1000),
-      offset: parseInt(offset) || 0
+      start: start ? new Date(start) : undefined,
+      end: end ? new Date(end) : undefined,
+      limit: parseLimit(limit),
+      offset: parseOffset(offset),
     });
 
     res.json({
-      events,
-      count: events.length
+      events: result.events,
+      count: result.events.length,
+      total_count: result.total_count,
+      limit: result.limit,
+      offset: result.offset,
     });
   } catch (error) {
     next(error);
