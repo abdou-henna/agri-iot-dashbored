@@ -1,0 +1,51 @@
+% ============================================================
+% Abstract — English
+% ============================================================
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Agricultural monitoring in Saharan environments presents challenges that distinguish it
+from conventional farming contexts: intermittent electrical supply, unreliable Internet
+access, extreme thermal conditions, and the practical difficulty of reaching dispersed
+field plots between observation cycles. For alfalfa cultivation specifically, these
+constraints are compounded by the absence of IoT monitoring systems designed for this
+crop in Saharan agricultural settings and by a recurring limitation identified across
+reviewed works: the conflation of the time of data upload with the time of
+measurement, which undermines the traceability of any time-series analysis.
+
+This thesis presents the design and implementation of an IoT-based monitoring and
+deterministic agronomic analytics platform for alfalfa cultivation in the El~Oued
+region of Algeria. The system consists of three embedded sensor nodes communicating
+over a 433~MHz LoRa wireless link within a structured ten-minute superframe. The MAIN
+gateway node coordinates reception, maintains an authoritative DS3231 real-time clock,
+and persists all measurements locally on an SD card independent of network
+availability. Node2 acquires soil moisture, temperature, and electrical conductivity
+at a second irrigation pivot via RS485/Modbus; Node3 acquires atmospheric temperature,
+humidity, and pressure. Data transfer follows an offline-first model: accumulated SD
+records are uploaded in batch to a cloud backend when connectivity is intermittently
+available. Eight firmware operating modes address the specific constraints of the
+deployment, including a recovery mechanism that corrects timing drift causing
+persistent communication failure, and power-saving strategies that extend battery
+autonomy through deep sleep and relay-controlled sensor power.
+
+The backend, built with Node.js and PostgreSQL, enforces a strict policy separating
+the RTC-derived measurement timestamp (\texttt{measured\_at}) from the upload receipt
+time, which is stored exclusively as transfer audit metadata. A React dashboard
+presents sensor trends, agronomic events, and the output of a ten-stage deterministic
+quality-control and reliability-scoring pipeline. AI-assisted interpretation is
+provided through a backend-proxied Gemini interface subject to six architectural
+constraints that prevent the model from computing primary analytics or modifying stored
+data.
+
+A pilot validation window spanning 2026-05-06 to 2026-05-11 produced 2433 sensor
+readings distributed equally across the three nodes, six completed upload sessions,
+and 135 rows of deterministic pipeline output. These results demonstrate the functional
+feasibility of the end-to-end architecture within the scope of a pilot deployment;
+full-season agronomic validation and reliability threshold calibration constitute
+priorities for future work.
+
+\vspace{1em}
+\noindent\textbf{Keywords:} Internet of Things, smart agriculture, alfalfa, LoRa,
+ESP32, offline-first, deterministic analytics, Saharan agriculture, data quality,
+real-time clock, timestamp traceability.

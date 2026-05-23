@@ -1,0 +1,157 @@
+% ============================================================
+% General Conclusion
+% ============================================================
+
+\chapter*{General Conclusion}
+\addcontentsline{toc}{chapter}{General Conclusion}
+\label{chap:general-conclusion}
+
+% ---- Summary of achieved work --------------------------------
+\section*{Summary of Achieved Work}
+
+This thesis has presented the design, implementation, and pilot validation of an
+IoT-based monitoring and deterministic agronomic analytics platform for alfalfa
+cultivation in Saharan agricultural environments. The work spanned hardware
+architecture, embedded firmware, data communication, local and remote storage,
+backend engineering, dashboard development, deterministic analytics, and an
+AI-assisted interpretation interface.
+
+The implemented system comprises three embedded sensor nodes communicating over
+a 433~MHz LoRa wireless link within a structured ten-minute superframe. The MAIN
+gateway node coordinates reception, maintains an authoritative real-time clock, and
+persists all acquired measurements on an SD card independent of network availability.
+Node2 acquires soil moisture, temperature, and electrical conductivity at a second
+irrigation pivot via RS485/Modbus; Node3 acquires atmospheric temperature, humidity,
+and barometric pressure. Eight firmware operating modes address the specific field
+constraints of the deployment: Power Saving Mode reduces energy consumption through
+deep sleep and relay-controlled sensor power; Recovery Mode corrects timing drift
+that caused persistent communication failure during prototype testing; Upload Mode
+and RTC Synchronisation Mode manage the interface between offline field operation
+and online data transfer.
+
+The backend, built with Node.js and PostgreSQL, enforces a strict timestamp policy
+that separates the RTC-derived measurement timestamp (\texttt{measured\_at}) from
+the upload receipt time, which is stored only as transfer audit metadata. A
+React-based dashboard presents soil and weather trends, agronomic events, and the
+output of a ten-stage deterministic quality-control and reliability-scoring pipeline.
+The Processed Data Viewer exposes the full analytical lineage in read-only form.
+AI-assisted interpretation is provided through a backend proxy that enforces six
+boundary rules preventing Gemini from computing primary analytics or modifying
+stored data.
+
+% ---- Response to the problem statement -----------------------
+\section*{Response to the Problem Statement}
+
+Each of the five problems identified in the general introduction has been addressed
+by the implemented system.
+
+The absence of a local storage mechanism for offline operation is addressed by
+the SD-based Local Storage Mode, which writes sensor readings and system events
+to the SD card at the end of every measurement cycle, independently of network
+availability. Upload Mode transfers the accumulated records in a single batch
+session triggered by the operator.
+
+The low-power constraint is addressed by Power Saving Mode, which combines deep
+sleep between measurement cycles with relay-controlled sensor power and BME280
+forced measurement mode on Node3, eliminating continuous current draw from both
+the microcontrollers and the sensors.
+
+The timestamp integrity problem is addressed at every layer of the system. The
+DS3231 RTC provides the canonical \texttt{measured\_at} timestamp, written by
+MAIN at packet reception and never overwritten. The backend enforces this
+separation at ingestion, and all dashboard charts draw their time axes from
+\texttt{measured\_at}.
+
+The absence of a deterministic analytics layer is addressed by the ten-stage
+QC and reliability-scoring pipeline, which produces auditable analytics snapshots
+that are authoritative for all dashboard metrics. Gemini receives only these
+snapshots and is explicitly excluded from all computation stages.
+
+The alfalfa monitoring gap is addressed by deploying the prototype specifically
+for alfalfa cultivation in the El~Oued region, collecting the soil and atmospheric
+measurements relevant to this crop's water, temperature, and salinity requirements
+in a Saharan context.
+
+% ---- Technical contributions ---------------------------------
+\section*{Technical Contributions}
+
+The primary contributions of this work are: an offline-first three-node LoRa
+architecture with deterministic superframe coordination; a timestamp traceability
+policy grounded in RTC hardware; eight documented firmware operating modes each
+motivated by a specific field constraint; a ten-stage deterministic analytics
+pipeline with an explicit AI boundary; a Processed Data Viewer for analytical
+transparency; and a documented pilot deployment targeting alfalfa monitoring in
+Saharan agriculture.
+
+% ---- Validation summary (cautious) ---------------------------
+\section*{Validation Summary}
+
+The system was validated over a pilot window from 2026-05-06 to 2026-05-11.
+The validation evidence comprises 2433 sensor readings distributed equally across
+three nodes, eight system events, six manually recorded agronomic events,
+six upload sessions all reaching processed status, and 135 rows of deterministic
+pipeline output. These results confirm the functional feasibility of the
+end-to-end architecture within the scope of a pilot deployment. They do not
+constitute full-season agronomic validation, and the reliability indicator of
+0.399 is presented as a pilot-phase output of the uncalibrated pipeline.
+
+% ---- Limitations ---------------------------------------------
+\section*{Limitations}
+
+The system operates within a well-defined scope. Soil electrical conductivity
+is treated as a relative trend indicator; raw in-situ EC values are not converted
+to official salinity classifications. The sensor stack does not include pH or NPK
+measurement. Evapotranspiration cannot be computed because the weather node lacks
+wind speed and solar radiation sensors. The validation window covers five-and-a-half
+days, not a complete alfalfa growth cycle. Battery autonomy and LoRa communication
+range are design intentions that were not quantitatively characterised during the
+pilot deployment. The Pivot~1 local soil measurement path requires register map
+confirmation before validated agronomic data can be collected from that sensor.
+The effects of precipitation and high humidity on LoRa communication reliability
+and enclosure performance were not experimentally isolated during the pilot
+deployment and represent an open environmental validation question.
+
+% ---- Future work ---------------------------------------------
+\section*{Future Work}
+
+Several directions for future development emerge from the present work.
+
+\textbf{Extended validation.} The most immediate priority is a deployment covering
+one or more complete alfalfa cut cycles to assess seasonal measurement coverage,
+long-term node reliability, and the agronomic interpretability of multi-week
+soil moisture trends.
+
+\textbf{Battery autonomy study.} Instrumenting the nodes with battery voltage
+sensing hardware would allow Power Saving Mode to be characterised in quantitative
+terms under actual field discharge conditions.
+
+\textbf{LoRa range characterisation.} A structured range trial with RSSI and SNR
+logging at known node-to-gateway distances would establish the communication
+envelope of the system and support placement decisions for future deployments.
+
+\textbf{Sensor calibration.} Local calibration of the RS485 soil sensors against
+gravimetric soil moisture samples and EC laboratory measurements would allow the
+system to report calibrated agronomic values rather than relative trend indicators.
+
+\textbf{Reliability threshold calibration.} The reliability scoring pipeline
+requires field calibration against known-good and known-poor measurement windows.
+Once calibrated, the 0.399 pilot-phase indicator can be replaced by a threshold-
+grounded score that supports operator alerts with a defined confidence level.
+
+\textbf{Agronomic expert validation.} Collaboration with an agronomist specialising
+in alfalfa cultivation in arid environments would establish whether the soil and
+atmospheric measurements collected by the system are sufficient to support
+irrigation scheduling recommendations, and what additional data points would be
+required.
+
+\textbf{Mobile upload workflow.} Replacing the push-button upload trigger with a
+mobile application would reduce the operator effort required for periodic field
+visits and enable upload sessions without a laptop at the field site.
+
+\textbf{Crop and region expansion.} The monitoring platform is not inherently
+specific to alfalfa or El~Oued. Deploying the same architecture for other
+drought-sensitive crops grown in Saharan conditions — such as date palms, onions,
+or tomatoes under drip irrigation — would validate the generalisability of the
+design and provide a basis for comparative agronomic analysis across crop types.
+These extensions should be preceded by appropriate agronomic consultation and
+sensor calibration specific to each crop and site.

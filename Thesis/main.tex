@@ -1,0 +1,190 @@
+\documentclass[12pt,a4paper,oneside]{report}
+
+% ============================================================
+% Smart Farm IoT Master Thesis — Main LaTeX File
+%
+% COMPILE SEQUENCE (from D:\DataColl2\):
+%   xelatex main.tex
+%   bibtex main
+%   xelatex main.tex
+%   xelatex main.tex
+%
+% BEFORE FINAL COMPILE:
+%   1. Copy all figure files listed in the chapter quality audits
+%      to the figures/ directory (29 files needed — see audit docs).
+%   2. Remove [draft] from \usepackage{graphicx} below.
+%   3. Install Amiri font for Arabic abstract if not present:
+%      https://github.com/alif-type/amiri/releases
+%   4. Verify all [TODO:...] placeholders in frontmatter/title_page.tex.
+% ============================================================
+
+% ============================================================
+% PAGE GEOMETRY AND SPACING
+% ============================================================
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1.2cm}
+\setlength{\parskip}{0pt}
+
+% ============================================================
+% ENGINE-SPECIFIC PACKAGES
+% ============================================================
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{textcomp}
+  \usepackage{lmodern}
+  % NOTE: Arabic abstract will not render correctly under pdfLaTeX.
+  % Use XeLaTeX for full Arabic + French support.
+\else
+  % XeLaTeX path — recommended
+  \usepackage{fontspec}
+  \setmainfont{Times New Roman}
+  \usepackage{polyglossia}
+  \setmainlanguage{english}
+  \setotherlanguage{arabic}
+  \setotherlanguage[variant=french]{french}
+  % Arabic font — requires Amiri (or another Arabic-capable font)
+  % TODO: Install Amiri if not present, or change to an available Arabic font:
+  %   e.g., "Scheherazade New", "Tahoma", "Arial Unicode MS"
+  \newfontfamily\arabicfont[Script=Arabic,Scale=1.1]{Amiri}
+\fi
+
+% ============================================================
+% GRAPHICS
+% [draft] shows placeholder boxes instead of images.
+% REMOVE [draft] after copying all figures to figures/ directory.
+% ============================================================
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{grffile}
+
+\graphicspath{
+  {figures/}
+  {Academic-Thesis/Diagrams/}
+  {Academic-Thesis/SystemImage/}
+  {Academic-Thesis/DashBoredImages/}
+  {Academic-Thesis/validation_package/02_validation_evidence/dashboard_screenshots/}
+}
+
+% ============================================================
+% TABLES
+% ============================================================
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{ragged2e}
+\usepackage{pdflscape}
+\usepackage{adjustbox}
+\renewcommand{\arraystretch}{1.18}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+
+% ============================================================
+% CAPTIONS AND FIGURES
+% ============================================================
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ============================================================
+% TYPOGRAPHY AND LAYOUT
+% ============================================================
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage{microtype}
+
+% ============================================================
+% HYPERLINKS
+% ============================================================
+\usepackage[
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+  unicode=true
+]{hyperref}
+
+% ============================================================
+% COUNTERS AND TOC
+% ============================================================
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{3}
+% Note: tocbibind removed — all TOC entries use manual \addcontentsline
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+\pagenumbering{roman}
+
+% --- Front matter --------------------------------------------
+\input{frontmatter/title_page}
+
+\input{frontmatter/dedication}
+\clearpage
+
+\input{frontmatter/acknowledgements}
+\clearpage
+
+\input{frontmatter/abstract_en}
+\clearpage
+
+\input{frontmatter/abstract_fr}
+\clearpage
+
+\input{frontmatter/abstract_ar}
+\clearpage
+
+\tableofcontents
+\clearpage
+
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\clearpage
+
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
+\clearpage
+
+\input{frontmatter/list_of_abbreviations}
+\clearpage
+
+% --- Main matter ---------------------------------------------
+\pagenumbering{arabic}
+
+\input{frontmatter/general_introduction}
+\clearpage
+
+\input{chapters/chapter1_background}
+\clearpage
+
+\input{chapters/chapter2_related_works}
+\clearpage
+
+\input{chapters/chapter3_implementation}
+\clearpage
+
+\input{frontmatter/general_conclusion}
+\clearpage
+
+% --- Bibliography --------------------------------------------
+\addcontentsline{toc}{chapter}{References}
+\bibliographystyle{IEEEtran}
+\bibliography{Academic-Thesis/references}
+\clearpage
+
+% --- Appendices ----------------------------------------------
+\appendix
+\chapter*{Appendices}
+\addcontentsline{toc}{chapter}{Appendices}
+% TODO: Add appendices here if required.
+% Suggested: firmware register map, API full spec, processed data sample.
+
+\end{document}

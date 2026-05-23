@@ -1,0 +1,973 @@
+%===============================================================
+% Chapter 2 — Related Works and Comparative Analysis
+% Part A: Sections 2.1–2.10
+% Thesis: A Smart Farm IoT Monitoring and Deterministic Agronomic
+%         Analytics Platform for Alfalfa Cultivation
+% Authors: Abderrahmane Henna · Nacer Eddine Aouissi
+% Supervisor: Mohib Eddine KHEBBACHE
+% University of El Oued – Echahid Hamma Lakhdar, 2025/2026
+%===============================================================
+
+\chapter{Related Works and Comparative Analysis}
+\label{chap:related-works}
+
+%---------------------------------------------------------------
+\section{Chapter Introduction}
+\label{sec:ch2-intro}
+%---------------------------------------------------------------
+
+The previous chapter established the theoretical and contextual foundations of
+this work: the constraints of Saharan field environments, the data collection
+principles that govern a reliable monitoring system, the communication and
+topology choices relevant to distributed IoT deployments, and the agronomic
+requirements of alfalfa cultivation. Those foundations were drawn from general
+literature and technical standards. This chapter moves from general principles to
+the specific: it examines how previous research has addressed agricultural IoT
+monitoring, what these works have achieved, and where meaningful gaps remain.
+
+The analysis is organized thematically rather than as a sequential list of papers.
+Seven dimensions guide the comparison: system architecture and monitoring scope,
+wireless communication strategies, soil and environmental data collection,
+energy management and field reliability, offline storage and upload handling,
+timestamp semantics and data integrity, and dashboard plus analytics design.
+A dedicated section then surveys the crop contexts addressed by the reviewed
+works, leading to an explicit identification of the alfalfa monitoring gap that
+motivates this project.
+
+The chapter draws primarily on three peer-reviewed works that are close enough
+to this project to support meaningful comparison: Ahmed et al.
+(2022)~\cite{ahmed2022lora_agriculture_chile}, Pereira et al.
+(2023)~\cite{pereira2023esp32_drip_irrigation}, and Saban et al.
+(2023)~\cite{saban2023smart_agricultural_lora_cloud}. Supporting references
+from survey works~\cite{ayaz2019iot_smart_agriculture_survey,farooq2019iot_smart_agriculture_review}
+and data quality literature~\cite{teh2020sensor_data_quality,dandrifosse2024weather_qc_agriculture}
+provide broader context. Where additional works are referenced and their
+bibliographic metadata requires verification, this is noted explicitly.
+
+%---------------------------------------------------------------
+\section{IoT-Based Agricultural Monitoring Systems}
+\label{sec:iot-monitoring-systems}
+%---------------------------------------------------------------
+
+Field-oriented IoT monitoring systems have converged on a recognizable pattern
+over the past decade: embedded sensing nodes collect environmental or soil
+measurements, a wireless link carries those measurements to a receiver or
+gateway, and a web-based interface makes the data accessible to users.
+Surveys of the field confirm that this three-layer structure is the dominant
+approach~\cite{ayaz2019iot_smart_agriculture_survey,farooq2019iot_smart_agriculture_review}.
+Within this shared architecture, individual systems differ significantly in
+the variables they monitor, the embedded hardware they use, and the
+infrastructure they assume.
+
+ESP32-based nodes appear frequently across recent implementations. Pereira et
+al.~\cite{pereira2023esp32_drip_irrigation} present an IoT system built around
+the ESP32 microcontroller for smart drip irrigation, integrating soil and
+environmental sensing with a cloud-connected dashboard for visualization and
+control. The system's primary objective is irrigation automation: the ESP32
+measures soil conditions, evaluates them against thresholds, and triggers the
+irrigation mechanism accordingly. This is a coherent design for its intended
+purpose, and the use of ESP32 as the embedded platform reflects its practical
+balance of processing capability, wireless connectivity, and cost. The
+limitation relative to this project's goals is one of scope rather than
+technical error: the system is designed for irrigation control of a general
+crop, not for multi-node field monitoring with multi-domain data governance,
+manual agronomic event recording, and an explicit analytical layer targeted at
+a specific crop.
+
+Ahmed et al.~\cite{ahmed2022lora_agriculture_chile} approach the monitoring
+problem at a different scale. Their LoRa-based platform is deployed across a
+large commercial farm in Chile and focuses on remote sensing, LoRa network
+behavior, and multi-point data collection. The platform demonstrates that LoRa
+communication can sustain reliable data delivery across agricultural field
+distances, and the multi-layer system architecture covers sensor nodes, a
+gateway, and a server-side monitoring interface. What the work foregrounds is
+the feasibility of LoRa as a field communication technology. What it does not
+foreground is the data governance layer: the distinction between measurement
+time and upload time, the handling of the data record during connectivity
+outages, or the reliability of individual readings relative to a quality
+control standard.
+
+Saban et al.~\cite{saban2023smart_agricultural_lora_cloud} combine PLC-based
+field control with a LoRa/LoRaWAN communication infrastructure and a
+cloud-hosted web application for monitoring and device management. The system
+extends the monitoring concept toward active agricultural management, and the
+cloud web interface provides a relatively complete view of connected devices
+and their states. The architecture, however, is fundamentally cloud-first:
+field data is expected to reach the server promptly, and the system's
+monitoring and control functions operate on this assumption. The treatment of
+offline periods, local data persistence, or upload audit trails is not the
+central contribution of the work.
+
+Across these systems, the sensing and visualization layers are the primary
+technical contributions. The data infrastructure connecting them --- how
+measurements are timestamped at the moment of collection, how the local record
+is preserved when the network is unavailable, and how uploaded data is
+validated against expected structure and timing --- receives comparatively
+limited attention. This is not a deficiency in individual papers; it reflects
+where the research effort has been directed. It does, however, identify a
+space in which the system proposed in this dissertation makes a specific
+contribution.
+
+%---------------------------------------------------------------
+\section{Wireless Communication in Agricultural IoT}
+\label{sec:wireless-communication}
+%---------------------------------------------------------------
+
+The appropriateness of LoRa as a field communication technology was established
+in Chapter~\ref{chap:background} through a comparison of wireless protocol
+characteristics. The reviewed works confirm this choice empirically: both Ahmed
+et al.~\cite{ahmed2022lora_agriculture_chile} and Saban et
+al.~\cite{saban2023smart_agricultural_lora_cloud} deploy LoRa in agricultural
+environments and demonstrate that the technology can sustain data delivery
+across field-scale distances with acceptable power budgets.
+
+The practical question that emerges from these works is not whether LoRa can
+carry data across a field, but what guarantees accompany delivery. Ahmed et
+al.\ demonstrate multi-point remote monitoring with LoRa and discuss network
+behavior at the farm scale, including link quality observations. Saban et al.\
+use LoRaWAN infrastructure, which adds a network server layer that handles
+some aspects of device management and downlink communication. In both cases,
+the communication architecture is the subject of design attention. What is less
+discussed is the upstream consequence of communication uncertainty: when a
+field node fails to transmit successfully, how does the system detect this, log
+it, and recover?
+
+Communication feasibility and communication reliability are related but not
+identical. A LoRa link that works ninety percent of the time is highly
+functional for many monitoring purposes, but the ten percent of missed packets
+creates gaps in the server-side record that may not be distinguishable from
+periods of genuine field inactivity. If the only signal of a problem is a gap
+in the database, an operator looking at a dashboard chart cannot easily
+determine whether the crop conditions were stable and unreported, or whether
+the node failed and the sensor data was never acquired.
+
+Addressing this requires more than the communication layer alone. An
+acknowledgement mechanism at the application level, a diagnostic event log
+that records missed transmissions and recovery attempts, and a recovery
+procedure for nodes that have drifted out of synchronization with the gateway's
+receive window all contribute to turning communication feasibility into
+operational reliability. The works reviewed here lay a strong foundation for
+the communication design; the proposed system builds on that foundation by
+adding the reliability and logging infrastructure on top of the communication
+layer.
+
+Regarding outdoor protocol selection more broadly, work on the effects of
+communication protocols in precision agriculture outdoor
+environments~\cite{iot_protocols_precision_agriculture_outdoor} offers
+additional empirical context for understanding how environmental conditions
+affect protocol
+performance.
+% TODO: verify bibliographic metadata for iot_protocols_precision_agriculture_outdoor before final submission
+
+%---------------------------------------------------------------
+\section{Soil and Environmental Data Collection Systems}
+\label{sec:soil-environmental}
+%---------------------------------------------------------------
+
+Soil moisture is the most frequently monitored variable in agricultural IoT
+systems, and with good reason: it is the primary determinant of irrigation
+timing, a sensitive indicator of crop water status, and a variable that changes
+on timescales short enough to make periodic automated measurement practically
+useful~\cite{ayaz2019iot_smart_agriculture_survey}. Environmental variables
+--- air temperature, humidity, and atmospheric pressure --- appear alongside
+soil measurements in many systems as contextual information that helps
+interpret the soil data.
+
+The design of the data collection pipeline receives varying degrees of
+attention across the reviewed works. Most systems describe the sensing hardware
+and the dashboard interface in detail, with the data pathway between them
+treated as a solved problem of wireless transmission and database storage.
+Wireless sensor network deployments focused specifically on soil moisture
+monitoring~\cite{lloret2021soil_moisture_wsn} address aspects of sensor
+placement, network topology, and data reliability in that
+context.
+% TODO: verify bibliographic metadata for lloret2021soil_moisture_wsn before final submission
+Studies on practical, low-cost IoT solutions for agricultural data
+monitoring~\cite{cheap_practical_iot_agri_monitoring} address deployment
+feasibility in resource-constrained
+settings.
+% TODO: verify bibliographic metadata for cheap_practical_iot_agri_monitoring before final submission
+
+What these systems share is a primary focus on the measurement itself: which
+sensor to use, where to place it, and how to transmit its reading. Less
+consistently addressed is the organization of the collected data once it
+arrives at the server: whether soil and weather data are stored in separate
+structured domains, whether individual readings carry quality indicators, and
+whether the collection pipeline distinguishes between data that represents a
+valid measurement and data that represents a recovered or estimated value.
+
+A related challenge is the multi-source nature of agricultural monitoring
+data. Even a relatively simple field setup produces at least two categories of
+information: automatic sensor readings and human-entered agronomic records such
+as irrigation events and cutting dates. Keeping these categories separate, with
+appropriate timestamps for each, allows later analysis to use both without
+conflating machine-generated and human-entered information. Teh et
+al.~\cite{teh2020sensor_data_quality} identify data completeness and
+consistency as critical quality dimensions that must be managed across the full
+data lifecycle, not only at the sensor interface. In most reviewed systems,
+this lifecycle management is implicit rather than a named design objective.
+
+Pereira et al.~\cite{pereira2023esp32_drip_irrigation} combine soil sensing
+with irrigation control in a system that uses sensor measurements to drive
+direct actuation. The monitoring and control functions are tightly coupled,
+which is appropriate for an irrigation automation system. For a system focused
+on monitoring and decision support for a specific crop, however, the separation
+between what the system measures and what the operator decides remains
+important. Coupling measurement to automatic action blurs this distinction.
+
+%---------------------------------------------------------------
+\section{Energy Management and Field Reliability}
+\label{sec:energy-reliability}
+%---------------------------------------------------------------
+
+Battery-powered field nodes are a practical reality in distributed agricultural
+monitoring, and managing power consumption is a standard design challenge. The
+reviewed works acknowledge this constraint at different levels of depth.
+
+At the hardware selection level, the choice of microcontroller, radio module,
+and sensor type all affect the power budget. ESP32-based systems, as used by
+Pereira et al.~\cite{pereira2023esp32_drip_irrigation}, benefit from the
+availability of deep sleep modes that reduce current draw significantly during
+idle periods. LoRa radios, as used by both Ahmed et
+al.~\cite{ahmed2022lora_agriculture_chile} and Saban et
+al.~\cite{saban2023smart_agricultural_lora_cloud}, are selected partly for
+their low transmission power relative to cellular alternatives.
+
+Energy-aware firmware design is less consistently detailed in the reviewed
+works. Duty cycling --- the pattern of wake, measure, transmit, sleep --- is
+implied by most field node designs but is not always described in terms of its
+effect on measurement continuity or its interaction with the communication
+window. The relationship between the node's sleep interval, the gateway's
+receive window, and the risk of timing drift between the two is a specific
+firmware engineering concern that is rarely foregrounded as a primary design
+topic.
+
+A related aspect of field reliability is the system's ability to recover from
+communication failures without manual intervention. Pereira et
+al.~\cite{pereira2023esp32_drip_irrigation} address retry mechanisms at the
+sensor-actuator level. Ahmed et al.~\cite{ahmed2022lora_agriculture_chile}
+discuss network performance and link quality. Neither work centers on the
+problem of a node that has lost synchronization with the gateway's receive
+window and must execute a defined recovery procedure before normal operation
+can resume. This distinction between temporary packet loss and timing
+desynchronization is subtle but consequential in systems that depend on
+coordinated duty cycles.
+
+A broader review of data collection architectures in IoT
+networks~\cite{abbaari2024data_collection_iot_networks} discusses reliability
+challenges at the network and protocol level, confirming that reliability is a
+recognized concern in the IoT literature, even when specific firmware-level
+recovery procedures are not detailed in individual
+systems.
+% TODO: verify bibliographic metadata for abbaari2024data_collection_iot_networks before final submission
+A review of smart sensors and their deployment challenges in agricultural
+contexts~\cite{rajak2023iot_smart_sensors_agriculture} similarly identifies
+reliability and energy as ongoing concerns without providing field-level
+recovery
+procedures.
+% TODO: verify bibliographic metadata for rajak2023iot_smart_sensors_agriculture before final submission
+
+Diagnostic event logging complements energy and reliability design. When a
+node misses its expected window, when a recovery attempt is made, or when a
+communication failure is resolved, recording these events creates an auditable
+history that can inform both real-time dashboard diagnostics and retrospective
+reliability analysis. In most reviewed systems, such logging is either absent
+or described as a debugging tool rather than a primary feature of the data
+model.
+
+%---------------------------------------------------------------
+\section{Offline Storage and Upload Strategies}
+\label{sec:offline-storage}
+%---------------------------------------------------------------
+
+Many agricultural IoT systems are designed with the implicit assumption that
+a network connection is available for data forwarding on a timescale
+comparable to the measurement interval. Cloud-first architectures, in which
+sensor readings are transmitted to a remote server shortly after collection,
+are practical when connectivity is reliable. In Saharan and remote field
+environments of the kind described in Section~\ref{sec:saharan-agriculture},
+this assumption is not always valid.
+
+Ahmed et al.~\cite{ahmed2022lora_agriculture_chile} deploy their platform
+across a large commercial farm with LoRa gateways and server-side
+infrastructure in place. The architecture assumes that the gateway has
+connectivity to forward data to the cloud server. Saban et
+al.~\cite{saban2023smart_agricultural_lora_cloud} use a LoRaWAN network server
+and a cloud-hosted web application, again assuming that the gateway is
+continuously connected to the upstream service. Pereira et
+al.~\cite{pereira2023esp32_drip_irrigation} connect the ESP32 to a cloud
+service for dashboard access. In each case, the data path leads promptly from
+field to cloud.
+
+The consequence of this design is that the server-side record is only as
+complete as the connectivity allows. A period of network unavailability
+produces a gap in the database that may be indistinguishable from a period
+where no field data existed. An offline-first design inverts this priority:
+measurements are stored locally before any upload attempt, and the upload
+is an explicit, operator-controlled action rather than an automatic background
+process. Under this model, the local record is always complete; the server-side
+record is a subset of the local record determined by when uploads occurred.
+
+The distinction between when data is uploaded and when it was measured is
+therefore not merely a technical detail. It is the design choice that
+determines whether a gap in the server database represents an absence of
+field data or a delay in its transfer. Treated differently in analytics, these
+two interpretations lead to different conclusions about field conditions and
+system reliability.
+
+%---------------------------------------------------------------
+\section{Time Synchronization and Data Integrity}
+\label{sec:time-sync}
+%---------------------------------------------------------------
+
+Every data record in a time-series monitoring system carries a timestamp, and
+the meaning of that timestamp determines what the record represents. Whether
+the timestamp records the moment of measurement, the moment of local storage,
+the moment of transmission, or the moment of server-side ingestion is not
+always explicitly defined in the reviewed works. In systems with low latency
+between measurement and cloud arrival, the difference is small enough to be
+negligible. In systems where data can rest on local storage for hours or days
+before upload, the distinction becomes analytically significant.
+
+Dandrifosse et al.~\cite{dandrifosse2024weather_qc_agriculture} illustrate
+this in the context of agricultural weather data: quality control algorithms
+that rely on observation timestamps produce incorrect results when those
+timestamps reflect processing time rather than measurement time. The point
+applies equally to soil sensor data. A soil moisture reading labelled with the
+upload timestamp rather than the measurement timestamp will appear on a chart
+at the wrong point in time, potentially misrepresenting the relationship
+between soil conditions and agronomic events such as irrigation.
+
+The reviewed works address timestamp handling with varying degrees of
+explicitness. Ahmed et al.~\cite{ahmed2022lora_agriculture_chile} focus on the
+communication layer and the monitoring platform; the question of which
+timestamp propagates through the system and serves as the chart time axis is
+not a primary discussion topic. Saban et
+al.~\cite{saban2023smart_agricultural_lora_cloud} focus on control and
+monitoring through the cloud interface; timestamp semantics at the field node
+level are similarly not foregrounded. Pereira et
+al.~\cite{pereira2023esp32_drip_irrigation} focus on the irrigation control
+logic; the time axis of the sensor readings is not the central concern.
+
+In a system where offline storage and batch upload are by design, timestamp
+integrity requires an active approach. The field node must assign measurement
+timestamps at the moment of sensing, using a time source that does not depend
+on network availability. A dedicated real-time clock module, synchronized
+periodically to a reference source and used consistently as the timestamp for
+every measurement, provides this guarantee. The clock synchronization
+procedure itself must be explicit and auditable, so that an operator can
+confirm when the clock was last synchronized and what the expected drift is
+between synchronization events.
+
+This approach --- authoritative field-assigned measurement timestamps,
+preserved through local storage and batch upload, and used as the sole time
+axis for analytics --- is the design choice this dissertation makes and that
+the reviewed works do not explicitly address.
+
+%---------------------------------------------------------------
+\section{Dashboards, Analytics, and AI Interpretation}
+\label{sec:dashboards-analytics-ai}
+%---------------------------------------------------------------
+
+Web-based dashboard interfaces appear in all three primary reference systems
+as the final layer of user interaction. Ahmed et
+al.~\cite{ahmed2022lora_agriculture_chile} provide a monitoring platform with
+sensor data visualization. Saban et
+al.~\cite{saban2023smart_agricultural_lora_cloud} include a cloud-hosted web
+interface for monitoring and device control. Pereira et
+al.~\cite{pereira2023esp32_drip_irrigation} implement a dashboard for
+visualizing sensor readings and managing irrigation parameters.
+
+These interfaces fulfill the primary function of a monitoring dashboard:
+making field data visible to the operator through charts, status indicators,
+and historical views. Where they differ from the dashboard proposed in this
+work is in the depth of the analytics layer between raw data and displayed
+information. A typical monitoring dashboard passes measurements from the
+database to the chart directly, possibly with basic filtering and
+aggregation. A dashboard backed by a deterministic analytics layer first
+applies quality control rules to identify anomalous or unreliable readings,
+computes reliability indicators based on the completeness and consistency of
+the data record, and makes the results of both the raw and the processed data
+visible to the user.
+
+The distinction between raw measurement display and processed data
+transparency matters for two reasons. First, an operator looking at a soil
+moisture chart cannot easily distinguish a genuine measurement from one that
+is the result of a sensor glitch, a duplicate upload, or a timestamp anomaly
+--- unless the dashboard makes this distinction explicit. Second, when
+analytics outputs are derived from cleaned and quality-controlled data, the
+chain from raw reading to displayed result should be traceable, so that a
+discrepancy between a sensor reading and an analytics indicator can be
+investigated rather than simply accepted.
+
+Regarding artificial intelligence: some recent agricultural systems have
+explored machine learning components for prediction, anomaly detection, or
+crop state estimation. This is a legitimate research direction, but it
+introduces an important boundary question. When AI generates a result ---
+whether a prediction, a recommendation, or a summary --- the basis for that
+result should be distinguishable from the basis for deterministic metrics
+computed by rule-based or statistical methods. Treating AI output as
+equivalent to a sensor reading or a reliability score conflates two
+fundamentally different types of information.
+
+The approach adopted in this project positions the AI component strictly as
+an interpretation layer. Deterministic analytics --- quality control,
+reliability scoring, and trend metrics --- are computed independently of any
+AI model. The AI component receives the outputs of these deterministic steps
+and provides a narrative explanation. It does not compute primary metrics,
+fill missing measurements, or override reliability assessments. This boundary
+is intentional and is reflected throughout the system architecture.
+
+%---------------------------------------------------------------
+\section{Previous Crop Targets in Existing Works}
+\label{sec:crop-targets}
+%---------------------------------------------------------------
+
+Reviewing the agricultural context of the selected related works reveals a
+consistent pattern. Most systems target general irrigation applications,
+unspecified crop environments, or broad smart agriculture goals. None of the
+primary works reviewed for this chapter targets alfalfa as the principal
+monitored crop. Table~\ref{tab:related-work-crop-focus} summarizes the crop
+focus and main technical contribution of each reviewed work.
+
+\begin{table}[H]
+  \centering
+  \caption{Crop context and primary technical focus of selected related works
+           reviewed in this chapter.}
+  \label{tab:related-work-crop-focus}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{|p{3.8cm}|p{2.4cm}|p{3.6cm}|p{1.4cm}|p{2.0cm}|}
+    \hline
+    \textbf{Work} & \textbf{Crop / context} & \textbf{Main technical focus} &
+    \textbf{Alfalfa target?} & \textbf{Thesis relevance} \\
+    \hline
+    Ahmed et al.~\cite{ahmed2022lora_agriculture_chile} (2022) &
+    Large-scale farms, Chile &
+    LoRa IoT monitoring platform &
+    No & LoRa architecture comparison \\
+    \hline
+    Pereira et al.~\cite{pereira2023esp32_drip_irrigation} (2023) &
+    General irrigation &
+    ESP32 smart drip irrigation &
+    No & Embedded sensing comparison \\
+    \hline
+    Saban et al.~\cite{saban2023smart_agricultural_lora_cloud} (2023) &
+    General smart agriculture &
+    PLC + LoRa/LoRaWAN + cloud web app &
+    No & Cloud dashboard comparison \\
+    \hline
+    Ayaz et al.~\cite{ayaz2019iot_smart_agriculture_survey} (2019) &
+    Multiple crops (survey) &
+    IoT smart agriculture survey &
+    No & Smart agriculture background \\
+    \hline
+    Farooq et al.~\cite{farooq2019iot_smart_agriculture_review} (2019) &
+    Multiple crops (review) &
+    IoT smart farming review &
+    No & Smart farming context \\
+    \hline
+    Rajak et al.~\cite{rajak2023iot_smart_sensors_agriculture} &
+    % TODO: verify bibliographic metadata for rajak2023iot_smart_sensors_agriculture before final submission
+    Generic IoT agriculture &
+    Smart sensors review &
+    No & Sensor deployment context \\
+    \hline
+    Villa-Henriksen et al.~\cite{villa2020iot_arable_farming} &
+    % TODO: verify bibliographic metadata for villa2020iot_arable_farming before final submission
+    Arable farming (general) &
+    IoT challenges and opportunities &
+    No & Broad IoT farming review \\
+    \hline
+    Abbaari et al.~\cite{abbaari2024data_collection_iot_networks} &
+    % TODO: verify bibliographic metadata for abbaari2024data_collection_iot_networks before final submission
+    IoT networks (general) &
+    Data collection architecture &
+    No & Data collection theory \\
+    \hline
+    Cheap practical IoT~\cite{cheap_practical_iot_agri_monitoring} &
+    % TODO: verify bibliographic metadata for cheap_practical_iot_agri_monitoring before final submission
+    Generic agricultural &
+    Low-cost IoT monitoring &
+    No & Practical IoT context \\
+    \hline
+    Lloret et al.~\cite{lloret2021soil_moisture_wsn} &
+    % TODO: verify bibliographic metadata for lloret2021soil_moisture_wsn before final submission
+    Soil moisture monitoring &
+    Wireless soil moisture WSN &
+    No & Soil sensing comparison \\
+    \hline
+  \end{tabular}
+\end{table}
+
+The observation that none of the reviewed works targets alfalfa is not in
+itself a gap; most monitoring systems are intentionally general and their
+value does not depend on crop specificity. The gap emerges when considered
+alongside the monitoring requirements established in
+Section~\ref{subsec:alfalfa-monitoring-summary}: the repeated cutting cycle,
+the soil moisture dynamics between cuts, the need for contextual alignment
+between sensor trends and agronomic events, and the specific field conditions
+of Saharan oasis cultivation.
+
+%---------------------------------------------------------------
+\section{The Alfalfa Monitoring Gap}
+\label{sec:alfalfa-gap}
+%---------------------------------------------------------------
+
+The practical significance of a monitoring system depends partly on whether
+its design reflects the specific requirements of the crop it serves. A system
+built for general irrigation scheduling imposes no particular structure on how
+field data should be organized around cutting events, how soil moisture trends
+before and after an irrigation event should be captured and compared across
+different irrigated zones, or how the monitoring timeline aligns with the
+biological cycle of the crop. For alfalfa, these are not abstract concerns ---
+they are the questions that a monitoring platform must help an operator answer.
+
+Alfalfa's repeated harvest pattern means that the monitoring cycle is not
+seasonal in the conventional sense. Multiple cut events occur within a single
+growing season, each resetting the soil moisture dynamic and creating a new
+period of vegetative regrowth that must be monitored for irrigation timing.
+Chapter~\ref{chap:background} established that alfalfa is sensitive to soil
+moisture deficit, heat stress, and soil electrical conductivity changes, and
+that each of these variables can be monitored with appropriate field sensors.
+What the background chapter could not establish from the literature is whether
+any existing IoT monitoring system has been designed around this crop in a
+Saharan or Algerian context.
+
+Within the works reviewed for this thesis, no selected related work
+explicitly targets alfalfa as the monitored crop. The works reviewed focus on
+general irrigation systems, unspecified commercial crops, or broad smart
+agriculture goals in geographic and climatic settings different from the
+Saharan oasis environment. Some work on IoT enhancements specific to Algerian
+desert agriculture~\cite{iot_enhancements_algerian_desert_agriculture} touches
+on the regional context,
+% TODO: verify bibliographic metadata for iot_enhancements_algerian_desert_agriculture before final submission
+but does not address alfalfa monitoring as a specific design target. This
+observation is stated with care: it reflects the scope of this literature
+review, not a claim about all published work globally.
+
+The gap is not only agronomic. Several technical characteristics of the
+proposed system respond to limitations identified across the reviewed works:
+the assumption of continuous connectivity, the limited treatment of offline
+storage and batch upload, the absence of explicit timestamp semantics
+distinguishing measurement from transfer, the lack of a diagnostics layer for
+recovery and reliability, and the absence of a structured analytics pipeline
+with AI bounded to interpretation. Together, these gaps define the space in
+which the proposed system makes its contribution.
+
+The combination --- alfalfa as the target crop, Saharan field conditions as
+the deployment context, offline-first data collection, RTC-governed measurement
+timestamps, deterministic analytics, and a transparent processed-data layer ---
+has not been addressed in the reviewed works. The following sections of this
+chapter develop the comparative analysis that positions the proposed system
+relative to these identified gaps, and the subsequent chapter presents its
+design and implementation in detail.
+
+%---------------------------------------------------------------
+\section{Proposed System Improvements}
+\label{sec:proposed-improvements}
+%---------------------------------------------------------------
+
+The gaps identified across the preceding sections --- connectivity assumptions,
+limited local persistence, undefined timestamp semantics, absent recovery
+procedures, simple analytics, undefined AI boundaries, and no alfalfa-specific
+design target --- collectively map the design space that the system proposed in
+this dissertation occupies. Each gap corresponds to a deliberate design
+decision. This section summarizes those decisions at the level appropriate to
+a comparative analysis; their implementation is presented in detail in
+Chapter~\ref{chap:implementation}.
+
+The field architecture of the proposed system is organized around three nodes
+connected through a LoRa node-to-gateway topology. A MAIN gateway node
+coordinates communication, local storage, and upload operations. A dedicated
+soil monitoring node (Node~2) acquires soil moisture, soil temperature, and
+soil electrical conductivity independently from each irrigated zone. A
+dedicated weather node (Node~3) acquires air temperature, relative humidity,
+and atmospheric pressure, providing environmental context shared across the
+monitored areas. This three-node design, with the gateway coordinating rather
+than all nodes communicating as peers, reflects both the field geometry of the
+deployment site and the need to configure each node's power budget and duty
+cycle independently. A LoRa link with an application-level acknowledgement
+mechanism connects the remote nodes to the MAIN gateway; a node that does not
+receive an acknowledgement within its expected window enters a defined recovery
+procedure rather than failing silently.
+
+Offline-first data acquisition addresses the connectivity constraint that
+cloud-first systems cannot resolve by design. All sensor readings are stored
+locally on an SD card, in structured CSV format, before any upload is
+initiated. System diagnostic events are stored in parallel as JSONL records.
+The upload pathway is operator-controlled: a long continuous push-button press
+enters Upload Mode, initiating a batch transfer of locally stored records to
+the backend server. This design choice carries a direct consequence for time
+semantics: the upload timestamp records when the transfer occurred, not when
+the measurements were made. Upload time is treated throughout the system as
+transfer and audit metadata. It is recorded and available for operational
+diagnosis, but it does not function as the time axis for any sensor chart or
+analytics output.
+
+The temporal integrity of measurement timestamps requires a reliable time
+source that is independent of network availability. A DS3231 real-time clock
+module, integrated into the MAIN gateway node, provides this source. The
+DS3231 maintains time across power cycles without requiring a network
+connection. Clock synchronization to an external reference is performed
+explicitly: pressing the field push-button four consecutive times enters RTC
+Sync Mode, during which the clock is updated and the synchronization event is
+logged. The \texttt{measured\_at} field derived from this clock is the
+canonical timestamp for every sensor record stored on SD, transferred in batch
+uploads, and used in the database for all chart time axes, analytics
+computations, and alert threshold evaluations.
+
+Firmware operation is structured around four explicit modes in addition to the
+normal measurement cycle: Upload Mode for batch data transfer, Recovery Mode
+for nodes that have lost synchronization with the gateway's receive window, RTC
+Sync Mode for clock maintenance, and Power Saving Mode for battery-constrained
+periods. Power Saving Mode employs configured deep sleep intervals between
+measurement cycles and uses relay-controlled switching to cut power to the
+soil sensor between readings, reducing quiescent current draw. Every mode
+transition, communication failure, recovery attempt, and synchronization event
+is written to the JSONL diagnostic event log on the SD card. This log is
+uploaded alongside sensor readings and made available to the dashboard
+diagnostics interface, producing an auditable history of system behavior that
+operators can examine alongside sensor trends.
+
+The analytics layer is structured as a deterministic pipeline executed on the
+backend after each upload is processed. Quality control rules identify
+anomalous readings, structural inconsistencies, and timestamp irregularities
+within the uploaded batch. A cleaning step separates accepted records from
+flagged ones without modifying the raw data. Reliability scoring evaluates the
+completeness and internal consistency of the data record within each analysis
+window. Alert rules flag readings that cross configured threshold values.
+Analytics snapshots consolidate these outputs into structured representations
+consumed by the dashboard. A dedicated Processed Data Viewer exposes the full
+traceability chain: the raw reading, the quality-control result, and the
+processed representation are all accessible to the operator. No raw data is
+mutated at any stage of this pipeline, so any discrepancy between a sensor
+reading and an analytics output can be investigated and explained.
+
+The AI component of the system operates as a bounded interpretation layer.
+The Gemini model is accessed exclusively through a backend proxy and is never
+given raw sensor data directly. It does not execute database queries, compute
+reliability scores, or evaluate quality control rules. The input to the AI
+component is a structured snapshot prepared from the deterministic analytics
+outputs, applied after quality control and reliability assessment have been
+completed. From this snapshot, the AI generates a narrative interpretation.
+Deterministic metrics, quality control flags, and reliability scores remain the
+authoritative outputs; AI-generated text is supplementary and is presented
+distinctly in the dashboard interface. This boundary is an architectural
+decision, not a limitation, and it ensures that the interpretive layer cannot
+override or substitute for the computed layer. Agronomic decisions remain with the human operator; AI-generated narratives function as decision-support information, not as agronomic prescriptions.
+
+Crop specificity is embedded in the monitoring design at the level of sensor
+variable selection, agronomic event structure, and analytics parameterization.
+Alfalfa (\textit{Medicago sativa}) is the target crop for the deployment field
+in the El Oued region of Algeria. The monitoring requirements established in
+Chapter~\ref{chap:background} --- cut-cycle tracking, soil moisture dynamics
+between irrigation events, soil electrical conductivity as a relative trend
+indicator, and sensitivity to heat and water deficit during regrowth --- guided
+the selection of monitored variables and the design of the agronomic event log.
+Within the works selected for review in this chapter, no comparable system
+addresses these requirements for alfalfa in a Saharan field environment. The
+proposed system provides a field-oriented prototype that responds to this
+combined crop and technical gap.
+
+%---------------------------------------------------------------
+\section{Comparative Analysis}
+\label{sec:comparative-analysis}
+%---------------------------------------------------------------
+
+The comparison between the selected related works and the proposed system is
+developed across three complementary views: a grouped crop-focus summary that
+extends the survey in Section~\ref{sec:crop-targets} by positioning the
+proposed system alongside the reviewed works, a criterion-based table that
+examines twelve specific design dimensions where the proposed system diverges
+from prior approaches, and a binary feature matrix that enables direct
+comparison across fifteen system-level features.
+
+\subsection*{Crop Focus and Agricultural Context}
+
+Table~\ref{tab:crop-focus-summary} extends the per-work crop survey of
+Section~\ref{sec:crop-targets} by grouping the reviewed works into categories
+and adding the proposed system as a final row, making explicit the aggregate
+gap: within the selected works reviewed for this thesis, no prior system
+explicitly targets alfalfa as the main monitored crop.
+
+% NOTE: This table uses label tab:crop-focus-summary to avoid duplication
+% with tab:related-work-crop-focus (already defined in Section 2.9).
+% Both tables address crop context; this one groups works and adds the
+% proposed system row for comparative positioning.
+\begin{table}[H]
+  \centering
+  \caption{Grouped crop focus and agricultural context of reviewed works compared
+           with the proposed system.}
+  \label{tab:crop-focus-summary}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{|p{3.5cm}|p{2.8cm}|p{2.8cm}|p{1.5cm}|p{2.0cm}|}
+    \hline
+    \textbf{Work} & \textbf{Agricultural context} &
+    \textbf{Crop focus} & \textbf{Alfalfa target?} & \textbf{Thesis relevance} \\
+    \hline
+    Ahmed et al.~\cite{ahmed2022lora_agriculture_chile} (2022) &
+    Large commercial farms, Chile &
+    General farm monitoring &
+    No & LoRa architecture comparison \\
+    \hline
+    Pereira et al.~\cite{pereira2023esp32_drip_irrigation} (2023) &
+    Irrigated field, unspecified crop &
+    Drip irrigation application &
+    No & Embedded sensing comparison \\
+    \hline
+    Saban et al.~\cite{saban2023smart_agricultural_lora_cloud} (2023) &
+    General smart agriculture &
+    Unspecified crop context &
+    No & Cloud monitoring comparison \\
+    \hline
+    Survey works~\cite{ayaz2019iot_smart_agriculture_survey,farooq2019iot_smart_agriculture_review} &
+    Multiple regions and crops &
+    Broad IoT agriculture &
+    No & Background and framing \\
+    \hline
+    Other reviewed works [TODO] &
+    Various regional or general contexts &
+    Generic or unspecified crops &
+    No & Contextual support \\
+    \hline
+    \textbf{Proposed system} &
+    Saharan field, El Oued, Algeria &
+    Alfalfa (\textit{Medicago sativa}) &
+    \textbf{Yes} & --- \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Within the reviewed works used in this thesis, no selected work explicitly
+targets alfalfa as the main monitored crop. The proposed system is distinctive
+in this respect: alfalfa cultivation defines not only the deployment crop but
+also the sensor variable selection, the structure of the agronomic event log,
+and the analytics parameterization applied to the field data.
+
+\subsection*{Criterion Comparison}
+
+Table~\ref{tab:related-work-comparison} examines the reviewed works against the
+proposed system across twelve design dimensions. Each dimension corresponds to
+a thematic gap identified in Sections~\ref{sec:iot-monitoring-systems}
+through~\ref{sec:dashboards-analytics-ai}.
+
+\begin{table}[H]
+  \centering
+  \caption{Criterion-based comparison of selected related works and the proposed
+           system across twelve design dimensions.}
+  \label{tab:related-work-comparison}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{|p{2.5cm}|p{3.0cm}|p{3.3cm}|p{3.3cm}|}
+    \hline
+    \textbf{Criterion} & \textbf{Selected related works} &
+    \textbf{Observed limitation} & \textbf{Proposed system response} \\
+    \hline
+    Target crop &
+    General irrigation, mixed or unspecified crops &
+    No alfalfa-specific design, event model, or agronomic context &
+    Alfalfa target; cut-cycle-aware agronomic event log \\
+    \hline
+    Deployment context &
+    Commercial farms, general agricultural settings &
+    Limited attention to Saharan constraints: unstable power, limited connectivity &
+    Field-oriented prototype, El Oued oasis environment \\
+    \hline
+    Communication &
+    LoRa/LoRaWAN (Ahmed, Saban); cloud Wi-Fi path (Pereira) &
+    Feasibility demonstrated; application-level recovery not foregrounded &
+    LoRa node-to-gateway with ACK; defined Recovery Mode for desynchronization \\
+    \hline
+    Offline operation &
+    Cloud-first or continuously connected architectures assumed &
+    Database gaps indistinguishable from absent field data &
+    SD-first storage; server record is an explicit subset of local record \\
+    \hline
+    Upload strategy &
+    Automated or continuous cloud upload &
+    Upload time conflated with measurement time in downstream analysis &
+    Manual batch upload (long button press); upload time = transfer metadata only \\
+    \hline
+    Time policy &
+    Timestamp semantics not explicitly defined &
+    Risk of charting data against processing or arrival time &
+    DS3231 RTC; \texttt{measured\_at} = canonical time axis for all analytics \\
+    \hline
+    Power management &
+    Hardware selected for low power; firmware duty cycle often implicit &
+    Desynchronization consequence of duty-cycle drift not addressed &
+    Power Saving Mode: deep sleep intervals + relay-controlled sensor power \\
+    \hline
+    Recovery &
+    Link-layer packet retries; no application-level recovery procedure &
+    Missed windows accumulate; node timing state not explicitly recoverable &
+    Recovery Mode: defined firmware procedure for timing desynchronization \\
+    \hline
+    Data domains &
+    Single or undifferentiated data stores &
+    Sensor readings, events, and uploads may be mixed or conflated &
+    Four-domain schema: sensor readings, system events, uploads, agronomic events \\
+    \hline
+    Dashboard scope &
+    Sensor reading visualization; device status in some systems &
+    Raw chart display; processing steps not visible to operator &
+    Processed Data Viewer: raw, cleaned, and processed lineage accessible \\
+    \hline
+    Analytics &
+    Basic aggregation or threshold alerts in some systems &
+    No explicit quality control, reliability scoring, or data-quality visibility &
+    Deterministic QC, reliability scoring, alert rules, analytics snapshots \\
+    \hline
+    AI role &
+    Not addressed, or general AI potential noted &
+    Risk of conflating AI output with sensor or metric authority &
+    Gemini via backend proxy; interpretation only; deterministic metrics authoritative \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\subsection*{Feature Matrix}
+
+Table~\ref{tab:feature-matrix} provides a feature-level summary comparing the
+three primary reviewed works and the proposed system across fifteen
+system-level capabilities. Survey and unverified works are grouped as
+``Other reviewed'' and assessed where feature evidence is clearly available.
+
+\begin{table}[H]
+  \centering
+  \caption{System feature comparison across selected related works and the
+           proposed system. \checkmark~= present; \texttt{--}~= absent;
+           Partial~= partially addressed; Not specified~= feature not discussed
+           in the published work; [TODO]~= metadata unverified.}
+  \label{tab:feature-matrix}
+  \resizebox{\textwidth}{!}{%
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{|p{5.2cm}|c|c|c|c|c|}
+    \hline
+    \textbf{Feature} &
+    \textbf{Ahmed et al.} &
+    \textbf{Pereira et al.} &
+    \textbf{Saban et al.} &
+    \textbf{Other reviewed} &
+    \textbf{Proposed} \\
+    \hline
+    LoRa communication &
+    \checkmark & -- & \checkmark & Partial & \checkmark \\
+    \hline
+    Multi-node field architecture &
+    \checkmark & -- & \checkmark & Partial & \checkmark \\
+    \hline
+    Soil sensing &
+    \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+    \hline
+    Weather sensing &
+    \checkmark & Partial & \checkmark & Partial & \checkmark \\
+    \hline
+    SD local storage &
+    -- & -- & -- & -- & \checkmark \\
+    \hline
+    Manual batch upload &
+    -- & -- & -- & -- & \checkmark \\
+    \hline
+    RTC-based measurement timestamp &
+    -- & -- & -- & Not specified & \checkmark \\
+    \hline
+    Firmware Recovery Mode &
+    -- & -- & -- & -- & \checkmark \\
+    \hline
+    Power Saving Mode (deep sleep + relay) &
+    -- & Not specified & -- & -- & \checkmark \\
+    \hline
+    Diagnostic event logging &
+    -- & -- & -- & -- & \checkmark \\
+    \hline
+    Deterministic QC and data cleaning &
+    -- & -- & -- & -- & \checkmark \\
+    \hline
+    Reliability scoring &
+    -- & -- & -- & -- & \checkmark \\
+    \hline
+    Processed Data Viewer (lineage) &
+    -- & -- & -- & -- & \checkmark \\
+    \hline
+    AI interpretation boundary &
+    -- & -- & -- & -- & \checkmark \\
+    \hline
+    Alfalfa-specific monitoring &
+    -- & -- & -- & -- & \checkmark \\
+    \hline
+  \end{tabular}%
+  }
+\end{table}
+
+The matrix illustrates that the primary reviewed works demonstrate strong
+capability in field communication infrastructure, embedded sensing, and
+dashboard visualization, dimensions on which the proposed system also builds.
+The proposed system's extension lies in the data governance and analytics layers
+that sit between sensor acquisition and operator display: SD-based offline
+storage and manual batch upload as a connectivity-resilient pipeline;
+RTC-authoritative measurement timestamps preserved through local storage and
+batch transfer; a defined firmware procedure for recovery from timing
+desynchronization; diagnostic event logging as a first-class data domain;
+a deterministic analytics pipeline with quality control, reliability scoring,
+and processed-data transparency; a constrained AI interpretation layer; and
+alfalfa as an explicit crop target with Saharan deployment context. These are
+absent from all three primary comparisons and, to the extent observable, from
+the broader reviewed literature.
+
+%---------------------------------------------------------------
+\section{Chapter Summary}
+\label{sec:ch2-summary}
+%---------------------------------------------------------------
+
+This chapter has examined published agricultural IoT monitoring systems
+through seven thematic dimensions: monitoring architecture and scope, wireless
+communication, soil and environmental data collection, energy management and
+field reliability, offline storage and upload strategies, time synchronization
+and data integrity, and dashboard with analytics design. Three peer-reviewed
+works provided the primary comparison
+basis~\cite{ahmed2022lora_agriculture_chile,pereira2023esp32_drip_irrigation,saban2023smart_agricultural_lora_cloud},
+supported by survey
+literature~\cite{ayaz2019iot_smart_agriculture_survey,farooq2019iot_smart_agriculture_review}
+and data quality
+references~\cite{teh2020sensor_data_quality,dandrifosse2024weather_qc_agriculture}.
+Additional works referenced in the thematic sections carry pending metadata
+verification and are not cited as primary evidence.
+
+The reviewed works represent substantive contributions to agricultural IoT
+research. LoRa has been demonstrated as a suitable communication medium for
+large-scale field monitoring. ESP32-based embedded nodes have been deployed
+effectively for irrigation-oriented sensing. Cloud-connected web applications
+give agricultural operators remote visibility over their field installations.
+These results are established, and the proposed system builds on them rather
+than contesting them.
+
+The thematic analysis reveals that the layers between sensor acquisition and
+operator display receive comparatively less attention in the reviewed works.
+Local persistence strategies that sustain data collection through connectivity
+outages are not the central design objective of the primary works, which assume
+prompt or near-prompt cloud delivery. Timestamp discipline --- the practice of
+assigning measurement time at the sensor and carrying that timestamp
+unchanged through storage, upload, and analytics --- is not explicitly
+addressed in any of the primary works. Recovery procedures that return a field
+node to synchronized operation after a timing desynchronization event, as
+opposed to link-layer packet retries, are absent. Quality control and
+reliability scoring are not presented as distinct pipeline stages, and the
+chain from raw reading to displayed result is not exposed to the operator as
+a traceable artefact. The AI boundary question, concerning what an AI component
+may and may not do within a data-driven monitoring system, is not addressed in
+the primary works. Alongside these technical dimensions, no reviewed work
+targets alfalfa cultivation in a Saharan field environment, leaving both a crop
+and a deployment context unaddressed.
+
+The proposed system is not positioned as a universal improvement over all prior
+work. Its contribution is specific: stronger data governance through
+offline-first acquisition, authoritative field-assigned measurement timestamps,
+domain-separated storage, a deterministic quality control and reliability
+pipeline, processed-data traceability, and a bounded AI interpretation layer,
+applied to alfalfa cultivation in the El Oued region of Algeria. Chapter~\ref{chap:implementation}
+presents the design and implementation of the system components that realize
+these contributions, from the distributed field hardware and firmware
+operational modes through the backend analytics pipeline and the dashboard
+interface that makes the results accessible to the operator.
+
+% End of Chapter 2. Chapter 3 follows in chapters/chapter3_implementation.tex.

@@ -1,0 +1,173 @@
+% ============================================================
+% General Introduction
+% ============================================================
+
+\chapter*{General Introduction}
+\addcontentsline{toc}{chapter}{General Introduction}
+\label{chap:general-introduction}
+
+% ---- Context ------------------------------------------------
+\section*{Context}
+
+Agricultural activity in Algeria's southern regions depends on a set of conditions
+that differ fundamentally from those found in temperate farming environments. The
+Saharan zone, which covers the vast majority of the country's land area, sustains
+agricultural production through oasis-based cultivation and irrigated field plots
+fed by underground water resources. In regions such as El~Oued, crops including
+alfalfa are grown in conditions of extreme summer heat, scarce rainfall, and limited
+access to persistent network infrastructure. Farmers who monitor several spatially
+distributed plots must do so with limited real-time visibility into soil moisture
+trends, atmospheric conditions, and the effectiveness of irrigation applications.
+
+The growing availability of low-cost embedded hardware, long-range wireless
+communication technologies, and cloud-based storage has opened a viable path toward
+automated field monitoring in these environments. IoT-based agricultural monitoring
+systems have been deployed across diverse contexts over the past decade, demonstrating
+that continuous, structured data collection from remote sensor nodes is achievable
+even under constrained infrastructure conditions. However, the deployment of such
+systems in Saharan agricultural settings, particularly for alfalfa monitoring,
+remains underexplored, and several recurring design limitations in existing systems
+have not been addressed.
+
+% ---- Problem Statement --------------------------------------
+\section*{Problem Statement}
+
+This work identifies five interconnected problems that motivate the proposed system.
+
+First, agricultural IoT systems deployed in areas with unreliable Internet
+connectivity cannot depend on continuous data streaming. Without a local storage
+mechanism that operates independently of network availability, measurement data
+acquired during connectivity outages is lost. This creates gaps in the historical
+record that cannot be recovered retrospectively.
+
+Second, the intermittent power supply common to Saharan field sites requires that
+battery-powered sensor nodes operate for extended periods without replacement.
+Existing systems rarely describe the engineering mechanisms by which they achieve
+low-power operation, limiting the reproducibility of their designs in similarly
+constrained environments.
+
+Third, reviewed agricultural IoT systems frequently store or process data using
+the time of upload to the server rather than the time of measurement as recorded
+by the node. When connectivity is intermittent and upload sessions are batched, this
+conflation introduces systematic temporal inaccuracy into all downstream analysis.
+Charts, trend comparisons, and agronomic event alignments built on upload timestamps
+are misleading when the gap between measurement and upload spans hours or days.
+
+Fourth, no reviewed work targeting field IoT monitoring presents a deterministic
+analytics layer that is separate from the visualization interface and explicitly
+independent of any AI component. Without such a layer, quality control, reliability
+scoring, and alert evaluation cannot be audited or reproduced from the data alone.
+
+Fifth, despite its agronomic importance in Saharan agriculture, alfalfa has not
+been the primary target crop in any of the reviewed IoT monitoring works. Systems
+designed for generic crops or tropical contexts cannot be assumed to address the
+monitoring requirements specific to alfalfa under the environmental conditions of
+the El~Oued region.
+
+% ---- Motivation ---------------------------------------------
+\section*{Motivation}
+
+This work is motivated by the intersection of two practical needs. The first is
+the need for a reliable, traceable monitoring infrastructure for alfalfa cultivation
+in the El~Oued region that operates within the constraints of intermittent power
+and connectivity. The second is the academic need for a monitoring platform whose
+data-handling decisions — particularly the separation of measurement time from
+upload time — can be formally justified and validated through documented evidence.
+
+The system developed in this thesis is designed to demonstrate that these two needs
+can be addressed simultaneously through careful architectural choices in firmware,
+data policy, backend design, and analytics pipeline structure, without requiring
+commercial-grade infrastructure or continuous Internet access.
+
+% ---- Objectives ---------------------------------------------
+\section*{Objectives}
+
+The work pursued the following objectives:
+
+\begin{enumerate}
+  \item Design a multi-node IoT architecture suited to Saharan field monitoring,
+        with a central gateway coordinating remote sensing nodes over a LoRa
+        wireless link.
+  \item Implement structured soil and weather data collection across three physically
+        distinct sensor nodes covering two irrigation pivots and one atmospheric
+        monitoring position.
+  \item Provide reliable local data storage on the gateway SD card that accumulates
+        measurements independently of network availability.
+  \item Design a manual, batch-triggered upload mechanism that transfers SD-stored
+        records to a backend when Internet connectivity is temporarily available,
+        without requiring continuous connectivity.
+  \item Develop a backend and web dashboard that store, retrieve, and visualise sensor
+        data using the RTC-derived measurement timestamp as the canonical time
+        reference.
+  \item Implement a deterministic quality-control and reliability-scoring analytics
+        pipeline that operates entirely on processed data without AI involvement.
+  \item Integrate a reliability-aware AI interpretation interface that provides
+        narrative decision support from a controlled analytics snapshot, subject to
+        explicit architectural constraints that prevent AI from computing primary
+        metrics or modifying stored data.
+  \item Validate the end-to-end system through a documented pilot deployment covering
+        multi-node data acquisition, upload sessions, deterministic analytics
+        output, and dashboard visualization.
+\end{enumerate}
+
+% ---- Contributions ------------------------------------------
+\section*{Contributions}
+
+The primary technical contributions of this work are:
+
+\begin{enumerate}
+  \item An offline-first, three-node LoRa IoT architecture with a structured
+        ten-minute superframe that coordinates acquisition, reception, acknowledgement,
+        and storage without any cloud dependency during field operation.
+  \item A timestamp traceability policy centred on the DS3231 RTC, in which the
+        \texttt{measured\_at} field is set once at packet reception and is never
+        overwritten or approximated by the upload receipt timestamp.
+  \item An SD-based local storage mechanism combined with a manual upload-on-demand
+        trigger that makes the system fully operational without stable Internet
+        access.
+  \item Eight documented firmware operating modes — including Power Saving Mode,
+        Recovery Mode for timing-drift correction, Upload Mode, and RTC
+        Synchronisation Mode — each motivated by a specific observed field constraint.
+  \item A ten-stage deterministic QC and reliability-scoring pipeline that produces
+        auditable analytics snapshots from sensor readings without AI involvement at
+        any processing stage.
+  \item A Processed Data Viewer that exposes the full lineage of the analytics
+        pipeline in read-only form, supporting transparency and academic traceability.
+  \item A backend-proxied AI interpretation interface subject to six architectural
+        boundary rules that confine Gemini to reading the deterministic snapshot and
+        producing narrative text, without access to raw data or the ability to compute
+        primary metrics.
+  \item A documented prototype deployment targeting alfalfa monitoring in the
+        El~Oued Saharan agricultural region, validated over a five-and-a-half-day
+        pilot window.
+\end{enumerate}
+
+% ---- Thesis Organisation ------------------------------------
+\section*{Thesis Organisation}
+
+This thesis is organised into three chapters, preceded by this general introduction
+and followed by a general conclusion.
+
+\textbf{Chapter~1 — Background and Theoretical Foundations} establishes the context
+and technical vocabulary needed to understand the design decisions in Chapter~3.
+It introduces the Saharan agricultural environment that motivates the project,
+discusses data collection principles for agricultural IoT systems, surveys wireless
+communication technologies with a focus on LoRa, examines low-power and reliability
+strategies for field-deployed embedded systems, and provides the agronomic context
+of alfalfa cultivation. The chapter closes by identifying why alfalfa was selected
+as the target crop and what monitoring requirements are specific to it.
+
+\textbf{Chapter~2 — Related Works and Comparative Analysis} examines existing
+agricultural IoT monitoring systems along seven dimensions: system architecture,
+wireless communication, soil and environmental data collection, energy management
+and reliability, offline storage and upload handling, timestamp semantics, and
+dashboard plus analytics design. The chapter identifies alfalfa as absent from
+the primary target crops of the reviewed works and synthesises five design gaps
+that the proposed system is constructed to address.
+
+\textbf{Chapter~3 — System Design, Implementation, and Evaluation} presents the
+full implementation of the proposed platform, from hardware node architecture and
+firmware operating modes through data storage policy, backend design, dashboard
+implementation, deterministic analytics, AI interpretation boundary, and field
+deployment. It concludes with a pilot validation section supported by quantitative
+evidence from the deployment window and an explicit statement of system limitations.

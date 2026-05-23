@@ -1,0 +1,55 @@
+% ============================================================
+% Résumé — Français
+% ============================================================
+
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+
+La surveillance agricole dans les environnements sahariens présente des
+caractéristiques distinctives qui la différencient des contextes agricoles classiques:
+alimentation électrique intermittente, accès à Internet peu fiable, conditions
+thermiques extrêmes, et difficulté pratique d'accéder aux parcelles éloignées entre
+deux visites. Pour la culture de la luzerne en particulier, ces contraintes sont
+accentuées par l'absence de systèmes de surveillance IoT conçus spécifiquement pour
+cette culture dans le contexte agricole saharien, ainsi que par une limitation
+récurrente identifiée dans les travaux examinés: la confusion entre l'horodatage de
+téléversement et l'horodatage réel de la mesure, ce qui compromet la traçabilité de
+toute analyse temporelle.
+
+Cette thèse présente la conception et la mise en œuvre d'une plateforme de surveillance
+IoT et d'analyse agronomique déterministe pour la culture de la luzerne dans la région
+d'El Oued, en Algérie. Le système repose sur trois nœuds embarqués communicant par
+liaison sans fil LoRa à 433~MHz selon une trame de dix minutes. Le nœud passerelle
+principal coordonne la réception des paquets, maintient une horloge temps réel DS3231
+de référence et enregistre toutes les mesures localement sur une carte SD,
+indépendamment de la disponibilité du réseau. Le nœud Node2 mesure l'humidité, la
+température et la conductivité électrique du sol au niveau du second pivot d'irrigation
+via RS485/Modbus~; le nœud Node3 acquiert la température de l'air, l'humidité relative
+et la pression atmosphérique. Le transfert des données suit un modèle axé sur le
+stockage local: les enregistrements SD s'accumulent localement et sont transmis par
+lot vers un serveur distant lorsque la connexion Internet est ponctuellement disponible.
+
+Huit modes de fonctionnement du micrologiciel répondent aux contraintes spécifiques du
+déploiement: un mécanisme de récupération corrige la dérive temporelle à l'origine
+d'échecs de communication persistants, et des stratégies d'économie d'énergie
+prolongent l'autonomie des batteries par sommeil profond et contrôle de l'alimentation
+des capteurs par relais. Le serveur, développé avec Node.js et PostgreSQL, applique
+une politique stricte qui sépare l'horodatage issu de l'horloge temps réel
+(\texttt{measured\_at}) de l'horodatage de réception du téléversement. Un tableau de
+bord React présente les tendances des capteurs, les événements agronomiques et les
+résultats d'un pipeline déterministe en dix étapes de contrôle qualité et de scoring
+de fiabilité. L'interprétation assistée par IA (Gemini) est encadrée par six règles
+architecturales qui interdisent au modèle de calculer des métriques primaires ou de
+modifier les données enregistrées.
+
+Une fenêtre de validation pilote couvrant la période du 6 au 11 mai 2026 a produit
+2433 relevés de capteurs répartis équitablement entre les trois nœuds, six sessions
+de téléversement menées à terme, et 135 lignes issues du pipeline de traitement. Ces
+résultats démontrent la faisabilité fonctionnelle de l'architecture de bout en bout
+dans le cadre d'un déploiement pilote~; la validation sur une saison complète et
+l'étalonnage des seuils de fiabilité constituent des priorités pour les travaux futurs.
+
+\vspace{1em}
+\noindent\textbf{Mots-clés:} Internet des Objets, agriculture intelligente, luzerne,
+LoRa, ESP32, priorité locale, analyse déterministe, agriculture saharienne, qualité
+des données, horloge temps réel, traçabilité temporelle.
