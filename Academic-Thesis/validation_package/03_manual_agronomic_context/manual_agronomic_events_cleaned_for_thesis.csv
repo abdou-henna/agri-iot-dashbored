@@ -1,0 +1,7 @@
+event_id,event_type,category,node_id,started_at,ended_at,amount_mm,fertilizer_type,rate_kg_ha,notes
+IRR-20260508-P1,irrigation,water,MAIN,2026-05-08 05:10:00+00:00,2026-05-08 07:20:00+00:00,17.0,,,Pivot 1 post-cut irrigation
+IRR-20260508-P2,irrigation,water,N2,2026-05-08 05:25:00+00:00,2026-05-08 07:35:00+00:00,15.0,,,Pivot 2 post-cut irrigation
+NOTE-20260509,field_note,field_operation,farm,2026-05-09 16:30:00+00:00,2026-05-09 16:30:00+00:00,,,,Field scout noted heat stress risk and faster drying after first cut.
+FERT-20260510,fertilization,nutrition,farm,2026-05-10 08:15:00+00:00,2026-05-10 08:15:00+00:00,,N-balanced,35.0,Light nitrogen-balanced feeding during regrowth period
+IRR-20260511-P1,irrigation,water,MAIN,2026-05-11 06:20:00+00:00,2026-05-11 08:10:00+00:00,12.0,,,Pivot 1 short irrigation before afternoon upload
+IRR-20260511-P2,irrigation,water,N2,2026-05-11 06:35:00+00:00,2026-05-11 08:25:00+00:00,10.0,,,Pivot 2 short irrigation before afternoon upload

@@ -1,0 +1,8 @@
+file,size_bytes
+readings_2026-05-06_to_2026-05-11_1500.csv,295650
+events_2026-05-06_to_2026-05-11_1500.csv,1252
+agronomic_events_2026-05-06_to_2026-05-11_1500.csv,1812
+uploads_2026-05-06_to_2026-05-11_1500.csv,832
+upload_queue_2026-05-06_to_2026-05-11_1500.jsonl,1359224
+processed_data_sensor_readings_MAIN_soil_moisture_percent_2026-05-04T14_20_31.529Z_2026-05-11T14_20_31.529Z_hour_7.x_7.x_none_MAIN_soil_moisture_percent_2026-05-04T14_20_31.529Z_2026-05-11T14_20_31.529Z_1hour.csv,72827
+esp32GOODserial(1).md,198539

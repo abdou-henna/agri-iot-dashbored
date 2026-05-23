@@ -1,0 +1,7 @@
+upload_id,uploaded_at,filename,status,row_count,error_count,notes
+UP-2026-032,2026-05-06T23:55:00Z,2026-05-06_readings.csv,processed,432,0,Daily SD batch upload deterministic demo continuation
+UP-2026-033,2026-05-07T23:55:00Z,2026-05-07_readings.csv,processed,432,0,Daily SD batch upload deterministic demo continuation
+UP-2026-034,2026-05-08T23:55:00Z,2026-05-08_readings.csv,processed,432,0,Daily SD batch upload deterministic demo continuation
+UP-2026-035,2026-05-09T23:55:00Z,2026-05-09_readings.csv,processed,432,0,Daily SD batch upload deterministic demo continuation
+UP-2026-036,2026-05-10T23:55:00Z,2026-05-10_readings.csv,processed,432,3,Daily SD batch upload deterministic demo continuation
+UP-2026-037,2026-05-11T15:00:00Z,2026-05-11_readings.csv,processed,273,0,Partial SD batch upload until 2026-05-11T15:00:00Z

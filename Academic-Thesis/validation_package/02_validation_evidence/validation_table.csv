@@ -1,0 +1,9 @@
+test,expected_result,actual_result,status
+Data ingestion volume,Uploaded readings should match upload session row counts,2433 readings; upload row_count sum = 2433,PASS
+Node coverage,"MAIN, N2, and N3 should be present","Nodes found: MAIN, N2, N3",PASS
+Measurement time availability,Every reading must have measured_at,Missing measured_at rows: 0,PASS
+Status completeness,Every reading must have status,Missing status rows: 0; statuses: ok,PASS
+Upload processing,Each upload session should be processed with zero errors,Uploads: 6; error_count sum: 3,CHECK
+Manual agronomic context,Manual irrigation/fertilization/notes should be represented separately,"Agronomic events: 6; types: fertilization, field_note, irrigation",PASS
+Processed viewer evidence,Processed deterministic rows should expose reliability and limitations,Rows: 135; reliability range: 0.399-0.399,PASS
+Unsupported pH field check,Project policy says pH is unsupported and must not be claimed,soil_ph non-null rows in raw file: 1622,WARNING: EXCLUDE FROM THESIS CLAIMS
