@@ -28,6 +28,20 @@ function isFrontendTimeoutError(error: { status: number; message: string } | nul
   return error?.status === 0 && error.message.toLowerCase().includes('timed out');
 }
 
+function isBackendGeminiTimeout(error: { status: number; message: string } | null) {
+  return error?.message === 'gemini_timeout';
+}
+
+function getGeminiErrorMessage(error: { status: number; message: string } | null) {
+  if (isBackendGeminiTimeout(error)) {
+    return 'Gemini took longer than the server timeout to produce the report. Please retry or reduce the analysis window.';
+  }
+  if (isFrontendTimeoutError(error)) {
+    return 'The AI report took longer than expected and the browser stopped waiting. Please retry or reduce the report scope/window.';
+  }
+  return 'Unable to generate interpretation due to a temporary proxy timeout or service failure. Please retry later.';
+}
+
 function RichInsightContent({ insight }: { insight: GeminiInsightOutput }) {
   const isDemo = insight.report_mode === 'small_dataset_demo';
   const hasEnrichedReport = Boolean(
@@ -212,7 +226,6 @@ export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysi
   const displayedConfidence = gate.report_mode === 'small_dataset_demo' && gate.mode === 'caution' && gemini.insight?.confidence === 'high'
     ? 'medium'
     : (gemini.insight?.confidence ?? 'n/a');
-  const hasFrontendTimeout = isFrontendTimeoutError(gemini.apiError);
   const includedSnapshots = comparisonSnapshots.filter((item) => item.snapshot).map((item) => item.scopeLabel);
   const missingSnapshots = comparisonSnapshots.filter((item) => !item.snapshot).map((item) => item.scopeLabel);
 
@@ -259,9 +272,7 @@ export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysi
       {gate.mode === 'caution' && gemini.insight?.confidence === 'high' ? <div className="mb-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">Snapshot reliability caps practical confidence at medium for this demo report.</div> : null}
       {gemini.isError ? (
         <div className="mb-3 rounded-lg bg-zinc-50 p-3 text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-          {hasFrontendTimeout
-            ? 'The AI report is still taking longer than expected. The request timed out before Gemini returned a response. Please retry, or reduce the report scope/window.'
-            : 'Unable to generate interpretation due to a temporary proxy timeout or service failure. Please retry later.'}
+          {getGeminiErrorMessage(gemini.apiError)}
         </div>
       ) : null}
 

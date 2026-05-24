@@ -1,6 +1,7 @@
 import { GEMINI_SYSTEM_PROMPT } from '../config/geminiPrompts.js';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const GEMINI_UPSTREAM_TIMEOUT_MS = 60_000;
 
 const FORBIDDEN_KEYS = new Set([
   'raw_payload',
@@ -232,6 +233,16 @@ function extractReportMeta(input) {
   return { reportMode, hasLowOrInvalidReliability };
 }
 
+function getSafeRequestMeta(input) {
+  const validCount = input?.report_context?.sample_size?.valid_count;
+  return {
+    timeout_ms: GEMINI_UPSTREAM_TIMEOUT_MS,
+    report_mode: input?.report_context?.report_mode ?? 'standard',
+    analysis_type: input?.analysis_type ?? 'unknown',
+    valid_count: typeof validCount === 'number' ? validCount : null,
+  };
+}
+
 function normalizeGeminiInsightOutput(parsed, input) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
 
@@ -425,16 +436,18 @@ class GeminiService {
     }
 
     const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+    const requestMeta = getSafeRequestMeta(input);
 
     let response;
     try {
+      console.info('[gemini] request start', requestMeta);
       response = await fetch(`${GEMINI_API_URL}/${model}:generateContent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-goog-api-key': apiKey,
         },
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(GEMINI_UPSTREAM_TIMEOUT_MS),
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: JSON.stringify(input) }] }],
           systemInstruction: { parts: [{ text: GEMINI_SYSTEM_PROMPT }] },
@@ -446,6 +459,7 @@ class GeminiService {
       });
     } catch (error) {
       if (error?.name === 'TimeoutError') {
+        console.warn('[gemini] upstream timeout', requestMeta);
         return { status: 502, error: 'gemini_timeout', message: 'Gemini upstream timeout.' };
       }
       return { status: 502, error: 'gemini_http_error', message: 'Failed to reach Gemini API.' };
