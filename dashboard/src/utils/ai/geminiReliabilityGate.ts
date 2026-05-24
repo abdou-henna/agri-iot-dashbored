@@ -1,67 +1,90 @@
 import type { AnalyticsSnapshot, ReliabilityScore } from '../../types/analytics';
+import type { GeminiReportMode } from '../../types/gemini';
 
 export type GeminiReliabilityMode = 'allowed' | 'caution' | 'blocked';
 
+export type GeminiBlockedReason =
+  | 'no_snapshot'
+  | 'no_usable_readings'
+  | 'insufficient_readings'
+  | 'invalid_input';
+
 export interface GeminiReliabilityGateResult {
   mode: GeminiReliabilityMode;
+  report_mode: GeminiReportMode;
   reason: string;
+  blocked_reason?: GeminiBlockedReason;
   limitations: string[];
   canGenerate: boolean;
   badgeLabel: string;
   severity: 'info' | 'warning' | 'error';
+  valid_count: number;
+  processed_count: number;
 }
 
-function mapMode(level: ReliabilityScore['level'] | undefined): Omit<GeminiReliabilityGateResult, 'limitations'> {
-  if (level === 'high') {
-    return {
-      mode: 'allowed',
-      reason: 'AI interpretation is allowed for this snapshot.',
-      canGenerate: true,
-      badgeLabel: 'Allowed',
-      severity: 'info',
-    };
-  }
-  if (level === 'medium') {
-    return {
-      mode: 'caution',
-      reason: 'AI interpretation is allowed with caution because reliability is medium.',
-      canGenerate: true,
-      badgeLabel: 'Caution',
-      severity: 'warning',
-    };
-  }
-  if (level === 'low') {
-    return {
-      mode: 'caution',
-      reason: 'AI interpretation is allowed with caution because snapshot reliability is low.',
-      canGenerate: true,
-      badgeLabel: 'Caution',
-      severity: 'warning',
-    };
-  }
+export const MIN_USABLE_READINGS_FOR_DEMO = 3;
 
-  return {
-    mode: 'blocked',
-    reason: 'AI interpretation is blocked because snapshot reliability is invalid.',
-    canGenerate: false,
-    badgeLabel: 'Blocked',
-    severity: 'error',
-  };
+function computeValidCount(snapshot: AnalyticsSnapshot): number {
+  return snapshot.quality.valid_count ?? 0;
+}
+
+function computeProcessedCount(snapshot: AnalyticsSnapshot): number {
+  return snapshot.quality.processed_count ?? 0;
 }
 
 export function evaluateGeminiReliabilityGate(snapshot: AnalyticsSnapshot | null): GeminiReliabilityGateResult {
   if (!snapshot) {
     return {
       mode: 'blocked',
+      report_mode: 'standard',
       reason: 'No analytics snapshot is available for this context.',
+      blocked_reason: 'no_snapshot',
       limitations: ['Gemini must not override deterministic alerts.'],
       canGenerate: false,
       badgeLabel: 'Blocked',
       severity: 'error',
+      valid_count: 0,
+      processed_count: 0,
     };
   }
 
-  const base = mapMode(snapshot.quality.reliability_level);
+  const validCount = computeValidCount(snapshot);
+  const processedCount = computeProcessedCount(snapshot);
+
+  if (validCount === 0) {
+    return {
+      mode: 'blocked',
+      report_mode: 'standard',
+      reason: 'No usable readings are available in this snapshot (valid_count = 0). AI interpretation is blocked.',
+      blocked_reason: 'no_usable_readings',
+      limitations: ['No valid readings — AI interpretation cannot proceed.', 'Gemini must not override deterministic alerts.'],
+      canGenerate: false,
+      badgeLabel: 'Blocked',
+      severity: 'error',
+      valid_count: validCount,
+      processed_count: processedCount,
+    };
+  }
+
+  if (validCount < MIN_USABLE_READINGS_FOR_DEMO) {
+    return {
+      mode: 'blocked',
+      report_mode: 'standard',
+      reason: `Only ${validCount} valid reading(s) available. At least ${MIN_USABLE_READINGS_FOR_DEMO} are required for any AI interpretation.`,
+      blocked_reason: 'insufficient_readings',
+      limitations: [
+        `Insufficient valid readings (${validCount} < ${MIN_USABLE_READINGS_FOR_DEMO}).`,
+        'Gemini must not override deterministic alerts.',
+      ],
+      canGenerate: false,
+      badgeLabel: 'Blocked',
+      severity: 'error',
+      valid_count: validCount,
+      processed_count: processedCount,
+    };
+  }
+
+  const reliabilityLevel: ReliabilityScore['level'] = snapshot.quality.reliability_level ?? 'invalid';
   const limitations: string[] = [];
 
   const expectedCount = snapshot.quality.expected_count;
@@ -83,9 +106,46 @@ export function evaluateGeminiReliabilityGate(snapshot: AnalyticsSnapshot | null
 
   limitations.push('Gemini must not override deterministic alerts.');
 
+  // valid_count >= 3: determine mode based on reliability
+  if (reliabilityLevel === 'invalid' || reliabilityLevel === 'low') {
+    limitations.push(`Small dataset demo mode: ${validCount} valid reading(s). Interpretation is exploratory only.`);
+    return {
+      mode: 'caution',
+      report_mode: 'small_dataset_demo',
+      reason: `AI interpretation allowed in small dataset demo mode (${validCount} valid readings, reliability: ${reliabilityLevel}). Report is exploratory and not suitable for final agronomic decisions.`,
+      limitations,
+      canGenerate: true,
+      badgeLabel: 'Demo Mode',
+      severity: 'warning',
+      valid_count: validCount,
+      processed_count: processedCount,
+    };
+  }
+
+  if (reliabilityLevel === 'medium') {
+    return {
+      mode: 'caution',
+      report_mode: 'standard',
+      reason: 'AI interpretation is allowed with caution because reliability is medium.',
+      limitations,
+      canGenerate: true,
+      badgeLabel: 'Caution',
+      severity: 'warning',
+      valid_count: validCount,
+      processed_count: processedCount,
+    };
+  }
+
   return {
-    ...base,
+    mode: 'allowed',
+    report_mode: 'standard',
+    reason: 'AI interpretation is allowed for this snapshot.',
     limitations,
+    canGenerate: true,
+    badgeLabel: 'Allowed',
+    severity: 'info',
+    valid_count: validCount,
+    processed_count: processedCount,
   };
 }
 
@@ -97,17 +157,68 @@ export function evaluateGeminiMultiSnapshotReliabilityGate(snapshots: Array<Anal
   if (!validSnapshots.length) {
     return {
       mode: 'blocked',
-      reason: 'No valid analytics snapshots are available for this context.',
+      report_mode: 'standard',
+      reason: 'No analytics snapshots are available for this context.',
+      blocked_reason: 'no_snapshot',
       limitations: ['Missing required snapshots for comparison.', 'Gemini must not override deterministic alerts.'],
       canGenerate: false,
       badgeLabel: 'Blocked',
       severity: 'error',
+      valid_count: 0,
+      processed_count: 0,
     };
   }
 
-  const levels = validSnapshots.map((snapshot) => snapshot.quality.reliability_level ?? 'invalid');
-  let hasInvalid = false;
+  // Compute per-snapshot valid counts
+  const snapshotCounts = validSnapshots.map((s) => ({
+    node_id: s.identity.node_id ?? 'unknown',
+    valid_count: computeValidCount(s),
+    processed_count: computeProcessedCount(s),
+  }));
+
+  const totalValidCount = snapshotCounts.reduce((sum, s) => sum + s.valid_count, 0);
+  const totalProcessedCount = snapshotCounts.reduce((sum, s) => sum + s.processed_count, 0);
+
+  // All valid_count = 0 → blocked
+  const allEmpty = snapshotCounts.every((s) => s.valid_count === 0);
+  if (allEmpty) {
+    return {
+      mode: 'blocked',
+      report_mode: 'standard',
+      reason: 'All available snapshots have zero valid readings. AI interpretation is blocked.',
+      blocked_reason: 'no_usable_readings',
+      limitations: ['No valid readings in any snapshot.', 'Gemini must not override deterministic alerts.'],
+      canGenerate: false,
+      badgeLabel: 'Blocked',
+      severity: 'error',
+      valid_count: 0,
+      processed_count: totalProcessedCount,
+    };
+  }
+
+  // At least one snapshot with valid_count >= MIN_USABLE_READINGS_FOR_DEMO → allow
+  const usableSnapshots = snapshotCounts.filter((s) => s.valid_count >= MIN_USABLE_READINGS_FOR_DEMO);
+  if (!usableSnapshots.length) {
+    return {
+      mode: 'blocked',
+      report_mode: 'standard',
+      reason: `No snapshot has enough valid readings (minimum ${MIN_USABLE_READINGS_FOR_DEMO}). AI interpretation is blocked.`,
+      blocked_reason: 'insufficient_readings',
+      limitations: [
+        `Insufficient valid readings across all snapshots (threshold: ${MIN_USABLE_READINGS_FOR_DEMO}).`,
+        'Gemini must not override deterministic alerts.',
+      ],
+      canGenerate: false,
+      badgeLabel: 'Blocked',
+      severity: 'error',
+      valid_count: totalValidCount,
+      processed_count: totalProcessedCount,
+    };
+  }
+
+  // Build per-snapshot limitations
   let hasMediumOrLow = false;
+  let hasInvalidReliability = false;
 
   snapshots.forEach((snapshot, index) => {
     if (!snapshot) {
@@ -116,56 +227,66 @@ export function evaluateGeminiMultiSnapshotReliabilityGate(snapshots: Array<Anal
     }
 
     const level = snapshot.quality.reliability_level ?? 'invalid';
-    const expectedCount = snapshot.quality.expected_count;
+    const vc = computeValidCount(snapshot);
 
     if (level === 'invalid') {
-      limitations.push(`${snapshot.identity.node_id ?? `Snapshot ${index + 1}`} has invalid reliability.`);
-      hasInvalid = true;
+      hasInvalidReliability = true;
+      limitations.push(`${snapshot.identity.node_id ?? `Snapshot ${index + 1}`} has invalid reliability (${vc} valid readings).`);
+    } else if (level === 'low' || level === 'medium') {
+      hasMediumOrLow = true;
     }
 
-    if (level === 'medium' || level === 'low') hasMediumOrLow = true;
-
+    const expectedCount = snapshot.quality.expected_count;
     if (typeof expectedCount === 'number' && expectedCount > 0) {
       const missingRatio = snapshot.quality.missing_count / expectedCount;
       if (missingRatio >= 0.2) limitations.push(`${snapshot.identity.node_id ?? `Snapshot ${index + 1}`} has high missing data.`);
     }
 
     if (snapshot.quality.qc_flag_count > 0) limitations.push(`${snapshot.identity.node_id ?? `Snapshot ${index + 1}`} has QC flags.`);
-    if (typeof snapshot.quality.reliability_score === 'number' && snapshot.quality.reliability_score < 0.6) limitations.push(`${snapshot.identity.node_id ?? `Snapshot ${index + 1}`} has a low reliability score.`);
+    if (typeof snapshot.quality.reliability_score === 'number' && snapshot.quality.reliability_score < 0.6) {
+      limitations.push(`${snapshot.identity.node_id ?? `Snapshot ${index + 1}`} has a low reliability score.`);
+    }
   });
 
-  const missingCount = snapshots.length - validSnapshots.length;
-  if (missingCount > 0) {
-    limitations.push('Comparison limited because only one valid snapshot is available.');
-    return {
-      mode: hasInvalid ? 'blocked' : 'caution',
-      reason: hasInvalid ? 'AI interpretation is blocked because one or more required snapshots are invalid.' : 'AI interpretation is allowed with caution because one required snapshot is missing.',
-      limitations: [...new Set([...limitations, 'Gemini must not override deterministic alerts.'])],
-      canGenerate: !hasInvalid,
-      badgeLabel: hasInvalid ? 'Blocked' : 'Caution',
-      severity: hasInvalid ? 'error' : 'warning',
-    };
+  const missingSnapshotCount = snapshots.length - validSnapshots.length;
+  if (missingSnapshotCount > 0) {
+    limitations.push(`${missingSnapshotCount} snapshot(s) missing — comparison is partial.`);
   }
 
-  if (hasInvalid || levels.includes('invalid')) {
+  limitations.push('Gemini must not override deterministic alerts.');
+  const uniqueLimitations = [...new Set(limitations)];
+
+  // Determine report mode: small_dataset_demo if any snapshot has invalid/low reliability
+  const reportMode: GeminiReportMode = (hasInvalidReliability || hasMediumOrLow) ? 'small_dataset_demo' : 'standard';
+
+  if (missingSnapshotCount > 0 || hasInvalidReliability) {
+    const label = reportMode === 'small_dataset_demo' ? 'Demo Mode' : 'Caution';
     return {
-      mode: 'blocked',
-      reason: 'AI interpretation is blocked because one or more required snapshots have invalid reliability.',
-      limitations: [...new Set([...limitations, 'Gemini must not override deterministic alerts.'])],
-      canGenerate: false,
-      badgeLabel: 'Blocked',
-      severity: 'error',
+      mode: 'caution',
+      report_mode: reportMode,
+      reason: hasInvalidReliability
+        ? 'AI interpretation allowed with caution. Some snapshots have invalid reliability but usable readings exist — partial comparison only.'
+        : 'AI interpretation allowed with caution because one or more required snapshots are missing.',
+      limitations: uniqueLimitations,
+      canGenerate: true,
+      badgeLabel: label,
+      severity: 'warning',
+      valid_count: totalValidCount,
+      processed_count: totalProcessedCount,
     };
   }
 
   return {
     mode: hasMediumOrLow ? 'caution' : 'allowed',
+    report_mode: reportMode,
     reason: hasMediumOrLow
       ? 'AI interpretation is allowed with caution because at least one required snapshot has medium/low reliability.'
       : 'AI interpretation is allowed because all required snapshots have high reliability.',
-    limitations: [...new Set([...limitations, 'Gemini must not override deterministic alerts.'])],
+    limitations: uniqueLimitations,
     canGenerate: true,
     badgeLabel: hasMediumOrLow ? 'Caution' : 'Allowed',
     severity: hasMediumOrLow ? 'warning' : 'info',
+    valid_count: totalValidCount,
+    processed_count: totalProcessedCount,
   };
 }

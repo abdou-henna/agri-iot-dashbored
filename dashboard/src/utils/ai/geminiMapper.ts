@@ -1,7 +1,7 @@
 import type { AnalyticsSnapshot } from '../../types/analytics';
-import type { GeminiAnalysisType, GeminiInsightInput } from '../../types/gemini';
+import type { GeminiAnalysisType, GeminiInsightInput, GeminiReportContext } from '../../types/gemini';
 import { GEMINI_FORBIDDEN_CLAIMS } from '../../config/geminiPrompts';
-import { evaluateGeminiReliabilityGate } from './geminiReliabilityGate';
+import { evaluateGeminiReliabilityGate, MIN_USABLE_READINGS_FOR_DEMO } from './geminiReliabilityGate';
 
 import type { AgronomicIntelligenceOutput } from '../../types/agronomicIntelligence';
 
@@ -13,6 +13,39 @@ interface BuildGeminiInsightOptions {
   days_since_last_cut?: number | null;
   calibration_present?: boolean;
   agronomicIntelligence?: AgronomicIntelligenceOutput | null;
+}
+
+function buildReportContext(snapshot: AnalyticsSnapshot, reportMode: GeminiReportContext['report_mode']): GeminiReportContext {
+  const validCount = snapshot.quality.valid_count ?? 0;
+  const processedCount = snapshot.quality.processed_count ?? 0;
+  const expectedCount = snapshot.quality.expected_count ?? null;
+  const missingCount = snapshot.quality.missing_count ?? 0;
+  const validRatio = typeof expectedCount === 'number' && expectedCount > 0
+    ? validCount / expectedCount
+    : null;
+
+  const isDemo = reportMode === 'small_dataset_demo';
+
+  return {
+    report_mode: reportMode,
+    purpose: isDemo
+      ? 'Exploratory interpretation from a small dataset. Suitable for thesis and demo contexts. Not for final agronomic decisions.'
+      : 'Standard agronomic interpretation of a quality-controlled sensor snapshot.',
+    sample_size: {
+      processed_count: processedCount,
+      valid_count: validCount,
+      expected_count: expectedCount,
+      missing_count: missingCount,
+      valid_ratio: validRatio,
+    },
+    small_dataset_threshold: MIN_USABLE_READINGS_FOR_DEMO,
+    generation_policy: isDemo
+      ? 'Generate a structured agronomic report from available deterministic summaries. State sample-size limits explicitly. Separate confirmed evidence from hypothesis. Recommend field checks.'
+      : 'Generate a full structured agronomic report from the deterministic snapshot summaries.',
+    interpretation_style: isDemo
+      ? 'exploratory_with_caveats'
+      : 'standard_agronomic',
+  };
 }
 
 export function buildGeminiInsightInput(snapshot: AnalyticsSnapshot, options: BuildGeminiInsightOptions = {}): GeminiInsightInput {
@@ -61,6 +94,7 @@ export function buildGeminiInsightInput(snapshot: AnalyticsSnapshot, options: Bu
       limitations: [...limitations],
     },
     alerts: (snapshot.payload.alerts ?? []).map((alert) => ({ ...alert })) as Array<Record<string, unknown>>,
+    report_context: buildReportContext(snapshot, gate.report_mode),
     agronomic_intelligence: options.agronomicIntelligence ? {
       farm_state: options.agronomicIntelligence.farm_state as unknown as Record<string, unknown>,
       irrigation_reasoning: options.agronomicIntelligence.irrigation_reasoning as unknown as Record<string, unknown>,

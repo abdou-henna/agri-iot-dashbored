@@ -2,6 +2,8 @@ export type GeminiAnalysisType = 'weekly_summary' | 'event_analysis' | 'alert_ex
 
 export type GeminiConfidence = 'high' | 'medium' | 'low';
 
+export type GeminiReportMode = 'standard' | 'small_dataset_demo';
+
 export type GeminiForbiddenClaim =
   | 'Do not diagnose disease.'
   | 'Do not infer NPK or pH.'
@@ -19,6 +21,22 @@ export interface GeminiRiskOutput {
   limitations: string[];
 }
 
+export interface GeminiPivotObservation {
+  pivot: string;
+  observation: string;
+  evidence: string[];
+  confidence: GeminiConfidence;
+  limitation: string;
+}
+
+export interface GeminiActionPlanItem {
+  title: string;
+  priority: 'high' | 'medium' | 'low';
+  type: 'field_check' | 'sensor_check' | 'data_quality' | 'irrigation_review' | 'monitoring';
+  rationale: string;
+  confidence: GeminiConfidence;
+}
+
 export interface GeminiInsightOutput {
   summary: string;
   confidence: GeminiConfidence;
@@ -33,6 +51,48 @@ export interface GeminiInsightOutput {
   hypotheses: string[];
   recommended_checks: string[];
   not_claimed: string[];
+  // Enriched report fields (optional — safe fallback if absent)
+  report_mode?: GeminiReportMode;
+  executive_summary?: string;
+  farm_state?: string;
+  pivot_observations?: GeminiPivotObservation[];
+  weather_context?: string;
+  irrigation_context?: string;
+  data_quality_interpretation?: {
+    usable_for: string[];
+    not_usable_for: string[];
+  };
+  plant_health_caution?: {
+    not_diagnosed: string[];
+  };
+  why_this_matters?: string;
+  action_plan?: GeminiActionPlanItem[];
+  limitations?: string[];
+}
+
+export interface GeminiReportContext {
+  report_mode: GeminiReportMode;
+  purpose: string;
+  sample_size: {
+    processed_count: number;
+    valid_count: number;
+    expected_count: number | null;
+    missing_count: number;
+    valid_ratio: number | null;
+  };
+  small_dataset_threshold: number;
+  generation_policy: string;
+  interpretation_style: string;
+}
+
+export interface GeminiMultiSnapshotReportContext extends GeminiReportContext {
+  usable_snapshot_count: number;
+  snapshot_usability: Array<{
+    scope_label: string;
+    valid_count: number;
+    usable: boolean;
+  }>;
+  comparison_completeness: 'full' | 'partial' | 'single_only';
 }
 
 export interface GeminiInsightInput {
@@ -56,6 +116,7 @@ export interface GeminiInsightInput {
   agronomic_context: Record<string, unknown>;
   reliability: Record<string, unknown>;
   alerts: Array<Record<string, unknown>>;
+  report_context: GeminiReportContext;
   agronomic_intelligence?: {
     farm_state: Record<string, unknown>;
     irrigation_reasoning: Record<string, unknown>;
@@ -102,6 +163,7 @@ export interface GeminiMultiSnapshotInsightInput {
   snapshots: GeminiSnapshotSummary[];
   cross_snapshot_limitations: string[];
   reliability: Record<string, unknown>;
+  report_context: GeminiMultiSnapshotReportContext;
   forbidden_claims: GeminiForbiddenClaim[];
   agronomic_intelligence?: GeminiInsightInput['agronomic_intelligence'];
 }

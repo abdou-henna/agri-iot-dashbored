@@ -1,7 +1,8 @@
 import type { AnalyticsSnapshot } from '../../types/analytics';
-import type { GeminiAnalysisType, GeminiInsightInput, GeminiMultiSnapshotInsightInput, GeminiSnapshotSummary } from '../../types/gemini';
+import type { GeminiAnalysisType, GeminiInsightInput, GeminiMultiSnapshotInsightInput, GeminiMultiSnapshotReportContext, GeminiSnapshotSummary } from '../../types/gemini';
 import { GEMINI_FORBIDDEN_CLAIMS } from '../../config/geminiPrompts';
 import { buildGeminiInsightInput } from './geminiMapper';
+import { evaluateGeminiMultiSnapshotReliabilityGate, MIN_USABLE_READINGS_FOR_DEMO } from './geminiReliabilityGate';
 import type { AgronomicIntelligenceOutput } from '../../types/agronomicIntelligence';
 
 interface BuildMultiSnapshotParams {
@@ -32,9 +33,57 @@ function toSummary(scopeLabel: string, snapshot: AnalyticsSnapshot, timezone: st
   };
 }
 
+function buildMultiSnapshotReportContext(
+  snapshotEntries: Array<{ scopeLabel: string; snapshot: AnalyticsSnapshot | null }>,
+  reportMode: GeminiMultiSnapshotReportContext['report_mode'],
+  validCount: number,
+  processedCount: number,
+): GeminiMultiSnapshotReportContext {
+  const usability = snapshotEntries.map((entry) => ({
+    scope_label: entry.scopeLabel,
+    valid_count: entry.snapshot?.quality.valid_count ?? 0,
+    usable: (entry.snapshot?.quality.valid_count ?? 0) >= MIN_USABLE_READINGS_FOR_DEMO,
+  }));
+
+  const usableCount = usability.filter((u) => u.usable).length;
+  const presentCount = snapshotEntries.filter((e) => Boolean(e.snapshot)).length;
+  const totalCount = snapshotEntries.length;
+
+  const completeness: GeminiMultiSnapshotReportContext['comparison_completeness'] =
+    usableCount === 0 ? 'single_only'
+    : usableCount < totalCount ? 'partial'
+    : 'full';
+
+  const isDemo = reportMode === 'small_dataset_demo';
+
+  return {
+    report_mode: reportMode,
+    purpose: isDemo
+      ? 'Exploratory multi-snapshot interpretation from small or partial datasets. Suitable for thesis/demo. Not for final agronomic decisions.'
+      : 'Standard multi-snapshot agronomic interpretation from quality-controlled summaries.',
+    sample_size: {
+      processed_count: processedCount,
+      valid_count: validCount,
+      expected_count: null,
+      missing_count: 0,
+      valid_ratio: null,
+    },
+    small_dataset_threshold: MIN_USABLE_READINGS_FOR_DEMO,
+    generation_policy: isDemo
+      ? 'Generate a structured agronomic report from available snapshots. State which snapshots are usable. Separate confirmed evidence from hypothesis. Recommend field checks.'
+      : 'Generate a full structured agronomic comparison report from all deterministic snapshot summaries.',
+    interpretation_style: isDemo ? 'exploratory_with_caveats' : 'standard_agronomic',
+    usable_snapshot_count: usableCount,
+    snapshot_usability: usability,
+    comparison_completeness: completeness,
+  };
+}
+
 export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots, agronomicIntelligence }: BuildMultiSnapshotParams): GeminiInsightInput | GeminiMultiSnapshotInsightInput | null {
   const valid = snapshots.filter((entry): entry is { scopeLabel: string; snapshot: AnalyticsSnapshot } => Boolean(entry.snapshot));
   if (!valid.length) return null;
+
+  const gate = evaluateGeminiMultiSnapshotReliabilityGate(snapshots.map((e) => e.snapshot));
 
   if (analysisType !== 'pivot_comparison' && analysisType !== 'farm_summary' && valid[0]?.snapshot) {
     return buildGeminiInsightInput(valid[0].snapshot, { analysis_type: analysisType, timezone, agronomicIntelligence });
@@ -74,8 +123,10 @@ export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, s
         node_id: entry.snapshot.identity.node_id,
         reliability_level: entry.snapshot.quality.reliability_level ?? 'invalid',
         reliability_score: entry.snapshot.quality.reliability_score ?? null,
+        valid_count: entry.snapshot.quality.valid_count ?? 0,
       })),
     },
+    report_context: buildMultiSnapshotReportContext(snapshots, gate.report_mode, gate.valid_count, gate.processed_count),
     agronomic_intelligence: agronomicIntelligence ? {
       farm_state: agronomicIntelligence.farm_state as unknown as Record<string, unknown>,
       irrigation_reasoning: agronomicIntelligence.irrigation_reasoning as unknown as Record<string, unknown>,
