@@ -11,6 +11,8 @@ pnpm-debug.log*
 .idea/
 /dist/
 .claude
+.agents
+Thumbs.db
 
 # Dashboard app artifacts
 dashboard/node_modules/
@@ -29,5 +31,41 @@ WebService/.git
 
 # Temporary files
 *.tmp
+*.temp
 *.swp
 *.swo
+.cache/
+.parcel-cache/
+.vite/
+coverage/
+build/
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# Local debug/tree artifacts
+Tree.py
+tree.md
+tree.txt
+Academic-Thesis/Tree.py
+Academic-Thesis/tree.md
+Academic-Thesis/serialmoniter.md
+Academic-Thesis/treminaltest.txt
+Academic-Thesis/references/references_old.bib
+
+# Local copied/generated thesis artifacts
+Thesis/Academic-Thesis/
+Thesis/ai_detection_report/
+Thesis/*.aux
+Thesis/*.bbl
+Thesis/*.blg
+Thesis/*.fdb_latexmk
+Thesis/*.fls
+Thesis/*.lof
+Thesis/*.log
+Thesis/*.lot
+Thesis/*.out
+Thesis/*.toc
+Thesis/*.synctex.gz
+Thesis/*.pdf
