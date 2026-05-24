@@ -6,6 +6,10 @@ export interface ApiError {
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 
+export interface ApiRequestOptions {
+  timeoutMs?: number;
+}
+
 const baseUrl = () => {
   const configured = import.meta.env.VITE_API_BASE_URL;
   return configured ? configured.replace(/\/$/, '') : '';
@@ -26,9 +30,10 @@ function buildUrl(path: string, params?: Record<string, unknown>) {
   return url.toString();
 }
 
-async function request<T>(method: string, path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown, params?: Record<string, unknown>, options: ApiRequestOptions = {}): Promise<T> {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(buildUrl(path, params), {
@@ -67,22 +72,22 @@ async function request<T>(method: string, path: string, body?: unknown, params?:
   }
 }
 
-export function apiGet<T>(path: string, params?: Record<string, unknown>) {
-  return request<T>('GET', path, undefined, params);
+export function apiGet<T>(path: string, params?: Record<string, unknown>, options?: ApiRequestOptions) {
+  return request<T>('GET', path, undefined, params, options);
 }
 
-export function apiPost<T>(path: string, body: unknown) {
-  return request<T>('POST', path, body);
+export function apiPost<T>(path: string, body: unknown, options?: ApiRequestOptions) {
+  return request<T>('POST', path, body, undefined, options);
 }
 
-export function apiPatch<T>(path: string, body: unknown) {
-  return request<T>('PATCH', path, body);
+export function apiPatch<T>(path: string, body: unknown, options?: ApiRequestOptions) {
+  return request<T>('PATCH', path, body, undefined, options);
 }
 
-export function apiDelete<T>(path: string) {
-  return request<T>('DELETE', path);
+export function apiDelete<T>(path: string, options?: ApiRequestOptions) {
+  return request<T>('DELETE', path, undefined, undefined, options);
 }
 
-export function apiPut<T>(path: string, body: unknown) {
-  return request<T>('PUT', path, body);
+export function apiPut<T>(path: string, body: unknown, options?: ApiRequestOptions) {
+  return request<T>('PUT', path, body, undefined, options);
 }

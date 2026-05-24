@@ -1,7 +1,9 @@
 import { apiPost } from './client';
 import type { GeminiInsightInput, GeminiInsightOutput, GeminiMultiSnapshotInsightInput } from '../types/gemini';
 
-const REQUEST_TIMEOUT_MS = 30000;
+// Gemini report generation calls an external AI provider through the backend,
+// so it can take longer than normal dashboard reads.
+const GEMINI_REQUEST_TIMEOUT_MS = 45000;
 
 function isValidInsightOutput(payload: unknown): payload is GeminiInsightOutput {
   if (!payload || typeof payload !== 'object') return false;
@@ -16,10 +18,7 @@ function isValidInsightOutput(payload: unknown): payload is GeminiInsightOutput 
 }
 
 export async function generateGeminiInsight(input: GeminiInsightInput | GeminiMultiSnapshotInsightInput): Promise<GeminiInsightOutput> {
-  const response = await Promise.race([
-    apiPost<unknown>('/api/v1/ai/gemini/insight', { input }),
-    new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Gemini request timed out after 30s.')), REQUEST_TIMEOUT_MS)),
-  ]);
+  const response = await apiPost<unknown>('/api/v1/ai/gemini/insight', { input }, { timeoutMs: GEMINI_REQUEST_TIMEOUT_MS });
 
   if (!isValidInsightOutput(response)) {
     throw new Error('Gemini proxy returned an invalid insight response shape.');

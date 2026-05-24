@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { generateGeminiInsight } from '../api/gemini.api';
+import type { ApiError } from '../api/client';
 import type { GeminiInsightInput, GeminiMultiSnapshotInsightInput } from '../types/gemini';
 
 interface UseGeminiInsightOptions {
@@ -24,6 +25,9 @@ export function useGeminiInsight(input: GeminiInsightInput | GeminiMultiSnapshot
     isLoading: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error instanceof Error ? mutation.error.message : mutation.error ? String(mutation.error) : null,
+    apiError: mutation.error && typeof mutation.error === 'object' && 'status' in mutation.error
+      ? mutation.error as ApiError
+      : null,
     generate: mutation.mutateAsync,
     refetch: mutation.mutateAsync,
     clear: mutation.reset,
