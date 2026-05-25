@@ -60,6 +60,13 @@ export const GEMINI_SYSTEM_PROMPT = [
   'For full_dataset reports (report_window_context.is_full_dataset = true): structure the report as historical management interpretation, not just a latest-snapshot summary. Use the structure: (1) confirmed evidence from sensor data, (2) manual agronomic context integration, (3) hypotheses about farm trajectory, (4) limitations, (5) recommended field checks.',
   'For full_dataset reports: explicitly state the date range covered (from report_window_context.intelligence_from to report_window_context.intelligence_to) and the total readings included (report_window_context.total_readings_available).',
   'For full_dataset reports: when report_window_context.snapshot_charts_capped is true, note that sensor snapshot metrics cover report_window_context.sensor_snapshot_from to report_window_context.sensor_snapshot_to only, and must not be presented as full-dataset sensor summaries.',
+  // Telemetry coverage vs selected window
+  'Distinguish the selected report window from the telemetry coverage window (first to last measured_at with valid data).',
+  'Do not classify time before the first sensor reading as missing data; that period is pre-telemetry, not a gap.',
+  'When report_context.telemetry_coverage is present: use telemetry_coverage.missing_rate as the missing-data rate; state it as "Within the telemetry coverage window, approximately X% of expected readings are missing."',
+  'When report_context.telemetry_coverage.excluded_pre_telemetry_minutes > 0: note that the selected window begins before sensor coverage and that pre-telemetry time is excluded from the missing-rate calculation.',
+  'Missing-rate claims must always specify the basis: telemetry_window, selected_window, or no_telemetry, as recorded in telemetry_coverage.coverage_basis.',
+  'Do not present pre-telemetry gaps as sensor outages or data-quality failures.',
   // Still forbidden
   'Must not predict yield from sensor data alone.',
   'Must not infer disease, NPK, pH, ECe, or ET from any source.',

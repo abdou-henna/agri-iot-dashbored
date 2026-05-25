@@ -1,5 +1,5 @@
 import type { AnalyticsSnapshot } from '../../types/analytics';
-import type { GeminiAnalysisType, GeminiInsightInput, GeminiMultiSnapshotInsightInput, GeminiMultiSnapshotReportContext, GeminiSnapshotSummary } from '../../types/gemini';
+import type { GeminiAnalysisType, GeminiInsightInput, GeminiMultiSnapshotInsightInput, GeminiMultiSnapshotReportContext, GeminiSnapshotSummary, GeminiTelemetryCoverage } from '../../types/gemini';
 import { GEMINI_FORBIDDEN_CLAIMS } from '../../config/geminiPrompts';
 import { buildGeminiInsightInput } from './geminiMapper';
 import { evaluateGeminiMultiSnapshotReliabilityGate, MIN_USABLE_READINGS_FOR_DEMO } from './geminiReliabilityGate';
@@ -54,7 +54,6 @@ function buildMultiSnapshotReportContext(
   }));
 
   const usableCount = usability.filter((u) => u.usable).length;
-  const presentCount = snapshotEntries.filter((e) => Boolean(e.snapshot)).length;
   const totalCount = snapshotEntries.length;
 
   const completeness: GeminiMultiSnapshotReportContext['comparison_completeness'] =
@@ -63,6 +62,39 @@ function buildMultiSnapshotReportContext(
     : 'full';
 
   const isDemo = reportMode === 'small_dataset_demo';
+
+  // Build combined telemetry coverage across all valid snapshots
+  const validSnaps = snapshotEntries.filter((e): e is { scopeLabel: string; snapshot: AnalyticsSnapshot } => Boolean(e.snapshot));
+  let telemetryCoverage: GeminiTelemetryCoverage | undefined;
+  if (validSnaps.length > 0) {
+    const coverageStarts = validSnaps
+      .map((e) => e.snapshot.quality.telemetry_coverage_start)
+      .filter((s): s is string => s !== undefined);
+    const coverageEnds = validSnaps
+      .map((e) => e.snapshot.quality.telemetry_coverage_end)
+      .filter((s): s is string => s !== undefined);
+    const firstSnap = validSnaps[0].snapshot;
+    const totalExpected = validSnaps.reduce((sum, e) => sum + (e.snapshot.quality.expected_count ?? 0), 0);
+    const totalValid = validSnaps.reduce((sum, e) => sum + (e.snapshot.quality.valid_count ?? 0), 0);
+    const totalMissing = validSnaps.reduce((sum, e) => sum + (e.snapshot.quality.missing_count ?? 0), 0);
+    const maxExcluded = validSnaps.reduce((max, e) => Math.max(max, e.snapshot.quality.excluded_pre_telemetry_minutes ?? 0), 0);
+    const hasTelemetryWindow = validSnaps.some((e) => e.snapshot.quality.coverage_basis === 'telemetry_window');
+
+    if (firstSnap.quality.coverage_basis) {
+      telemetryCoverage = {
+        coverage_start: coverageStarts.length > 0 ? [...coverageStarts].sort()[0] : undefined,
+        coverage_end: coverageEnds.length > 0 ? [...coverageEnds].sort().reverse()[0] : undefined,
+        selected_window_start: firstSnap.quality.selected_window_start ?? firstSnap.identity.window_start,
+        selected_window_end: firstSnap.quality.selected_window_end ?? firstSnap.identity.window_end,
+        coverage_basis: hasTelemetryWindow ? 'telemetry_window' : 'selected_window',
+        expected_count: totalExpected,
+        valid_count: totalValid,
+        missing_count: totalMissing,
+        missing_rate: totalExpected > 0 ? totalMissing / totalExpected : 0,
+        excluded_pre_telemetry_minutes: maxExcluded,
+      };
+    }
+  }
 
   return {
     report_mode: reportMode,
@@ -84,6 +116,7 @@ function buildMultiSnapshotReportContext(
     usable_snapshot_count: usableCount,
     snapshot_usability: usability,
     comparison_completeness: completeness,
+    telemetry_coverage: telemetryCoverage,
   };
 }
 
@@ -106,6 +139,9 @@ export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, s
     'AI must not compute new trusted metrics.',
     'AI must not override deterministic alerts.',
     ...snapshots.filter((s) => !s.snapshot).map((s) => `${s.scopeLabel} snapshot is unavailable and must be treated as a limitation.`),
+    ...valid
+      .filter((e) => (e.snapshot.quality.excluded_pre_telemetry_minutes ?? 0) > 0)
+      .map((e) => `${e.scopeLabel}: selected window starts before telemetry coverage; pre-telemetry time is excluded from missing-rate calculation.`),
   ];
 
   return {

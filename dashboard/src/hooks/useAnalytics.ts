@@ -5,13 +5,13 @@ import { useReadingAggregates } from './useReadingAggregates';
 import { useReadings } from './useReadings';
 import {
   aggregateReadings,
-  calculateMissingPercentage,
   cleanReadings,
   detectDuplicateReadings,
   detectFlatline,
   detectSpikeOrStep,
   physicalRangeFlags,
 } from '../utils/analytics';
+import { buildTelemetryCoverageSummary } from '../utils/analytics/telemetryCoverage';
 
 interface UseAnalyticsParams {
   node_id: 'MAIN' | 'N2' | 'N3';
@@ -51,12 +51,11 @@ export function useAnalytics({ node_id, metric, from, to, bucket, effectiveFrom,
     return flags;
   }, [cleanedReadings, metric]);
 
-  const missingPct = useMemo(() => {
-    const durationMs = Math.max(0, Date.parse(to) - Date.parse(queryFrom));
-    const expectedCount = Math.floor(durationMs / (10 * 60 * 1000));
-    const validCount = cleanedReadings.filter((reading) => reading[metric] != null).length;
-    return calculateMissingPercentage(expectedCount, validCount);
-  }, [cleanedReadings, metric, queryFrom, to]);
+  const telemetryCoverage = useMemo(
+    () => buildTelemetryCoverageSummary({ readings: cleanedReadings, metric, selectedFrom: queryFrom, selectedTo: to }),
+    [cleanedReadings, metric, queryFrom, to],
+  );
+  const missingPct = telemetryCoverage.missing_rate;
 
   const derivedAggregates = useMemo(() => {
     if (aggregateMode !== 'derived') return [];
@@ -74,6 +73,7 @@ export function useAnalytics({ node_id, metric, from, to, bucket, effectiveFrom,
     duplicateMeta,
     cleanedReadings,
     missingPct,
+    telemetryCoverage,
     effectiveFrom: queryFrom,
     isLoading: readingsQuery.isLoading || (aggregateMode === 'api' && aggregateQuery.isLoading),
     isError: readingsQuery.isError || (aggregateMode === 'api' && aggregateQuery.isError),

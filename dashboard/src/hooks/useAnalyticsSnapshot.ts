@@ -26,19 +26,28 @@ export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effect
 
   const snapshot = useMemo<AnalyticsSnapshot>(() => {
     const nowIso = new Date().toISOString();
-    const missingCount = analytics.aggregates.reduce((sum, point) => sum + (point.missing_count ?? 0), 0);
+    const aggregateMissingCount = analytics.aggregates.reduce((sum, point) => sum + (point.missing_count ?? 0), 0);
     const duplicateCount = analytics.duplicateMeta.reduce((sum, item) => sum + item.count, 0) - analytics.duplicateMeta.length;
     const conflictCount = analytics.duplicateMeta.filter((item) => item.conflict).length;
-    const validCount = analytics.cleanedReadings.filter((reading) => reading[metric as AnalyticsMetricName] != null).length;
     const cursor = getSensorCursorFromReadings(analytics.cleanedReadings);
 
     const reliability = includeReliability ? reliabilityQuery.byNode.map.get(node_id) : undefined;
     const alerts = includeAlerts ? alertEvaluationsQuery.evaluations : undefined;
+    const coverage = analytics.telemetryCoverage;
 
     const quality = {
       processed_count: analytics.cleanedReadings.length,
-      valid_count: validCount,
-      missing_count: missingCount,
+      valid_count: coverage.valid_count,
+      missing_count: coverage.missing_count,
+      missing_rate: coverage.missing_rate,
+      expected_count: coverage.expected_count,
+      telemetry_coverage_start: coverage.telemetry_coverage_start,
+      telemetry_coverage_end: coverage.telemetry_coverage_end,
+      selected_window_start: coverage.selected_window_start,
+      selected_window_end: coverage.selected_window_end,
+      coverage_basis: coverage.coverage_basis,
+      excluded_pre_telemetry_minutes: coverage.excluded_pre_telemetry_minutes,
+      aggregate_missing_count: aggregateMissingCount,
       duplicate_count: Math.max(0, duplicateCount),
       conflict_count: conflictCount,
       qc_flag_count: analytics.qcFlags.length,

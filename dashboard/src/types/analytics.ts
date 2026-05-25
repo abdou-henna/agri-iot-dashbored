@@ -126,7 +126,21 @@ export interface SnapshotQualitySummary {
   expected_count?: number;
   processed_count: number;
   valid_count: number;
+  /** Telemetry-window-based missing count (excludes pre-telemetry period). */
   missing_count: number;
+  /** Telemetry-window-based missing rate (0–1). */
+  missing_rate?: number;
+  /** Oldest measured_at with a valid metric value in this window. */
+  telemetry_coverage_start?: string;
+  /** Newest measured_at with a valid metric value in this window. */
+  telemetry_coverage_end?: string;
+  selected_window_start?: string;
+  selected_window_end?: string;
+  coverage_basis?: 'telemetry_window' | 'selected_window' | 'no_telemetry';
+  /** Minutes at the start of the selected window before any telemetry arrived. */
+  excluded_pre_telemetry_minutes?: number;
+  /** Original aggregate-bucket missing count from the API response (preserved separately). */
+  aggregate_missing_count?: number;
   duplicate_count: number;
   conflict_count: number;
   qc_flag_count: number;

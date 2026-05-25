@@ -5,8 +5,9 @@ import { useEvents } from './useEvents';
 import { useNodes } from './useNodes';
 import { useReadings } from './useReadings';
 import { useStatus } from './useStatus';
-import { calculateMissingPercentage, cleanReadings, detectFlatline, detectSpikeOrStep, physicalRangeFlags } from '../utils/analytics';
+import { cleanReadings, detectFlatline, detectSpikeOrStep, physicalRangeFlags } from '../utils/analytics';
 import { computeNodeReliabilityScore } from '../utils/analytics/reliability';
+import { buildTelemetryCoverageSummary, type TelemetryCoverageSummary } from '../utils/analytics/telemetryCoverage';
 
 const NODE_IDS: NodeId[] = ['MAIN', 'N2', 'N3'];
 
@@ -24,6 +25,7 @@ export interface ReliabilityScoreEntry extends ReliabilityScore {
     systemEventCount: number;
     avgRssi: number | null;
     avgSnr: number | null;
+    telemetryCoverage: TelemetryCoverageSummary;
   };
 }
 
@@ -59,10 +61,9 @@ export function useReliabilityScores({ from, to }: UseReliabilityScoresParams) {
         ...detectSpikeOrStep(nodeReadings, nodeId === 'N3' ? 'air_temperature_c' : 'soil_moisture_percent', SPIKE_THRESHOLDS[nodeId]),
       ];
 
-      const durationMs = Math.max(0, Date.parse(to) - Date.parse(from));
-      const expectedCount = Math.floor(durationMs / (10 * 60 * 1000));
-      const validCount = nodeReadings.filter((reading) => (nodeId === 'N3' ? reading.air_temperature_c : reading.soil_moisture_percent) != null).length;
-      const missingPct = calculateMissingPercentage(expectedCount, validCount);
+      const nodeMetric = nodeId === 'N3' ? 'air_temperature_c' as const : 'soil_moisture_percent' as const;
+      const coverage = buildTelemetryCoverageSummary({ readings: nodeReadings, metric: nodeMetric, selectedFrom: from, selectedTo: to });
+      const missingPct = coverage.missing_rate;
 
       const latestStatus = statusQuery.data?.latest_readings.find((item) => item.node_id === nodeId);
       const avgRssi = latestStatus?.rssi ?? null;
@@ -78,6 +79,7 @@ export function useReliabilityScores({ from, to }: UseReliabilityScoresParams) {
           systemEventCount: nodeEvents.length,
           avgRssi,
           avgSnr,
+          telemetryCoverage: coverage,
         },
       };
     });

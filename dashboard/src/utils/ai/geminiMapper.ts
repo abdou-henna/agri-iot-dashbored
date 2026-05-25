@@ -1,5 +1,5 @@
 import type { AnalyticsSnapshot } from '../../types/analytics';
-import type { GeminiAnalysisType, GeminiInsightInput, GeminiReportContext } from '../../types/gemini';
+import type { GeminiAnalysisType, GeminiInsightInput, GeminiReportContext, GeminiTelemetryCoverage } from '../../types/gemini';
 import { GEMINI_FORBIDDEN_CLAIMS } from '../../config/geminiPrompts';
 import { evaluateGeminiReliabilityGate, MIN_USABLE_READINGS_FOR_DEMO } from './geminiReliabilityGate';
 
@@ -34,6 +34,22 @@ function buildReportContext(snapshot: AnalyticsSnapshot, reportMode: GeminiRepor
 
   const isDemo = reportMode === 'small_dataset_demo';
 
+  let telemetryCoverage: GeminiTelemetryCoverage | undefined;
+  if (snapshot.quality.coverage_basis) {
+    telemetryCoverage = {
+      coverage_start: snapshot.quality.telemetry_coverage_start,
+      coverage_end: snapshot.quality.telemetry_coverage_end,
+      selected_window_start: snapshot.quality.selected_window_start ?? snapshot.identity.window_start,
+      selected_window_end: snapshot.quality.selected_window_end ?? snapshot.identity.window_end,
+      coverage_basis: snapshot.quality.coverage_basis,
+      expected_count: snapshot.quality.expected_count ?? 0,
+      valid_count: validCount,
+      missing_count: missingCount,
+      missing_rate: snapshot.quality.missing_rate ?? 0,
+      excluded_pre_telemetry_minutes: snapshot.quality.excluded_pre_telemetry_minutes ?? 0,
+    };
+  }
+
   return {
     report_mode: reportMode,
     purpose: isDemo
@@ -53,20 +69,28 @@ function buildReportContext(snapshot: AnalyticsSnapshot, reportMode: GeminiRepor
     interpretation_style: isDemo
       ? 'exploratory_with_caveats'
       : 'standard_agronomic',
+    telemetry_coverage: telemetryCoverage,
   };
 }
 
 export function buildGeminiInsightInput(snapshot: AnalyticsSnapshot, options: BuildGeminiInsightOptions = {}): GeminiInsightInput {
   const gate = evaluateGeminiReliabilityGate(snapshot);
   const reliabilityLevel = snapshot.quality.reliability_level ?? 'invalid';
-  const missingPct = snapshot.quality.expected_count
-    ? snapshot.quality.missing_count / Math.max(1, snapshot.quality.expected_count)
-    : 0;
+  // Use telemetry-window-based missing rate when available; fall back to ratio from quality counts.
+  const missingPct = snapshot.quality.missing_rate
+    ?? (snapshot.quality.expected_count
+      ? snapshot.quality.missing_count / Math.max(1, snapshot.quality.expected_count)
+      : 0);
 
   const limitations = new Set<string>(gate.limitations);
   if (reliabilityLevel === 'invalid') limitations.add('No reliable conclusion can be drawn.');
   if (reliabilityLevel === 'low') limitations.add('Snapshot reliability is low; interpretation confidence must remain limited.');
-  if (missingPct >= 0.2) limitations.add(`High missing data (${Math.round(missingPct * 100)}%) limits interpretation quality.`);
+  if ((snapshot.quality.excluded_pre_telemetry_minutes ?? 0) > 0) {
+    limitations.add('The selected window starts before telemetry coverage; pre-telemetry time is excluded from missing-rate calculation.');
+  }
+  if (missingPct >= 0.2) {
+    limitations.add(`Within the telemetry coverage window, missing telemetry is approximately ${Math.round(missingPct * 100)}%. Interpretation quality is limited.`);
+  }
   if (options.calibration_present === false) limitations.add('No calibration metadata; water-stress threshold claims are forbidden.');
 
   const features = (snapshot.payload.features ?? {}) as Record<string, unknown>;

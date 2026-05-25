@@ -23,6 +23,7 @@ const blockedReasonLabel: Record<string, string> = {
 export function GeminiReliabilityGate({ gate, snapshot }: GeminiReliabilityGateProps) {
   const expectedCount = snapshot?.quality.expected_count;
   const missingCount = snapshot?.quality.missing_count;
+  const excludedPreTelemetryMinutes = snapshot?.quality.excluded_pre_telemetry_minutes;
   const validCount = gate.valid_count;
   const processedCount = gate.processed_count;
 
@@ -49,7 +50,8 @@ export function GeminiReliabilityGate({ gate, snapshot }: GeminiReliabilityGateP
         <span className="rounded-full bg-white/70 px-2 py-1">Processed readings: {processedCount}</span>
         <span className="rounded-full bg-white/70 px-2 py-1">Reliability level: {snapshot?.quality.reliability_level ?? 'invalid'}</span>
         <span className="rounded-full bg-white/70 px-2 py-1">Reliability score: {snapshot?.quality.reliability_score ?? 'n/a'}</span>
-        {typeof expectedCount === 'number' ? <span className="rounded-full bg-white/70 px-2 py-1">Missing: {missingCount}/{expectedCount}</span> : null}
+        {typeof expectedCount === 'number' ? <span className="rounded-full bg-white/70 px-2 py-1">Telemetry missing within coverage: {missingCount}/{expectedCount}</span> : null}
+        {typeof excludedPreTelemetryMinutes === 'number' && excludedPreTelemetryMinutes > 0 ? <span className="rounded-full bg-white/70 px-2 py-1">Pre-telemetry excluded: {excludedPreTelemetryMinutes} min</span> : null}
         {typeof snapshot?.quality.qc_flag_count === 'number' ? <span className="rounded-full bg-white/70 px-2 py-1">QC flags: {snapshot.quality.qc_flag_count}</span> : null}
       </div>
     </div>

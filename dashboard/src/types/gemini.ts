@@ -70,6 +70,19 @@ export interface GeminiInsightOutput {
   limitations?: string[];
 }
 
+export interface GeminiTelemetryCoverage {
+  coverage_start?: string;
+  coverage_end?: string;
+  selected_window_start: string;
+  selected_window_end: string;
+  coverage_basis: 'telemetry_window' | 'selected_window' | 'no_telemetry';
+  expected_count: number;
+  valid_count: number;
+  missing_count: number;
+  missing_rate: number;
+  excluded_pre_telemetry_minutes: number;
+}
+
 export interface GeminiReportContext {
   report_mode: GeminiReportMode;
   purpose: string;
@@ -83,6 +96,7 @@ export interface GeminiReportContext {
   small_dataset_threshold: number;
   generation_policy: string;
   interpretation_style: string;
+  telemetry_coverage?: GeminiTelemetryCoverage;
 }
 
 export interface GeminiMultiSnapshotReportContext extends GeminiReportContext {

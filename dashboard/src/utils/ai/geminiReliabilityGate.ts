@@ -87,12 +87,12 @@ export function evaluateGeminiReliabilityGate(snapshot: AnalyticsSnapshot | null
   const reliabilityLevel: ReliabilityScore['level'] = snapshot.quality.reliability_level ?? 'invalid';
   const limitations: string[] = [];
 
-  const expectedCount = snapshot.quality.expected_count;
-  if (typeof expectedCount === 'number' && expectedCount > 0) {
-    const missingRatio = snapshot.quality.missing_count / expectedCount;
-    if (missingRatio >= 0.2) {
-      limitations.push('High missing data limits interpretation quality.');
-    }
+  const missingRate = snapshot.quality.missing_rate
+    ?? (typeof snapshot.quality.expected_count === 'number' && snapshot.quality.expected_count > 0
+      ? snapshot.quality.missing_count / snapshot.quality.expected_count
+      : undefined);
+  if (typeof missingRate === 'number' && missingRate >= 0.2) {
+    limitations.push(`Within the telemetry coverage window, missing telemetry is approximately ${Math.round(missingRate * 100)}%. Interpretation quality is limited.`);
   }
 
   if (snapshot.quality.qc_flag_count > 0) {
@@ -236,10 +236,12 @@ export function evaluateGeminiMultiSnapshotReliabilityGate(snapshots: Array<Anal
       hasMediumOrLow = true;
     }
 
-    const expectedCount = snapshot.quality.expected_count;
-    if (typeof expectedCount === 'number' && expectedCount > 0) {
-      const missingRatio = snapshot.quality.missing_count / expectedCount;
-      if (missingRatio >= 0.2) limitations.push(`${snapshot.identity.node_id ?? `Snapshot ${index + 1}`} has high missing data.`);
+    const snapshotMissingRate = snapshot.quality.missing_rate
+      ?? (typeof snapshot.quality.expected_count === 'number' && snapshot.quality.expected_count > 0
+        ? snapshot.quality.missing_count / snapshot.quality.expected_count
+        : undefined);
+    if (typeof snapshotMissingRate === 'number' && snapshotMissingRate >= 0.2) {
+      limitations.push(`${snapshot.identity.node_id ?? `Snapshot ${index + 1}`}: within telemetry coverage window, approximately ${Math.round(snapshotMissingRate * 100)}% missing telemetry.`);
     }
 
     if (snapshot.quality.qc_flag_count > 0) limitations.push(`${snapshot.identity.node_id ?? `Snapshot ${index + 1}`} has QC flags.`);
