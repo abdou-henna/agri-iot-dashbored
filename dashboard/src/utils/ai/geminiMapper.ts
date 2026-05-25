@@ -13,6 +13,14 @@ interface BuildGeminiInsightOptions {
   days_since_last_cut?: number | null;
   calibration_present?: boolean;
   agronomicIntelligence?: AgronomicIntelligenceOutput | null;
+  selectedWindow?: string;
+  isFullDataset?: boolean;
+  intelligenceFrom?: string;
+  intelligenceTo?: string;
+  snapshotFrom?: string;
+  snapshotTo?: string;
+  totalReadingsAvailable?: number;
+  readingsLimitUsed?: number;
 }
 
 function buildReportContext(snapshot: AnalyticsSnapshot, reportMode: GeminiReportContext['report_mode']): GeminiReportContext {
@@ -106,6 +114,20 @@ export function buildGeminiInsightInput(snapshot: AnalyticsSnapshot, options: Bu
       deterministic_alerts: options.agronomicIntelligence.deterministic_alerts.map((item) => ({ ...item })) as Array<Record<string, unknown>>,
       limitations: [...options.agronomicIntelligence.limitations],
       forbidden_claims: [...options.agronomicIntelligence.forbidden_claims],
+      manual_context_summary: options.agronomicIntelligence.manual_context_summary as unknown as Record<string, unknown> | undefined,
+      report_window_context: {
+        selected_window: options.selectedWindow ?? 'unknown',
+        is_full_dataset: options.isFullDataset ?? false,
+        intelligence_from: options.intelligenceFrom ?? snapshot.identity.window_start,
+        intelligence_to: options.intelligenceTo ?? snapshot.identity.window_end,
+        sensor_snapshot_from: options.snapshotFrom ?? snapshot.identity.window_start,
+        sensor_snapshot_to: options.snapshotTo ?? snapshot.identity.window_end,
+        snapshot_charts_capped: options.isFullDataset
+          ? (options.snapshotFrom !== options.intelligenceFrom || options.snapshotTo !== options.intelligenceTo)
+          : false,
+        total_readings_available: options.totalReadingsAvailable ?? null,
+        readings_limit_used: options.readingsLimitUsed ?? null,
+      },
     } : undefined,
     forbidden_claims: GEMINI_FORBIDDEN_CLAIMS,
   };

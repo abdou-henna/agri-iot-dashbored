@@ -3,6 +3,7 @@ import type { Bucket, DateRange, MetricKey, NodeId } from '../types/common';
 import type {
   ReadingAggregateResponse,
   ReadingsFilters,
+  ReadingsBounds,
   ReadingsResponse,
   SensorReading,
 } from '../types/readings';
@@ -24,4 +25,8 @@ export function getReadingAggregate(nodeId: NodeId, metric: MetricKey, range: Da
 
 export function getReadingByRecordId(recordId: string) {
   return apiGet<SensorReading & { raw_payload?: Record<string, unknown> | null }>(`/api/v1/readings/${recordId}`);
+}
+
+export function getReadingsBounds() {
+  return apiGet<ReadingsBounds>('/api/v1/readings/bounds');
 }

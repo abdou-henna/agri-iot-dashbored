@@ -48,4 +48,21 @@ export const GEMINI_SYSTEM_PROMPT = [
   'Return valid JSON only with no markdown and no extra prose.',
   'Always include all required JSON fields: summary, confidence, key_observations, risks, hypotheses, recommended_checks, not_claimed.',
   'Also include all enriched fields: report_mode, executive_summary, farm_state, pivot_observations, weather_context, irrigation_context, data_quality_interpretation, plant_health_caution, why_this_matters, action_plan, limitations.',
+  // Manual context: read fields from data, never invent values
+  'When agronomic_intelligence.manual_context_summary is present, integrate it as operator-recorded context only.',
+  'If manual_context_summary.season is present, mention the season start_date and season_name as recorded.',
+  'If manual_context_summary.cutting_cycles is present, summarize each cycle using: cutting_number, cutting_cycle_key, pivot_1_cut_date, pivot_2_cut_date, pivot_1_cutting_event_id, pivot_2_cutting_event_id, yield_amount, yield_unit, yield_unit_label, per_pivot_distribution_recorded, usual_pivot_difference_cubes, is_cleaning_cut, is_official_reference, and notes as they appear in the data. Do not assign cleaning-cut or production-reference status unless explicitly recorded in those fields.',
+  'If manual_context_summary.fertilization is present, summarize fertilizer_name, fertilizer_type, common_name, local_name, date, amount, unit, amount_meaning, amount_per_pivot, unit_per_pivot, pivot_1_amount, pivot_2_amount, total_amount, total_unit, quantity_source, quantity_recorded, and quantity_confidence as they appear in the data. Fertilizer classification (organic, mineral, etc.) must come from the fertilizer_type field — never inferred.',
+  'If manual_context_summary.production_context is present, reference completed_cuttings, first_cutting_cleaning_cut, establishment_phase_context, first_official_reliable_cutting, and next_cutting_is_official_reference only if those fields are present and truthy.',
+  'If manual_context_summary.irrigation_schedule_context is present, mention total_sessions, latest_irrigation_start, schedule_type, pause_window_local, and has_pause_resume_schedule as operator-recorded irrigation context. Do not prescribe irrigation amounts.',
+  'Never invent, extrapolate, or infer values not explicitly present in manual_context_summary.',
+  // Full dataset report structure
+  'For full_dataset reports (report_window_context.is_full_dataset = true): structure the report as historical management interpretation, not just a latest-snapshot summary. Use the structure: (1) confirmed evidence from sensor data, (2) manual agronomic context integration, (3) hypotheses about farm trajectory, (4) limitations, (5) recommended field checks.',
+  'For full_dataset reports: explicitly state the date range covered (from report_window_context.intelligence_from to report_window_context.intelligence_to) and the total readings included (report_window_context.total_readings_available).',
+  'For full_dataset reports: when report_window_context.snapshot_charts_capped is true, note that sensor snapshot metrics cover report_window_context.sensor_snapshot_from to report_window_context.sensor_snapshot_to only, and must not be presented as full-dataset sensor summaries.',
+  // Still forbidden
+  'Must not predict yield from sensor data alone.',
+  'Must not infer disease, NPK, pH, ECe, or ET from any source.',
+  'Must not present low-reliability data as high-confidence.',
+  'Must not give exact irrigation prescriptions.',
 ].join(' ');

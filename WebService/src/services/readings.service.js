@@ -113,6 +113,18 @@ class ReadingsService {
     return result.rows;
   }
 
+  async getReadingsBounds() {
+    const pool = getPool();
+    const result = await pool.query(`
+      SELECT
+        MIN(measured_at) AS min_measured_at,
+        MAX(measured_at) AS max_measured_at,
+        COUNT(*)::int AS total_readings
+      FROM sensor_readings
+    `);
+    return result.rows[0] ?? null;
+  }
+
   async getReadingByRecordId(recordId) {
     const pool = getPool();
     const query = `

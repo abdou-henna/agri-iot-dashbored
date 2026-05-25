@@ -128,6 +128,8 @@ export interface GeminiInsightInput {
     deterministic_alerts: Array<Record<string, unknown>>;
     limitations: string[];
     forbidden_claims: string[];
+    manual_context_summary?: Record<string, unknown>;
+    report_window_context?: Record<string, unknown>;
   };
   forbidden_claims: GeminiForbiddenClaim[];
 }
@@ -167,6 +169,7 @@ export interface GeminiMultiSnapshotInsightInput {
   forbidden_claims: GeminiForbiddenClaim[];
   agronomic_intelligence?: GeminiInsightInput['agronomic_intelligence'];
 }
+
 export interface GeminiInsightRequestState {
   insight: GeminiInsightOutput | null;
   isLoading: boolean;

@@ -4,12 +4,13 @@ import { GeminiInsightPanel } from '../../components/ai/GeminiInsightPanel';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/feedback/States';
 import { useAgronomicInsights } from '../../hooks/useAgronomicInsights';
 import { useAnalyticsSnapshot } from '../../hooks/useAnalyticsSnapshot';
-import { useAgronomicIntelligence } from '../../hooks/useAgronomicIntelligence';
+import { useAgronomicIntelligence, REPORT_READINGS_LIMIT } from '../../hooks/useAgronomicIntelligence';
 import { AgronomicIntelligencePanel } from '../../components/agronomy/AgronomicIntelligencePanel';
 import { useTimeZone } from '../../hooks/useTimeZone';
 import { ProcessedDataViewerDrawer } from '../../components/analytics/ProcessedDataViewerDrawer';
 import type { GeminiAnalysisType } from '../../types/gemini';
 import { formatDisplayTime, rangeForPreset } from '../../utils/time';
+import { useReadingsBounds } from '../../hooks/useReadings';
 
 function DeltaLabel({ value }: { value: number }) {
   const sign = value > 0 ? '+' : '';
@@ -19,13 +20,32 @@ function DeltaLabel({ value }: { value: number }) {
 export function InsightsPage() {
   const insights = useAgronomicInsights();
   const { timezone } = useTimeZone();
-  const agronomicIntel = useAgronomicIntelligence();
   const [selectedScope, setSelectedScope] = useState<GeminiScopeKey>('pivot_1_main');
   const [selectedWindow, setSelectedWindow] = useState<GeminiWindowKey>('7d');
   const [selectedAnalysisType, setSelectedAnalysisType] = useState<GeminiAnalysisType>('weekly_summary');
 
+  const boundsQuery = useReadingsBounds();
+  const isFullDataset = selectedWindow === 'all';
+
   const selectedScopeOption = getGeminiScopeOption(selectedScope);
-  const range = useMemo(() => {
+
+  // intelligenceRange: full bounds when window=all, otherwise preset
+  const intelligenceRange = useMemo(() => {
+    if (isFullDataset) {
+      if (boundsQuery.data?.min_measured_at && boundsQuery.data?.max_measured_at) {
+        return { from: boundsQuery.data.min_measured_at, to: boundsQuery.data.max_measured_at };
+      }
+      return null;
+    }
+    if (selectedWindow === '7d') return rangeForPreset('7d');
+    const to = new Date();
+    const from = new Date(to);
+    from.setDate(from.getDate() - 30);
+    return { from: from.toISOString(), to: to.toISOString() };
+  }, [boundsQuery.data, isFullDataset, selectedWindow]);
+
+  // snapshotRange: always ≤30d — aggregate endpoint has a 31-day hard cap
+  const snapshotRange = useMemo(() => {
     if (selectedWindow === '7d') return rangeForPreset('7d');
     const to = new Date();
     const from = new Date(to);
@@ -33,20 +53,31 @@ export function InsightsPage() {
     return { from: from.toISOString(), to: to.toISOString() };
   }, [selectedWindow]);
 
+  const agronomicIntel = useAgronomicIntelligence({
+    from: intelligenceRange?.from,
+    to: intelligenceRange?.to,
+    selectedWindow,
+    readingsLimit: isFullDataset ? REPORT_READINGS_LIMIT : 1000,
+  });
+
   const snapshotState = useAnalyticsSnapshot({
     node_id: selectedScopeOption.node_id,
     metric: selectedScopeOption.metric,
-    from: range.from,
-    to: range.to,
+    from: snapshotRange.from,
+    to: snapshotRange.to,
     bucket: '1hour',
   });
 
-  const mainSoilSnapshotState = useAnalyticsSnapshot({ node_id: 'MAIN', metric: 'soil_moisture_percent', from: range.from, to: range.to, bucket: '1hour' });
-  const n2SoilSnapshotState = useAnalyticsSnapshot({ node_id: 'N2', metric: 'soil_moisture_percent', from: range.from, to: range.to, bucket: '1hour' });
-  const n3WeatherSnapshotState = useAnalyticsSnapshot({ node_id: 'N3', metric: 'air_temperature_c', from: range.from, to: range.to, bucket: '1hour' });
+  const mainSoilSnapshotState = useAnalyticsSnapshot({ node_id: 'MAIN', metric: 'soil_moisture_percent', from: snapshotRange.from, to: snapshotRange.to, bucket: '1hour' });
+  const n2SoilSnapshotState = useAnalyticsSnapshot({ node_id: 'N2', metric: 'soil_moisture_percent', from: snapshotRange.from, to: snapshotRange.to, bucket: '1hour' });
+  const n3WeatherSnapshotState = useAnalyticsSnapshot({ node_id: 'N3', metric: 'air_temperature_c', from: snapshotRange.from, to: snapshotRange.to, bucket: '1hour' });
 
   if (insights.isLoading) return <LoadingBlock label="Loading agronomic insights" />;
   if (insights.isError) return <ErrorBlock error={insights.error} onRetry={() => insights.refetch()} />;
+  if (isFullDataset && boundsQuery.isError) return <ErrorBlock error={boundsQuery.error} onRetry={() => void boundsQuery.refetch()} />;
+  if (isFullDataset && !boundsQuery.isLoading && !boundsQuery.data?.min_measured_at) {
+    return <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">No sensor readings found in the database — cannot determine full dataset bounds.</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -130,6 +161,15 @@ export function InsightsPage() {
         onAnalysisTypeChange={setSelectedAnalysisType}
       />
 
+      {isFullDataset && intelligenceRange && (
+        <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-300">
+          Full dataset: intelligence covers {boundsQuery.data?.total_readings?.toLocaleString()} readings from {intelligenceRange.from.slice(0, 10)} to {intelligenceRange.to.slice(0, 10)}. Snapshot charts are capped at the last 30 days.
+        </div>
+      )}
+      {isFullDataset && boundsQuery.isLoading && (
+        <div className="text-xs text-zinc-500">Loading dataset bounds…</div>
+      )}
+
       <GeminiInsightPanel
         snapshot={snapshotState.snapshot ?? null}
         comparisonSnapshots={[
@@ -143,6 +183,13 @@ export function InsightsPage() {
         windowLabel={selectedWindow}
         scopeLabel={selectedScopeOption.label}
         agronomicIntelligence={agronomicIntel.agronomicIntelligence}
+        isFullDataset={isFullDataset}
+        intelligenceFrom={intelligenceRange?.from}
+        intelligenceTo={intelligenceRange?.to}
+        snapshotFrom={snapshotRange.from}
+        snapshotTo={snapshotRange.to}
+        totalReadingsAvailable={boundsQuery.data?.total_readings}
+        readingsLimitUsed={isFullDataset ? REPORT_READINGS_LIMIT : 1000}
       />
     </div>
   );

@@ -59,6 +59,12 @@ export interface ReadingAggregateResponse {
   points: AggregatePoint[];
 }
 
+export interface ReadingsBounds {
+  min_measured_at: string | null;
+  max_measured_at: string | null;
+  total_readings: number;
+}
+
 export interface TimeSeriesPoint {
   ts: string;
   displayTime: string;

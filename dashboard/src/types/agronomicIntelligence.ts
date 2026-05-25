@@ -1,4 +1,5 @@
 import type { NodeId } from './common';
+import type { ManualAgronomicContextSummary } from '../utils/analytics/manualAgronomicContext';
 
 export type ConfidenceLevel = 'high' | 'medium' | 'low' | 'unknown';
 
@@ -65,4 +66,7 @@ export interface AgronomicIntelligenceOutput {
   deterministic_alerts: Array<{ title: string; severity: string; confidence: string; limitations: string[] }>;
   forbidden_claims: string[];
   limitations: string[];
+  manual_context_summary?: ManualAgronomicContextSummary;
 }
+
+export type { ManualAgronomicContextSummary };

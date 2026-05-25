@@ -1,7 +1,7 @@
 import type { GeminiAnalysisType } from '../../types/gemini';
 
 export type GeminiScopeKey = 'pivot_1_main' | 'pivot_2_remote' | 'weather' | 'farm_summary';
-export type GeminiWindowKey = '7d' | '30d';
+export type GeminiWindowKey = '7d' | '30d' | 'all';
 
 export interface GeminiScopeOption {
   key: GeminiScopeKey;
@@ -71,6 +71,7 @@ export function GeminiContextControls({
           >
             <option value="7d">7d</option>
             <option value="30d">30d</option>
+            <option value="all">Full dataset</option>
           </select>
         </label>
 

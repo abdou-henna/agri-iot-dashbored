@@ -10,6 +10,14 @@ interface BuildMultiSnapshotParams {
   timezone: string;
   snapshots: Array<{ scopeLabel: string; snapshot: AnalyticsSnapshot | null }>;
   agronomicIntelligence?: AgronomicIntelligenceOutput | null;
+  selectedWindow?: string;
+  isFullDataset?: boolean;
+  intelligenceFrom?: string;
+  intelligenceTo?: string;
+  snapshotFrom?: string;
+  snapshotTo?: string;
+  totalReadingsAvailable?: number;
+  readingsLimitUsed?: number;
 }
 
 function toSummary(scopeLabel: string, snapshot: AnalyticsSnapshot, timezone: string, agronomicIntelligence: AgronomicIntelligenceOutput | null): GeminiSnapshotSummary {
@@ -79,14 +87,14 @@ function buildMultiSnapshotReportContext(
   };
 }
 
-export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots, agronomicIntelligence }: BuildMultiSnapshotParams): GeminiInsightInput | GeminiMultiSnapshotInsightInput | null {
+export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots, agronomicIntelligence, selectedWindow, isFullDataset, intelligenceFrom, intelligenceTo, snapshotFrom, snapshotTo, totalReadingsAvailable, readingsLimitUsed }: BuildMultiSnapshotParams): GeminiInsightInput | GeminiMultiSnapshotInsightInput | null {
   const valid = snapshots.filter((entry): entry is { scopeLabel: string; snapshot: AnalyticsSnapshot } => Boolean(entry.snapshot));
   if (!valid.length) return null;
 
   const gate = evaluateGeminiMultiSnapshotReliabilityGate(snapshots.map((e) => e.snapshot));
 
   if (analysisType !== 'pivot_comparison' && analysisType !== 'farm_summary' && valid[0]?.snapshot) {
-    return buildGeminiInsightInput(valid[0].snapshot, { analysis_type: analysisType, timezone, agronomicIntelligence });
+    return buildGeminiInsightInput(valid[0].snapshot, { analysis_type: analysisType, timezone, agronomicIntelligence, selectedWindow, isFullDataset, intelligenceFrom, intelligenceTo, snapshotFrom, snapshotTo, totalReadingsAvailable, readingsLimitUsed });
   }
 
   const first = valid[0].snapshot;
@@ -138,6 +146,20 @@ export function buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, s
       deterministic_alerts: agronomicIntelligence.deterministic_alerts.map((item) => ({ ...item })) as Array<Record<string, unknown>>,
       limitations: [...agronomicIntelligence.limitations],
       forbidden_claims: [...agronomicIntelligence.forbidden_claims],
+      manual_context_summary: agronomicIntelligence.manual_context_summary as unknown as Record<string, unknown> | undefined,
+      report_window_context: {
+        selected_window: selectedWindow ?? 'unknown',
+        is_full_dataset: isFullDataset ?? false,
+        intelligence_from: intelligenceFrom ?? (valid[0]?.snapshot.identity.window_start ?? 'unknown'),
+        intelligence_to: intelligenceTo ?? (valid[valid.length - 1]?.snapshot.identity.window_end ?? 'unknown'),
+        sensor_snapshot_from: snapshotFrom ?? (valid[0]?.snapshot.identity.window_start ?? 'unknown'),
+        sensor_snapshot_to: snapshotTo ?? (valid[valid.length - 1]?.snapshot.identity.window_end ?? 'unknown'),
+        snapshot_charts_capped: isFullDataset
+          ? (snapshotFrom !== intelligenceFrom || snapshotTo !== intelligenceTo)
+          : false,
+        total_readings_available: totalReadingsAvailable ?? null,
+        readings_limit_used: readingsLimitUsed ?? null,
+      },
     } : undefined,
     forbidden_claims: GEMINI_FORBIDDEN_CLAIMS,
   };

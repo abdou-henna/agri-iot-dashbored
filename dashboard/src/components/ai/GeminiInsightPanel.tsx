@@ -17,6 +17,13 @@ interface GeminiInsightPanelProps {
   windowLabel: string;
   scopeLabel: string;
   agronomicIntelligence?: AgronomicIntelligenceOutput | null;
+  isFullDataset?: boolean;
+  intelligenceFrom?: string;
+  intelligenceTo?: string;
+  snapshotFrom?: string;
+  snapshotTo?: string;
+  totalReadingsAvailable?: number;
+  readingsLimitUsed?: number;
 }
 
 function renderList(items: string[]) {
@@ -206,7 +213,7 @@ function RichInsightContent({ insight }: { insight: GeminiInsightOutput }) {
   );
 }
 
-export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysisType, timezone = 'UTC', contextLabel, windowLabel, scopeLabel, agronomicIntelligence = null }: GeminiInsightPanelProps) {
+export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysisType, timezone = 'UTC', contextLabel, windowLabel, scopeLabel, agronomicIntelligence = null, isFullDataset = false, intelligenceFrom, intelligenceTo, snapshotFrom, snapshotTo, totalReadingsAvailable, readingsLimitUsed }: GeminiInsightPanelProps) {
   const isMulti = analysisType === 'pivot_comparison' || analysisType === 'farm_summary';
   const gate = useMemo(
     () => (isMulti ? evaluateGeminiMultiSnapshotReliabilityGate(comparisonSnapshots.map((item) => item.snapshot)) : evaluateGeminiReliabilityGate(snapshot)),
@@ -214,10 +221,10 @@ export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysi
   );
 
   const input = useMemo(() => {
-    if (isMulti) return buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots: comparisonSnapshots, agronomicIntelligence });
+    if (isMulti) return buildGeminiMultiSnapshotInsightInput({ analysisType, timezone, snapshots: comparisonSnapshots, agronomicIntelligence, selectedWindow: windowLabel, isFullDataset, intelligenceFrom, intelligenceTo, snapshotFrom, snapshotTo, totalReadingsAvailable, readingsLimitUsed });
     if (!snapshot) return null;
-    return buildGeminiInsightInput(snapshot, { analysis_type: analysisType, timezone, crop: 'alfalfa', season_status: 'unknown', calibration_present: false, agronomicIntelligence });
-  }, [agronomicIntelligence, analysisType, comparisonSnapshots, isMulti, snapshot, timezone]);
+    return buildGeminiInsightInput(snapshot, { analysis_type: analysisType, timezone, crop: 'alfalfa', season_status: 'unknown', calibration_present: false, agronomicIntelligence, selectedWindow: windowLabel, isFullDataset, intelligenceFrom, intelligenceTo, snapshotFrom, snapshotTo, totalReadingsAvailable, readingsLimitUsed });
+  }, [agronomicIntelligence, analysisType, comparisonSnapshots, intelligenceFrom, intelligenceTo, isFullDataset, isMulti, readingsLimitUsed, snapshot, snapshotFrom, snapshotTo, timezone, totalReadingsAvailable, windowLabel]);
 
   const gemini = useGeminiInsight(input);
   useEffect(() => { gemini.clear(); }, [analysisType, contextLabel, scopeLabel, windowLabel]);

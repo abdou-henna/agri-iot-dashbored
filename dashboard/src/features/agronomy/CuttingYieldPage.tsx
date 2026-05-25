@@ -62,17 +62,24 @@ export function CuttingYieldPage() {
         <option value="">Select cutting event</option>
         {sortedCuttings.map((cutting) => <option key={cutting.agro_event_id} value={cutting.agro_event_id}>{cutting.agro_event_id}</option>)}
       </select>
-      <input className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Yield amount" value={yieldAmount} onChange={(e) => setYieldAmount(e.target.value)} />
+      <label className="mt-2 block text-sm font-medium">Yield amount (alfalfa cubes)</label>
+      <input className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="e.g. 65" value={yieldAmount} onChange={(e) => setYieldAmount(e.target.value)} />
       <button className="mt-2 rounded-lg bg-emerald-600 px-3 py-2 text-white hover:bg-emerald-700" onClick={async () => {
         setFormError(null);
         if (!yieldCuttingId) return setFormError('Yield must reference a cutting_event.');
+        const selectedCutting = sortedCuttings.find((c) => c.agro_event_id === yieldCuttingId);
+        if (!selectedCutting) return setFormError('Selected cutting event not found.');
         const amount = Number(yieldAmount);
         if (!amount || amount <= 0) return setFormError('Yield amount must be > 0.');
-        await createYield({ target_scope: 'farm', started_at: new Date().toISOString(), confidence: 'exact', details: { cutting_event_id: yieldCuttingId, yield_amount: amount, yield_unit: 'kg' } });
+        await createYield({ target_scope: 'farm', started_at: selectedCutting.started_at, confidence: 'exact', details: { cutting_event_id: yieldCuttingId, yield_amount: amount, yield_unit: 'alfalfa_cube' } });
         setYieldAmount('');
       }}>Add yield record</button>
       {formError ? <div className="mt-2 text-sm text-red-600">{formError}</div> : null}
-      <div className="mt-3 space-y-2 text-sm">{yields.length ? yields.map((item) => <div key={item.agro_event_id} className="rounded bg-zinc-50 p-2">{item.agro_event_id}</div>) : 'No yield records yet.'}</div>
+      <div className="mt-3 space-y-2 text-sm">{yields.length ? yields.map((item) => {
+        const d = (item.details ?? {}) as { yield_amount?: number; yield_unit?: string; cutting_event_id?: string };
+        const unitLabel = d.yield_unit === 'alfalfa_cube' ? 'alfalfa cubes' : d.yield_unit === 'kg' ? 'kg (legacy)' : d.yield_unit ?? '';
+        return <div key={item.agro_event_id} className="rounded bg-zinc-50 p-2">{d.yield_amount} {unitLabel} · Cutting: {d.cutting_event_id ?? item.agro_event_id}</div>;
+      }) : 'No yield records yet.'}</div>
     </section>
   </div>;
 }

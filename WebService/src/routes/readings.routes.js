@@ -1,10 +1,13 @@
 import express from 'express';
-import { getReadings, getReadingAggregate, getReadingByRecordId } from '../controllers/readings.controller.js';
+import { getReadings, getReadingAggregate, getReadingByRecordId, getReadingsBounds } from '../controllers/readings.controller.js';
 
 const router = express.Router();
 
 // GET /api/v1/readings/aggregate
 router.get('/aggregate', getReadingAggregate);
+
+// GET /api/v1/readings/bounds — must be before /:record_id
+router.get('/bounds', getReadingsBounds);
 
 // GET /api/v1/readings
 router.get('/', getReadings);

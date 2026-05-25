@@ -1,5 +1,7 @@
 import { readingsService } from '../services/readings.service.js';
 
+const REPORT_READINGS_MAX = 10000;
+
 const allowedMetrics = new Set([
   'soil_temperature_c',
   'soil_moisture_percent',
@@ -55,7 +57,7 @@ export async function getReadings(req, res, next) {
       uploadId: upload_id,
       from: from ? new Date(from) : undefined,
       to: to ? new Date(to) : undefined,
-      limit: Math.min(parseInt(limit) || 100, 1000)
+      limit: Math.min(parseInt(limit) || 100, REPORT_READINGS_MAX)
     });
 
     res.json({
@@ -110,6 +112,19 @@ export async function getReadingAggregate(req, res, next) {
       from: fromDate.toISOString(),
       to: toDate.toISOString(),
       points
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getReadingsBounds(req, res, next) {
+  try {
+    const bounds = await readingsService.getReadingsBounds();
+    res.json({
+      min_measured_at: bounds?.min_measured_at ? new Date(bounds.min_measured_at).toISOString() : null,
+      max_measured_at: bounds?.max_measured_at ? new Date(bounds.max_measured_at).toISOString() : null,
+      total_readings: bounds?.total_readings ?? 0,
     });
   } catch (error) {
     next(error);
