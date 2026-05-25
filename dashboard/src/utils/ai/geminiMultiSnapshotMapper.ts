@@ -1,7 +1,7 @@
 import type { AnalyticsSnapshot } from '../../types/analytics';
 import type { GeminiAnalysisType, GeminiInsightInput, GeminiMultiSnapshotInsightInput, GeminiMultiSnapshotReportContext, GeminiSnapshotSummary, GeminiTelemetryCoverage } from '../../types/gemini';
 import { GEMINI_FORBIDDEN_CLAIMS } from '../../config/geminiPrompts';
-import { buildGeminiInsightInput } from './geminiMapper';
+import { buildGeminiInsightInput, minutesToHuman } from './geminiMapper';
 import { evaluateGeminiMultiSnapshotReliabilityGate, MIN_USABLE_READINGS_FOR_DEMO } from './geminiReliabilityGate';
 import type { AgronomicIntelligenceOutput } from '../../types/agronomicIntelligence';
 
@@ -92,6 +92,7 @@ function buildMultiSnapshotReportContext(
         missing_count: totalMissing,
         missing_rate: totalExpected > 0 ? totalMissing / totalExpected : 0,
         excluded_pre_telemetry_minutes: maxExcluded,
+        excluded_pre_telemetry_human: maxExcluded > 0 ? minutesToHuman(maxExcluded) : undefined,
       };
     }
   }

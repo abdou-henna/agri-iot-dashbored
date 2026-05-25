@@ -81,6 +81,10 @@ export interface GeminiTelemetryCoverage {
   missing_count: number;
   missing_rate: number;
   excluded_pre_telemetry_minutes: number;
+  /** Human-readable form of excluded_pre_telemetry_minutes, e.g. "28 days 17 hours". */
+  excluded_pre_telemetry_human?: string;
+  /** Human-readable duration of the current reporting gap (time since last reading), e.g. "3 hours 20 minutes". Only present when gap > 2 hours. */
+  current_reporting_gap_human?: string;
 }
 
 export interface GeminiReportContext {

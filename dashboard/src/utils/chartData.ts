@@ -8,7 +8,7 @@ export function toTimeSeriesPoints(response: ReadingAggregateResponse | undefine
     response?.points.map((point) => ({
       ts: point.bucket_start,
       displayTime: formatDisplayTime(point.bucket_start, { timezone }),
-      value: point.missing_count > 0 || point.avg === null ? null : point.avg,
+      value: point.avg === null ? null : point.avg,
       node_id: response.node_id,
       missingCount: point.missing_count,
     })) ?? []
@@ -20,9 +20,9 @@ export function toDailyBandPoints(response: ReadingAggregateResponse | undefined
     response?.points.map((point) => ({
       ts: point.bucket_start,
       displayDate: formatDisplayDate(point.bucket_start, timezone),
-      avg: point.missing_count > 0 || point.avg === null ? null : point.avg,
-      min: point.missing_count > 0 || point.min === null ? null : point.min,
-      max: point.missing_count > 0 || point.max === null ? null : point.max,
+      avg: point.avg,
+      min: point.min,
+      max: point.max,
     })) ?? []
   );
 }

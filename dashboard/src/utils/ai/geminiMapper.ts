@@ -23,6 +23,18 @@ interface BuildGeminiInsightOptions {
   readingsLimitUsed?: number;
 }
 
+export function minutesToHuman(minutes: number): string {
+  if (minutes <= 0) return '0 minutes';
+  const days = Math.floor(minutes / (24 * 60));
+  const hours = Math.floor((minutes % (24 * 60)) / 60);
+  const mins = minutes % 60;
+  if (days > 0 && hours > 0) return `${days} day${days !== 1 ? 's' : ''} ${hours} hour${hours !== 1 ? 's' : ''}`;
+  if (days > 0) return `${days} day${days !== 1 ? 's' : ''}`;
+  if (hours > 0 && mins > 0) return `${hours} hour${hours !== 1 ? 's' : ''} ${mins} minute${mins !== 1 ? 's' : ''}`;
+  if (hours > 0) return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+}
+
 function buildReportContext(snapshot: AnalyticsSnapshot, reportMode: GeminiReportContext['report_mode']): GeminiReportContext {
   const validCount = snapshot.quality.valid_count ?? 0;
   const processedCount = snapshot.quality.processed_count ?? 0;
@@ -36,6 +48,17 @@ function buildReportContext(snapshot: AnalyticsSnapshot, reportMode: GeminiRepor
 
   let telemetryCoverage: GeminiTelemetryCoverage | undefined;
   if (snapshot.quality.coverage_basis) {
+    const excludedMin = snapshot.quality.excluded_pre_telemetry_minutes ?? 0;
+
+    // Detect current reporting gap: time since last reading vs snapshot creation
+    let currentGapHuman: string | undefined;
+    if (snapshot.quality.telemetry_coverage_end) {
+      const gapMin = Math.round(
+        (Date.parse(snapshot.created_at) - Date.parse(snapshot.quality.telemetry_coverage_end)) / 60000,
+      );
+      if (gapMin > 120) currentGapHuman = minutesToHuman(gapMin);
+    }
+
     telemetryCoverage = {
       coverage_start: snapshot.quality.telemetry_coverage_start,
       coverage_end: snapshot.quality.telemetry_coverage_end,
@@ -46,7 +69,9 @@ function buildReportContext(snapshot: AnalyticsSnapshot, reportMode: GeminiRepor
       valid_count: validCount,
       missing_count: missingCount,
       missing_rate: snapshot.quality.missing_rate ?? 0,
-      excluded_pre_telemetry_minutes: snapshot.quality.excluded_pre_telemetry_minutes ?? 0,
+      excluded_pre_telemetry_minutes: excludedMin,
+      excluded_pre_telemetry_human: excludedMin > 0 ? minutesToHuman(excludedMin) : undefined,
+      current_reporting_gap_human: currentGapHuman,
     };
   }
 
@@ -85,11 +110,20 @@ export function buildGeminiInsightInput(snapshot: AnalyticsSnapshot, options: Bu
   const limitations = new Set<string>(gate.limitations);
   if (reliabilityLevel === 'invalid') limitations.add('No reliable conclusion can be drawn.');
   if (reliabilityLevel === 'low') limitations.add('Snapshot reliability is low; interpretation confidence must remain limited.');
-  if ((snapshot.quality.excluded_pre_telemetry_minutes ?? 0) > 0) {
-    limitations.add('The selected window starts before telemetry coverage; pre-telemetry time is excluded from missing-rate calculation.');
+  const excludedPreTelMin = snapshot.quality.excluded_pre_telemetry_minutes ?? 0;
+  if (excludedPreTelMin > 0) {
+    limitations.add(`The selected window starts ${minutesToHuman(excludedPreTelMin)} before telemetry coverage begins; pre-telemetry time is excluded from missing-rate calculation.`);
   }
   if (missingPct >= 0.2) {
     limitations.add(`Within the telemetry coverage window, missing telemetry is approximately ${Math.round(missingPct * 100)}%. Interpretation quality is limited.`);
+  }
+  if (snapshot.quality.telemetry_coverage_end) {
+    const gapMin = Math.round(
+      (Date.parse(snapshot.created_at) - Date.parse(snapshot.quality.telemetry_coverage_end)) / 60000,
+    );
+    if (gapMin > 120) {
+      limitations.add(`Current reporting gap: no new readings from ${snapshot.identity.node_id ?? 'this node'} for ${minutesToHuman(gapMin)}. This is a present gap, separate from historical coverage quality.`);
+    }
   }
   if (options.calibration_present === false) limitations.add('No calibration metadata; water-stress threshold claims are forbidden.');
 
