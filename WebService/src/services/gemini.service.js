@@ -1,8 +1,12 @@
 import { GEMINI_SYSTEM_PROMPT } from '../config/geminiPrompts.js';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const GEMINI_UPSTREAM_TIMEOUT_MS = 25_000;
-const MAX_ATTEMPTS = 3;
+const GEMINI_UPSTREAM_TIMEOUT_MS = 90_000;
+// HTTP errors (429/5xx): retry up to 3 attempts. Timeout/network: retry up to 2 attempts
+// (3× 90s = 270s is too long; 2× 90s = 180s is acceptable given the 150s frontend timeout
+// only applies to total round-trip, not just the upstream fetch).
+const HTTP_MAX_ATTEMPTS = 3;
+const TIMEOUT_MAX_ATTEMPTS = 2;
 // Delays before attempt 2 and attempt 3 (ms). No delay needed after the final attempt.
 const RETRY_DELAYS_MS = [1000, 2000];
 const RETRYABLE_HTTP_STATUSES = new Set([429, 500, 502, 503, 504]);
@@ -456,8 +460,7 @@ class GeminiService {
     const request_id = crypto.randomUUID();
     const startTime = Date.now();
 
-    console.info('[gemini] request start', { request_id, ...requestMeta, payload_size_bytes: JSON.stringify(input).length });
-
+    const payload_size_bytes = JSON.stringify(input).length;
     const requestBody = JSON.stringify({
       contents: [{ role: 'user', parts: [{ text: JSON.stringify(input) }] }],
       systemInstruction: { parts: [{ text: GEMINI_SYSTEM_PROMPT }] },
@@ -467,7 +470,9 @@ class GeminiService {
       },
     });
 
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    console.info('[gemini] request start', { request_id, ...requestMeta, payload_size_bytes, request_body_size_bytes: requestBody.length, timeout_ms: GEMINI_UPSTREAM_TIMEOUT_MS });
+
+    for (let attempt = 1; attempt <= HTTP_MAX_ATTEMPTS; attempt++) {
       const attemptStart = Date.now();
       console.info('[gemini] attempt start', { request_id, attempt });
 
@@ -486,15 +491,16 @@ class GeminiService {
         const duration_ms = Date.now() - attemptStart;
         const isTimeout = fetchError?.name === 'TimeoutError';
         const error_type = isTimeout ? 'timeout' : 'network';
-        const retryable = attempt < MAX_ATTEMPTS;
-        console.warn('[gemini] attempt error', { request_id, attempt, error_type, duration_ms, retryable });
+        const maxForType = isTimeout ? TIMEOUT_MAX_ATTEMPTS : HTTP_MAX_ATTEMPTS;
+        const retryable = attempt < maxForType;
+        console.warn('[gemini] attempt error', { request_id, attempt, error_type, timeout_ms: GEMINI_UPSTREAM_TIMEOUT_MS, duration_ms, retryable });
 
         if (retryable) {
           await sleep(RETRY_DELAYS_MS[attempt - 1] + jitter());
           continue;
         }
 
-        console.info('[gemini] request end', { request_id, success: false, attempts: attempt, total_duration_ms: Date.now() - startTime });
+        console.info('[gemini] request end', { request_id, success: false, error: error_type, attempts: attempt, total_duration_ms: Date.now() - startTime });
         if (isTimeout) {
           return { status: 503, error: 'ai_provider_timeout', message: 'Gemini did not respond in time. Try a smaller report window.', retryable: true, request_id };
         }
@@ -505,15 +511,15 @@ class GeminiService {
       console.info('[gemini] attempt response', { request_id, attempt, status: response.status, duration_ms });
 
       if (!response.ok) {
-        const shouldRetry = attempt < MAX_ATTEMPTS && isRetryableStatus(response.status);
-        console.warn('[gemini] attempt error', { request_id, attempt, error_type: 'http_error', duration_ms, retryable: shouldRetry, status: response.status });
+        const shouldRetry = attempt < HTTP_MAX_ATTEMPTS && isRetryableStatus(response.status);
+        console.warn('[gemini] attempt error', { request_id, attempt, error_type: 'http_error', timeout_ms: GEMINI_UPSTREAM_TIMEOUT_MS, duration_ms, retryable: shouldRetry, status: response.status });
 
         if (shouldRetry) {
           await sleep(RETRY_DELAYS_MS[attempt - 1] + jitter());
           continue;
         }
 
-        console.info('[gemini] request end', { request_id, success: false, attempts: attempt, total_duration_ms: Date.now() - startTime });
+        console.info('[gemini] request end', { request_id, success: false, error: 'http_error', attempts: attempt, total_duration_ms: Date.now() - startTime });
         if (isRetryableStatus(response.status)) {
           return { status: 503, error: 'ai_provider_unavailable', message: 'Gemini is temporarily unavailable. Please retry in a moment.', retryable: true, provider_status: response.status, request_id };
         }
@@ -564,7 +570,7 @@ class GeminiService {
     }
 
     // Unreachable: loop always returns, but satisfies static analysis
-    console.info('[gemini] request end', { request_id, success: false, attempts: MAX_ATTEMPTS, total_duration_ms: Date.now() - startTime });
+    console.info('[gemini] request end', { request_id, success: false, attempts: HTTP_MAX_ATTEMPTS, total_duration_ms: Date.now() - startTime });
     return { status: 503, error: 'ai_provider_unavailable', message: 'Gemini is temporarily unavailable. Please retry in a moment.', retryable: true, request_id };
   }
 }

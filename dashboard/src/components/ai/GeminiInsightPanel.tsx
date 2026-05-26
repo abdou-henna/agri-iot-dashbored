@@ -55,7 +55,7 @@ function getGeminiErrorDetails(error: ApiError | null): GeminiErrorDetails {
 
   let friendlyMessage: string;
   if (code === 'ai_provider_timeout' || code === 'gemini_timeout') {
-    friendlyMessage = 'Gemini did not respond in time. Try a smaller report window.';
+    friendlyMessage = 'Gemini needed more time than expected to generate this report. Please retry. If it persists, use a smaller report window.';
   } else if (code === 'ai_provider_unavailable') {
     friendlyMessage = 'Gemini is temporarily unavailable. Please try again in a moment.';
   } else if (error.status === 0) {

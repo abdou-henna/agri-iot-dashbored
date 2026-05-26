@@ -1,9 +1,9 @@
 import { apiPost } from './client';
 import type { GeminiInsightInput, GeminiInsightOutput, GeminiMultiSnapshotInsightInput } from '../types/gemini';
 
-// Gemini report generation calls an external AI provider through the backend,
-// so rich structured reports can take longer than normal dashboard reads.
-const GEMINI_REQUEST_TIMEOUT_MS = 90_000;
+// Gemini report generation calls an external AI provider through the backend.
+// Backend per-attempt timeout is 90s with up to 3 retries — allow generous margin.
+const GEMINI_REQUEST_TIMEOUT_MS = 150_000;
 
 function isValidInsightOutput(payload: unknown): payload is GeminiInsightOutput {
   if (!payload || typeof payload !== 'object') return false;

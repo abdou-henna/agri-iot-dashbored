@@ -17,7 +17,13 @@ export async function postGeminiInsight(req, res) {
 
   const result = await geminiService.generateInsight(input);
   if (result.error) {
-    return res.status(result.status).json({ error: result.error, message: result.message });
+    return res.status(result.status).json({
+      error: result.error,
+      message: result.message,
+      retryable: result.retryable ?? false,
+      provider_status: result.provider_status,
+      request_id: result.request_id,
+    });
   }
 
   return res.json(result.data);
