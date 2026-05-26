@@ -16,10 +16,11 @@ interface UseAnalyticsSnapshotParams {
   aggregateMode?: 'api' | 'derived';
   includeReliability?: boolean;
   includeAlerts?: boolean;
+  readingsLimit?: number;
 }
 
-export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode = 'api', includeReliability = true, includeAlerts = true }: UseAnalyticsSnapshotParams) {
-  const analytics = useAnalytics({ node_id, metric: metric as AnalyticsMetricName, from, to, bucket, effectiveFrom, aggregateMode });
+export function useAnalyticsSnapshot({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode = 'api', includeReliability = true, includeAlerts = true, readingsLimit }: UseAnalyticsSnapshotParams) {
+  const analytics = useAnalytics({ node_id, metric: metric as AnalyticsMetricName, from, to, bucket, effectiveFrom, aggregateMode, readingsLimit });
 
   const reliabilityQuery = useReliabilityScores({ from, to });
   const alertEvaluationsQuery = useAlertEvaluations({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode });

@@ -21,6 +21,7 @@ interface UseAnalyticsParams {
   bucket: Bucket;
   effectiveFrom?: string;
   aggregateMode?: 'api' | 'derived';
+  readingsLimit?: number;
 }
 
 const SPIKE_THRESHOLDS: Record<AnalyticsMetricName, number> = {
@@ -34,9 +35,9 @@ const SPIKE_THRESHOLDS: Record<AnalyticsMetricName, number> = {
   snr: 8,
 };
 
-export function useAnalytics({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode = 'api' }: UseAnalyticsParams) {
+export function useAnalytics({ node_id, metric, from, to, bucket, effectiveFrom, aggregateMode = 'api', readingsLimit = 1000 }: UseAnalyticsParams) {
   const queryFrom = effectiveFrom ?? from;
-  const readingsQuery = useReadings({ node_id, from: queryFrom, to });
+  const readingsQuery = useReadings({ node_id, from: queryFrom, to, limit: readingsLimit });
   const aggregateQuery = useReadingAggregates(node_id, metric, { from, to }, bucket, aggregateMode === 'api');
 
   const cleanedReadings = useMemo(() => cleanReadings(readingsQuery.data?.readings ?? [], new Date().toISOString()), [readingsQuery.data?.readings]);

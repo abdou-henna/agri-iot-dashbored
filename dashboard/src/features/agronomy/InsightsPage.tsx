@@ -60,17 +60,20 @@ export function InsightsPage() {
     readingsLimit: isFullDataset ? REPORT_READINGS_LIMIT : 1000,
   });
 
+  const snapshotReadingsLimit = isFullDataset ? REPORT_READINGS_LIMIT : 1000;
+
   const snapshotState = useAnalyticsSnapshot({
     node_id: selectedScopeOption.node_id,
     metric: selectedScopeOption.metric,
     from: snapshotRange.from,
     to: snapshotRange.to,
     bucket: '1hour',
+    readingsLimit: snapshotReadingsLimit,
   });
 
-  const mainSoilSnapshotState = useAnalyticsSnapshot({ node_id: 'MAIN', metric: 'soil_moisture_percent', from: snapshotRange.from, to: snapshotRange.to, bucket: '1hour' });
-  const n2SoilSnapshotState = useAnalyticsSnapshot({ node_id: 'N2', metric: 'soil_moisture_percent', from: snapshotRange.from, to: snapshotRange.to, bucket: '1hour' });
-  const n3WeatherSnapshotState = useAnalyticsSnapshot({ node_id: 'N3', metric: 'air_temperature_c', from: snapshotRange.from, to: snapshotRange.to, bucket: '1hour' });
+  const mainSoilSnapshotState = useAnalyticsSnapshot({ node_id: 'MAIN', metric: 'soil_moisture_percent', from: snapshotRange.from, to: snapshotRange.to, bucket: '1hour', readingsLimit: snapshotReadingsLimit });
+  const n2SoilSnapshotState = useAnalyticsSnapshot({ node_id: 'N2', metric: 'soil_moisture_percent', from: snapshotRange.from, to: snapshotRange.to, bucket: '1hour', readingsLimit: snapshotReadingsLimit });
+  const n3WeatherSnapshotState = useAnalyticsSnapshot({ node_id: 'N3', metric: 'air_temperature_c', from: snapshotRange.from, to: snapshotRange.to, bucket: '1hour', readingsLimit: snapshotReadingsLimit });
 
   if (insights.isLoading) return <LoadingBlock label="Loading agronomic insights" />;
   if (insights.isError) return <ErrorBlock error={insights.error} onRetry={() => insights.refetch()} />;

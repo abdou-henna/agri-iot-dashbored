@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useGeminiInsight } from '../../hooks/useGeminiInsight';
+import type { ApiError } from '../../api/client';
 import type { AnalyticsSnapshot } from '../../types/analytics';
 import type { GeminiActionPlanItem, GeminiAnalysisType, GeminiInsightOutput, GeminiPivotObservation } from '../../types/gemini';
 import type { AgronomicIntelligenceOutput } from '../../types/agronomicIntelligence';
@@ -31,22 +32,41 @@ function renderList(items: string[]) {
   return <ul className="mt-1 list-disc space-y-1 pl-5 text-zinc-700 dark:text-zinc-300">{items.map((item) => <li key={item}>{item}</li>)}</ul>;
 }
 
-function isFrontendTimeoutError(error: { status: number; message: string } | null) {
-  return error?.status === 0 && error.message.toLowerCase().includes('timed out');
+interface GeminiErrorDetails {
+  friendlyMessage: string;
+  requestId?: string;
+  providerStatus?: number;
+  retryable: boolean;
 }
 
-function isBackendGeminiTimeout(error: { status: number; message: string } | null) {
-  return error?.message === 'gemini_timeout';
-}
+function getGeminiErrorDetails(error: ApiError | null): GeminiErrorDetails {
+  if (!error) return { friendlyMessage: 'An unknown error occurred. Please retry.', retryable: false };
 
-function getGeminiErrorMessage(error: { status: number; message: string } | null) {
-  if (isBackendGeminiTimeout(error)) {
-    return 'Gemini took longer than the server timeout to produce the report. Please retry or reduce the analysis window.';
+  const details = typeof error.details === 'object' && error.details !== null
+    ? (error.details as Record<string, unknown>)
+    : {};
+
+  const retryable = Boolean(details.retryable) || error.status === 0 || error.status === 503;
+  const requestId = typeof details.request_id === 'string' ? details.request_id : undefined;
+  const providerStatus = typeof details.provider_status === 'number' ? details.provider_status : undefined;
+
+  // error.message is set to payload.error by client.ts (the error code string)
+  const code = error.message;
+
+  let friendlyMessage: string;
+  if (code === 'ai_provider_timeout' || code === 'gemini_timeout') {
+    friendlyMessage = 'Gemini did not respond in time. Try a smaller report window.';
+  } else if (code === 'ai_provider_unavailable') {
+    friendlyMessage = 'Gemini is temporarily unavailable. Please try again in a moment.';
+  } else if (error.status === 0) {
+    friendlyMessage = 'The AI report took longer than expected and the browser stopped waiting. Please retry or reduce the report scope/window.';
+  } else {
+    friendlyMessage = typeof details.message === 'string' && details.message
+      ? details.message
+      : 'Unable to generate the AI report due to a temporary service failure. Please retry later.';
   }
-  if (isFrontendTimeoutError(error)) {
-    return 'The AI report took longer than expected and the browser stopped waiting. Please retry or reduce the report scope/window.';
-  }
-  return 'Unable to generate interpretation due to a temporary proxy timeout or service failure. Please retry later.';
+
+  return { friendlyMessage, requestId, providerStatus, retryable };
 }
 
 function RichInsightContent({ insight }: { insight: GeminiInsightOutput }) {
@@ -230,6 +250,7 @@ export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysi
   useEffect(() => { gemini.clear(); }, [analysisType, contextLabel, scopeLabel, windowLabel]);
 
   const canGenerate = gate.canGenerate && !gemini.isLoading && Boolean(input);
+  const errorDetails = getGeminiErrorDetails(gemini.apiError);
   const displayedConfidence = gate.report_mode === 'small_dataset_demo' && gate.mode === 'caution' && gemini.insight?.confidence === 'high'
     ? 'medium'
     : (gemini.insight?.confidence ?? 'n/a');
@@ -259,11 +280,11 @@ export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysi
       <GeminiReliabilityGate gate={gate} snapshot={snapshot} />
 
       <div className="mb-4 flex flex-wrap gap-2">
-        <button type="button" className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void gemini.generate()} disabled={!canGenerate}>
+        <button type="button" className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => { gemini.generate().catch(() => {}); }} disabled={!canGenerate}>
           {gemini.isLoading ? 'Generating...' : 'Generate AI insight'}
         </button>
         {(gemini.isError || gemini.insight) ? (
-          <button type="button" className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800" onClick={() => void gemini.refetch()} disabled={!canGenerate}>
+          <button type="button" className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800" onClick={() => { gemini.refetch().catch(() => {}); }} disabled={!canGenerate}>
             Retry
           </button>
         ) : null}
@@ -279,7 +300,17 @@ export function GeminiInsightPanel({ snapshot, comparisonSnapshots = [], analysi
       {gate.mode === 'caution' && gemini.insight?.confidence === 'high' ? <div className="mb-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">Snapshot reliability caps practical confidence at medium for this demo report.</div> : null}
       {gemini.isError ? (
         <div className="mb-3 rounded-lg bg-zinc-50 p-3 text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-          {getGeminiErrorMessage(gemini.apiError)}
+          <p>{errorDetails.friendlyMessage}</p>
+          {(gemini.apiError?.message || errorDetails.requestId || errorDetails.providerStatus) ? (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300">Technical details</summary>
+              <div className="mt-1 space-y-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                {gemini.apiError?.message ? <p>Code: {gemini.apiError.message}</p> : null}
+                {errorDetails.providerStatus ? <p>Provider status: {errorDetails.providerStatus}</p> : null}
+                {errorDetails.requestId ? <p>Request ID: {errorDetails.requestId}</p> : null}
+              </div>
+            </details>
+          ) : null}
         </div>
       ) : null}
 

@@ -1,7 +1,11 @@
 import { GEMINI_SYSTEM_PROMPT } from '../config/geminiPrompts.js';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const GEMINI_UPSTREAM_TIMEOUT_MS = 60_000;
+const GEMINI_UPSTREAM_TIMEOUT_MS = 25_000;
+const MAX_ATTEMPTS = 3;
+// Delays before attempt 2 and attempt 3 (ms). No delay needed after the final attempt.
+const RETRY_DELAYS_MS = [1000, 2000];
+const RETRYABLE_HTTP_STATUSES = new Set([429, 500, 502, 503, 504]);
 
 const FORBIDDEN_KEYS = new Set([
   'raw_payload',
@@ -120,6 +124,18 @@ const GEMINI_INSIGHT_RESPONSE_SCHEMA = {
   required: ['summary', 'confidence', 'key_observations', 'risks', 'hypotheses', 'recommended_checks', 'not_claimed'],
 };
 
+function isRetryableStatus(status) {
+  return RETRYABLE_HTTP_STATUSES.has(status);
+}
+
+function jitter() {
+  return Math.floor(Math.random() * 500);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function normalizeConfidence(value, maxAllowed) {
   const normalized = CONFIDENCE_LEVELS.has(value) ? value : 'low';
   if (!maxAllowed) return normalized;
@@ -236,10 +252,10 @@ function extractReportMeta(input) {
 function getSafeRequestMeta(input) {
   const validCount = input?.report_context?.sample_size?.valid_count;
   return {
-    timeout_ms: GEMINI_UPSTREAM_TIMEOUT_MS,
     report_mode: input?.report_context?.report_mode ?? 'standard',
     analysis_type: input?.analysis_type ?? 'unknown',
     valid_count: typeof validCount === 'number' ? validCount : null,
+    timeout_ms: GEMINI_UPSTREAM_TIMEOUT_MS,
   };
 }
 
@@ -437,72 +453,119 @@ class GeminiService {
 
     const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
     const requestMeta = getSafeRequestMeta(input);
+    const request_id = crypto.randomUUID();
+    const startTime = Date.now();
 
-    let response;
-    try {
-      console.info('[gemini] request start', requestMeta);
-      response = await fetch(`${GEMINI_API_URL}/${model}:generateContent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-goog-api-key': apiKey,
-        },
-        signal: AbortSignal.timeout(GEMINI_UPSTREAM_TIMEOUT_MS),
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: JSON.stringify(input) }] }],
-          systemInstruction: { parts: [{ text: GEMINI_SYSTEM_PROMPT }] },
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: GEMINI_INSIGHT_RESPONSE_SCHEMA,
+    console.info('[gemini] request start', { request_id, ...requestMeta, payload_size_bytes: JSON.stringify(input).length });
+
+    const requestBody = JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: JSON.stringify(input) }] }],
+      systemInstruction: { parts: [{ text: GEMINI_SYSTEM_PROMPT }] },
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: GEMINI_INSIGHT_RESPONSE_SCHEMA,
+      },
+    });
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const attemptStart = Date.now();
+      console.info('[gemini] attempt start', { request_id, attempt });
+
+      let response;
+      try {
+        response = await fetch(`${GEMINI_API_URL}/${model}:generateContent`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-goog-api-key': apiKey,
           },
-        }),
-      });
-    } catch (error) {
-      if (error?.name === 'TimeoutError') {
-        console.warn('[gemini] upstream timeout', requestMeta);
-        return { status: 502, error: 'gemini_timeout', message: 'Gemini upstream timeout.' };
+          signal: AbortSignal.timeout(GEMINI_UPSTREAM_TIMEOUT_MS),
+          body: requestBody,
+        });
+      } catch (fetchError) {
+        const duration_ms = Date.now() - attemptStart;
+        const isTimeout = fetchError?.name === 'TimeoutError';
+        const error_type = isTimeout ? 'timeout' : 'network';
+        const retryable = attempt < MAX_ATTEMPTS;
+        console.warn('[gemini] attempt error', { request_id, attempt, error_type, duration_ms, retryable });
+
+        if (retryable) {
+          await sleep(RETRY_DELAYS_MS[attempt - 1] + jitter());
+          continue;
+        }
+
+        console.info('[gemini] request end', { request_id, success: false, attempts: attempt, total_duration_ms: Date.now() - startTime });
+        if (isTimeout) {
+          return { status: 503, error: 'ai_provider_timeout', message: 'Gemini did not respond in time. Try a smaller report window.', retryable: true, request_id };
+        }
+        return { status: 503, error: 'ai_provider_unavailable', message: 'Gemini is temporarily unavailable. Please retry in a moment.', retryable: true, request_id };
       }
-      return { status: 502, error: 'gemini_http_error', message: 'Failed to reach Gemini API.' };
+
+      const duration_ms = Date.now() - attemptStart;
+      console.info('[gemini] attempt response', { request_id, attempt, status: response.status, duration_ms });
+
+      if (!response.ok) {
+        const shouldRetry = attempt < MAX_ATTEMPTS && isRetryableStatus(response.status);
+        console.warn('[gemini] attempt error', { request_id, attempt, error_type: 'http_error', duration_ms, retryable: shouldRetry, status: response.status });
+
+        if (shouldRetry) {
+          await sleep(RETRY_DELAYS_MS[attempt - 1] + jitter());
+          continue;
+        }
+
+        console.info('[gemini] request end', { request_id, success: false, attempts: attempt, total_duration_ms: Date.now() - startTime });
+        if (isRetryableStatus(response.status)) {
+          return { status: 503, error: 'ai_provider_unavailable', message: 'Gemini is temporarily unavailable. Please retry in a moment.', retryable: true, provider_status: response.status, request_id };
+        }
+        return { status: 502, error: 'gemini_http_error', message: `Gemini API returned HTTP ${response.status}.`, request_id };
+      }
+
+      // 2xx response — parse and validate (no further retries)
+      let responseJson;
+      try {
+        responseJson = await response.json();
+      } catch {
+        console.info('[gemini] request end', { request_id, success: false, attempts: attempt, total_duration_ms: Date.now() - startTime });
+        return { status: 502, error: 'gemini_invalid_response', message: 'Gemini response is not valid JSON.', request_id };
+      }
+
+      const text = responseJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (typeof text !== 'string') {
+        console.info('[gemini] request end', { request_id, success: false, attempts: attempt, total_duration_ms: Date.now() - startTime });
+        return { status: 502, error: 'gemini_invalid_json', message: 'Gemini response did not include JSON text output.', request_id };
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        console.info('[gemini] request end', { request_id, success: false, attempts: attempt, total_duration_ms: Date.now() - startTime });
+        return { status: 502, error: 'gemini_invalid_json', message: 'Gemini output is not valid JSON.', request_id };
+      }
+
+      const normalized = normalizeGeminiInsightOutput(parsed, input);
+      if (!normalized || !isValidOutputShape(normalized)) {
+        console.warn('[gemini] invalid output shape', {
+          request_id,
+          hasSummary: typeof parsed?.summary === 'string',
+          hasConfidence: typeof parsed?.confidence === 'string',
+          hasKeyObservations: Array.isArray(parsed?.key_observations),
+          hasRisks: Array.isArray(parsed?.risks),
+          hasHypotheses: Array.isArray(parsed?.hypotheses),
+          hasRecommendedChecks: Array.isArray(parsed?.recommended_checks),
+          hasNotClaimed: Array.isArray(parsed?.not_claimed),
+        });
+        console.info('[gemini] request end', { request_id, success: false, attempts: attempt, total_duration_ms: Date.now() - startTime });
+        return { status: 502, error: 'gemini_invalid_shape', message: 'Gemini output is missing required fields.', request_id };
+      }
+
+      console.info('[gemini] request end', { request_id, success: true, attempts: attempt, total_duration_ms: Date.now() - startTime });
+      return { status: 200, data: normalized };
     }
 
-    if (!response.ok) {
-      return { status: 502, error: 'gemini_http_error', message: `Gemini API returned HTTP ${response.status}.` };
-    }
-
-    let responseJson;
-    try {
-      responseJson = await response.json();
-    } catch {
-      return { status: 502, error: 'gemini_invalid_response', message: 'Gemini response is not valid JSON.' };
-    }
-
-    const text = responseJson?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (typeof text !== 'string') {
-      return { status: 502, error: 'gemini_invalid_json', message: 'Gemini response did not include JSON text output.' };
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      return { status: 502, error: 'gemini_invalid_json', message: 'Gemini output is not valid JSON.' };
-    }
-
-    const normalized = normalizeGeminiInsightOutput(parsed, input);
-    if (!normalized || !isValidOutputShape(normalized)) {
-      console.warn('[gemini] invalid output shape', {
-        hasSummary: typeof parsed?.summary === 'string',
-        hasConfidence: typeof parsed?.confidence === 'string',
-        hasKeyObservations: Array.isArray(parsed?.key_observations),
-        hasRisks: Array.isArray(parsed?.risks),
-        hasHypotheses: Array.isArray(parsed?.hypotheses),
-        hasRecommendedChecks: Array.isArray(parsed?.recommended_checks),
-        hasNotClaimed: Array.isArray(parsed?.not_claimed),
-      });
-      return { status: 502, error: 'gemini_invalid_shape', message: 'Gemini output is missing required fields.' };
-    }
-
-    return { status: 200, data: normalized };
+    // Unreachable: loop always returns, but satisfies static analysis
+    console.info('[gemini] request end', { request_id, success: false, attempts: MAX_ATTEMPTS, total_duration_ms: Date.now() - startTime });
+    return { status: 503, error: 'ai_provider_unavailable', message: 'Gemini is temporarily unavailable. Please retry in a moment.', retryable: true, request_id };
   }
 }
 

@@ -18,13 +18,18 @@ export function useGeminiInsight(input: GeminiInsightInput | GeminiMultiSnapshot
       return generateGeminiInsight(input);
     },
     onSuccess: options.onSuccess,
+    retry: false,
   });
 
   return {
     insight: mutation.data ?? null,
     isLoading: mutation.isPending,
     isError: mutation.isError,
-    error: mutation.error instanceof Error ? mutation.error.message : mutation.error ? String(mutation.error) : null,
+    error: mutation.error instanceof Error
+      ? mutation.error.message
+      : mutation.error && typeof mutation.error === 'object' && 'message' in mutation.error
+        ? String((mutation.error as { message: unknown }).message)
+        : mutation.error ? String(mutation.error) : null,
     apiError: mutation.error && typeof mutation.error === 'object' && 'status' in mutation.error
       ? mutation.error as ApiError
       : null,
